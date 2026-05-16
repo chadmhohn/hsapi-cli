@@ -1,0 +1,16 @@
+node_modules/
+*.tgz
+.env
+.env.*
+coverage/
+dist/
+
+# Real portal configs must stay private.
+config/
+portals.json
+*.portals.json
+
+# Local editor and OS files.
+.DS_Store
+.idea/
+.vscode/

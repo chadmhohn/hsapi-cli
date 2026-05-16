@@ -1,0 +1,24 @@
+name: Docs or context gap
+description: Request clearer human context for an API family or command.
+title: "[docs]: "
+labels:
+  - docs
+body:
+  - type: input
+    id: command_or_family
+    attributes:
+      label: Command or API family
+      placeholder: hsapi properties create, crm.imports
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: What is unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested_context
+    attributes:
+      label: Suggested context
+      description: Explain what an agent or operator needs to know before using this safely.

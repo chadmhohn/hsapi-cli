@@ -1,0 +1,42 @@
+name: Test portal failure
+description: Report a failure from a disposable HubSpot test portal.
+title: "[test-portal]: "
+labels:
+  - test-portal
+body:
+  - type: dropdown
+    id: test_type
+    attributes:
+      label: Test type
+      options:
+        - Unit
+        - Mock integration
+        - Live read smoke
+        - Gated live write
+        - Tier/scope expected failure
+    validations:
+      required: true
+  - type: dropdown
+    id: portal_tier
+    attributes:
+      label: Portal tier
+      options:
+        - Unknown
+        - Free
+        - Starter
+        - Professional
+        - Enterprise
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure details
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: cleanup
+    attributes:
+      label: Cleanup status
+      description: For write tests, note whether disposable test data was cleaned up.

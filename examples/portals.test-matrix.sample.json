@@ -1,0 +1,190 @@
+{
+  "default": "free_like",
+  "commandExpectations": {
+    "pipelines.deals": {
+      "acceptHttpStatuses": [403],
+      "reason": "HubSpot developer CLI personal-access-key tokens can return 403 when an endpoint does not allow user-level OAuth. Treat that as an auth-mode limitation to investigate, not as a transport failure."
+    }
+  },
+  "disposableWriteExpectations": {
+    "property.create": {
+      "acceptHttpStatuses": [403],
+      "reason": "Use fixture-specific expectations for known disposable-token scope gaps, such as missing deals-write on developer CLI tokens."
+    },
+    "pipeline_stage.create": {
+      "acceptHttpStatuses": [403],
+      "reason": "Use fixture-specific expectations when pipeline stage writes are blocked by token auth mode or missing deal pipeline write scope."
+    },
+    "list.create": {
+      "acceptHttpStatuses": [403],
+      "reason": "Use fixture-specific expectations when CRM list writes are blocked by missing list write scopes."
+    },
+    "crm_record.create": {
+      "acceptHttpStatuses": [403],
+      "reason": "Use fixture-specific expectations when standard object writes are blocked by missing object write scope."
+    },
+    "import.start": {
+      "acceptHttpStatuses": [403],
+      "reason": "Use fixture-specific expectations when tiny import writes are blocked by missing object write scope."
+    }
+  },
+  "portals": {
+    "free_like": {
+      "label": "Free-like HubSpot test portal",
+      "portalId": "<free-like-portal-id>",
+      "tokenEnv": "HSAPI_TEST_FREE_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_FREE_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Free",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "free_like",
+      "fixtureSafety": "read-only",
+      "expectedCapabilities": [
+        "account.details",
+        "crm.objects.standard.read",
+        "crm.properties.standard.read"
+      ],
+      "blockedCapabilities": [
+        "crm.schemas.custom_objects"
+      ]
+    },
+    "starter_like": {
+      "label": "Starter-like HubSpot test portal",
+      "portalId": "<starter-like-portal-id>",
+      "tokenEnv": "HSAPI_TEST_STARTER_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_STARTER_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Starter",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "starter_like",
+      "fixtureSafety": "read-only",
+      "expectedCapabilities": [
+        "account.details",
+        "crm.objects.standard.read",
+        "crm.pipelines.read"
+      ],
+      "blockedCapabilities": [
+        "crm.schemas.custom_objects"
+      ]
+    },
+    "professional_like": {
+      "label": "Professional-like HubSpot test portal",
+      "portalId": "<professional-like-portal-id>",
+      "tokenEnv": "HSAPI_TEST_PRO_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_PRO_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Professional",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "professional_like",
+      "fixtureSafety": "read-only",
+      "expectedCapabilities": [
+        "crm.limits.calculated_properties",
+        "crm.limits.association_labels",
+        "crm.pipelines.read"
+      ],
+      "blockedCapabilities": [
+        "crm.schemas.custom_objects"
+      ]
+    },
+    "enterprise_like": {
+      "label": "Enterprise-like HubSpot test portal",
+      "portalId": "<enterprise-like-portal-id>",
+      "tokenEnv": "HSAPI_TEST_ENTERPRISE_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_ENTERPRISE_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Enterprise",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "enterprise_like",
+      "fixtureSafety": "read-only",
+      "expectedCapabilities": [
+        "crm.schemas.custom_objects",
+        "crm.object_library",
+        "crm.limits.custom_object_types"
+      ],
+      "blockedCapabilities": []
+    },
+    "no_custom_objects": {
+      "label": "No-custom-objects HubSpot test portal",
+      "portalId": "<no-custom-objects-portal-id>",
+      "tokenEnv": "HSAPI_TEST_NO_CUSTOM_OBJECTS_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_NO_CUSTOM_OBJECTS_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Starter",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "no_custom_objects",
+      "fixtureSafety": "read-only",
+      "expectedCapabilities": [
+        "account.details",
+        "crm.objects.standard.read"
+      ],
+      "blockedCapabilities": [
+        "crm.schemas.custom_objects",
+        "crm.limits.custom_object_types"
+      ],
+      "commandExpectations": {
+        "schemas.list": {
+          "expectedHttpStatuses": [200],
+          "expectedResultCount": 0,
+          "reason": "This fixture should expose schema reads but return zero custom-object schemas; a nonzero result count means the fixture has drifted."
+        }
+      }
+    },
+    "disposable_write": {
+      "label": "Disposable write-test HubSpot portal",
+      "portalId": "<disposable-write-portal-id>",
+      "tokenEnv": "HSAPI_TEST_DISPOSABLE_WRITE_TOKEN",
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HSAPI_TEST_DISPOSABLE_WRITE_TOKEN",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com",
+      "knownPlanLabel": "Enterprise",
+      "knownPlanSource": "Replace with the source used to verify this test portal's plan.",
+      "fixtureRole": "disposable_write",
+      "fixtureSafety": "write-disposable-only",
+      "testAssetPrefix": "hsapi_test_",
+      "writeGateEnv": "HSAPI_RUN_DISPOSABLE_WRITES",
+      "expectedCapabilities": [
+        "crm.properties.write",
+        "crm.property_groups.write",
+        "crm.pipelines.write",
+        "crm.lists.write",
+        "crm.objects.standard.write"
+      ],
+      "blockedCapabilities": []
+    }
+  }
+}

@@ -1,0 +1,38 @@
+name: Tier or scope mismatch
+description: Report confusing access, scope, or subscription behavior.
+title: "[scope-tier]: "
+labels:
+  - scope-tier
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or endpoint
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: HubSpot response
+      description: Remove private IDs, tokens, emails, and customer data.
+      render: json
+    validations:
+      required: true
+  - type: dropdown
+    id: portal_tier
+    attributes:
+      label: Portal tier, if known
+      options:
+        - Unknown
+        - Free
+        - Starter
+        - Professional
+        - Enterprise
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Include known private app scopes, feature access, and expected behavior.

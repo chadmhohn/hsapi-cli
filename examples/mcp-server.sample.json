@@ -1,0 +1,83 @@
+{
+  "_comment": "Sample MCP client config for hsapi. Keep this file secret-free: only profile names, env var names, and placeholder paths belong here.",
+  "openclaw": {
+    "mcp": {
+      "servers": {
+        "hubspot-portal-alpha": {
+          "command": "hsapi-mcp",
+          "env": {
+            "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.json",
+            "HSAPI_PORTAL": "portal-alpha"
+          }
+        },
+        "hubspot-portal-beta": {
+          "command": "hsapi-mcp",
+          "env": {
+            "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.json",
+            "HSAPI_PORTAL": "portal-beta"
+          }
+        }
+      }
+    }
+  },
+  "genericMcpClient": {
+    "mcpServers": {
+      "hubspot-portal-alpha": {
+        "command": "hsapi-mcp",
+        "env": {
+          "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.json",
+          "HSAPI_PORTAL": "portal-alpha"
+        }
+      },
+      "hubspot-portal-beta": {
+        "command": "hsapi-mcp",
+        "env": {
+          "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.json",
+          "HSAPI_PORTAL": "portal-beta"
+        }
+      }
+    }
+  },
+  "portalConfigShape": {
+    "default": "portal-alpha",
+    "portals": {
+      "portal-alpha": {
+        "label": "Portal Alpha HubSpot",
+        "portalId": "<portal-alpha-id>",
+        "auth": {
+          "defaultFamily": "portal_bearer",
+          "portalBearer": {
+            "tokenEnv": "HUBSPOT_ACCESS_TOKEN_PORTAL_ALPHA",
+            "kind": "private_app"
+          }
+        },
+        "baseUrl": "https://api.hubapi.com"
+      },
+      "portal-beta": {
+        "label": "Portal Beta HubSpot",
+        "portalId": "<portal-beta-id>",
+        "auth": {
+          "defaultFamily": "portal_bearer",
+          "portalBearer": {
+            "tokenEnv": "HUBSPOT_ACCESS_TOKEN_PORTAL_BETA",
+            "kind": "private_app"
+          }
+        },
+        "baseUrl": "https://api.hubapi.com"
+      }
+    }
+  },
+  "neutralTokenWrapper": {
+    "_comment": "Use this command shape when an MCP client cannot inject HubSpot token env values directly. The wrapper loads token env names from HSAPI_PORTALS_CONFIG, resolves values through HSAPI_SECRET_LOOKUP_CMD, and then execs hsapi-mcp.",
+    "command": "/path/outside-package/hsapi/neutral-token-wrapper",
+    "args": [
+      "hsapi-mcp"
+    ],
+    "env": {
+      "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.multi-portal.json",
+      "HSAPI_PORTAL": "portal-alpha",
+      "HSAPI_NEUTRAL_TOKEN_PROFILES": "portal-alpha,portal-beta",
+      "HSAPI_SECRET_LOOKUP_CMD": "/path/outside-package/hsapi/lookup-hsapi-secret"
+    }
+  }
+}

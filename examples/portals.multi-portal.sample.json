@@ -1,0 +1,36 @@
+{
+  "_comment": "Sample neutral portal config for two generic HubSpot portal profiles while sourcing token values outside package and MCP config files.",
+  "default": "portal-alpha",
+  "portals": {
+    "portal-alpha": {
+      "label": "Portal Alpha HubSpot",
+      "portalId": "<portal-alpha-id>",
+      "authFamilyIntent": [
+        "portal_bearer"
+      ],
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HUBSPOT_ACCESS_TOKEN_PORTAL_ALPHA",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com"
+    },
+    "portal-beta": {
+      "label": "Portal Beta HubSpot",
+      "portalId": "<portal-beta-id>",
+      "authFamilyIntent": [
+        "portal_bearer"
+      ],
+      "auth": {
+        "defaultFamily": "portal_bearer",
+        "portalBearer": {
+          "tokenEnv": "HUBSPOT_ACCESS_TOKEN_PORTAL_BETA",
+          "kind": "private_app"
+        }
+      },
+      "baseUrl": "https://api.hubapi.com"
+    }
+  }
+}

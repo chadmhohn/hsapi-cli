@@ -1,0 +1,31 @@
+name: Bug report
+description: Report incorrect CLI behavior.
+title: "[bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Paste the command with tokens and private IDs removed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: CLI version, Node version, portal tier if relevant, and whether this was `--show-request`, mock, live read, or live write.

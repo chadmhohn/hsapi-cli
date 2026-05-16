@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 20
+          - 22
+          - 24
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Syntax check
+        run: |
+          node --check src/cli.js
+          node --check bin/hsapi.js
+          node --check bin/hsapi-cli.js
+          for file in scripts/*.js test/*.js; do
+            node --check "$file"
+          done
+
+      - name: JSON check
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const roots = ['data', 'examples', 'docs/hubspot-api-updates'];
+          const files = [];
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(full);
+              else if (entry.isFile() && full.endsWith('.json')) files.push(full);
+            }
+          }
+          for (const root of roots) walk(root);
+          for (const file of files) JSON.parse(fs.readFileSync(file, 'utf8'));
+          console.log(`validated ${files.length} JSON file(s)`);
+          NODE
+
+      - name: Package smoke test
+        run: npm test
+
+      - name: Coverage dashboard drift check
+        run: |
+          npm run catalog:dashboard
+          git diff --exit-code -- docs/hubspot-api-updates/coverage-dashboard.md
+
+      - name: Package dry run
+        run: |
+          npm pack --dry-run --json > /tmp/pack.json
+          node <<'NODE'
+          const fs = require('fs');
+          const pack = JSON.parse(fs.readFileSync('/tmp/pack.json', 'utf8'))[0];
+          const paths = pack.files.map((file) => file.path);
+          const required = [
+            'AGENTS.md',
+            'CLAUDE.md',
+            'bin/hsapi.js',
+            'bin/hsapi-cli.js',
+            'src/cli.js',
+            'src/catalog.js',
+            'data/hubspot-api-catalog.json',
+            'data/hubspot-api-tiers.json',
+            'docs/INSTALL.md',
+            'docs/TEST_PORTAL_MATRIX.md',
+            'examples/portals.sample.json',
+            'examples/portals.test-matrix.sample.json',
+            'README.md',
+            'SECURITY.md',
+            'CONTRIBUTING.md',
+            'package.json'
+          ];
+          const missing = required.filter((file) => !paths.includes(file));
+          const blocked = paths.filter((file) =>
+            file.startsWith('config/') ||
+            file.startsWith('.github/') ||
+            file.startsWith('test/') ||
+            file.includes('MEMORY') ||
+            file.includes('memory/') ||
+            file.includes('taskboard') ||
+            file.includes('hubspot-portals.json') ||
+            file.includes('test-matrix.json') ||
+            file.includes('.env')
+          );
+          if (missing.length || blocked.length) {
+            console.error(JSON.stringify({ missing, blocked }, null, 2));
+            process.exit(1);
+          }
+          console.log(`pack contents verified: ${paths.length} file(s)`);
+          NODE

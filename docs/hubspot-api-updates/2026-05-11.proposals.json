@@ -1,0 +1,3343 @@
+{
+  "generatedAt": "2026-05-11T14:00:15.725Z",
+  "mode": "network",
+  "candidateUrlCount": 12,
+  "candidateFileCount": 0,
+  "maxProposals": 200,
+  "totalEndpointProposalCount": 1130,
+  "truncatedEndpointProposalCount": 930,
+  "inspected": [
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "final": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "ok": true,
+      "status": 200,
+      "bytes": 2834034,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/error-handling",
+      "final": "https://developers.hubspot.com/docs/api-reference/error-handling",
+      "ok": true,
+      "status": 200,
+      "bytes": 3003244,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "final": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "ok": true,
+      "status": 200,
+      "bytes": 2880323,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/latest/crm/embed",
+      "final": "https://developers.hubspot.com/docs/api-reference/latest/crm/embed",
+      "ok": true,
+      "status": 200,
+      "bytes": 2841607,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/latest/crm/understanding-the-crm",
+      "final": "https://developers.hubspot.com/docs/api-reference/latest/crm/understanding-the-crm",
+      "ok": true,
+      "status": 200,
+      "bytes": 2923420,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/guide",
+      "ok": true,
+      "status": 200,
+      "bytes": 3244144,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/latest/sdk",
+      "final": "https://developers.hubspot.com/docs/api-reference/latest/sdk",
+      "ok": true,
+      "status": 200,
+      "bytes": 2843575,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/legacy/authentication/manage-oauth-tokens",
+      "final": "https://developers.hubspot.com/docs/api-reference/legacy/authentication/manage-oauth-tokens",
+      "ok": true,
+      "status": 200,
+      "bytes": 3117251,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/legacy/cms/hubdb/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/legacy/cms/hubdb/guide",
+      "ok": true,
+      "status": 200,
+      "bytes": 3298205,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/legacy/communication-preferences/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/legacy/communication-preferences/guide",
+      "ok": true,
+      "status": 200,
+      "bytes": 3390384,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/legacy/conversations/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/legacy/conversations/guide",
+      "ok": true,
+      "status": 200,
+      "bytes": 3406958,
+      "endpointReferenceCount": 1366,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/legacy/crm/embed",
+      "final": "https://developers.hubspot.com/docs/api-reference/legacy/crm/embed",
+      "ok": true,
+      "status": 200,
+      "bytes": 2847433,
+      "endpointReferenceCount": 1366,
+      "note": null
+    }
+  ],
+  "catalogAdditions": [
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.2026.03.activity.audit.logs.get",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/audit-logs",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.2026.03.activity.login.get",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/login",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.2026.03.activity.security.get",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/security",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.v3.activity.audit.logs.get",
+      "method": "GET",
+      "path": "/account-info/v3/activity/audit-logs",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.v3.activity.login.get",
+      "method": "GET",
+      "path": "/account-info/v3/activity/login",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.v3.activity.security.get",
+      "method": "GET",
+      "path": "/account-info/v3/activity/security",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.v3.api.usage.daily.private.apps.get",
+      "method": "GET",
+      "path": "/account-info/v3/api-usage/daily/private-apps",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "account",
+      "name": "account.account.info.v3.details.get",
+      "method": "GET",
+      "path": "/account-info/v3/details",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v1.refresh.tokens.by.id.delete",
+      "method": "DELETE",
+      "path": "/oauth/v1/refresh-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v1.access.tokens.by.id.get",
+      "method": "GET",
+      "path": "/oauth/v1/access-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v1.refresh.tokens.by.id.get",
+      "method": "GET",
+      "path": "/oauth/v1/refresh-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v1.token.post",
+      "method": "POST",
+      "path": "/oauth/v1/token",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v3.token.post",
+      "method": "POST",
+      "path": "/oauth/v3/token",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "auth",
+      "name": "auth.oauth.v3.token.introspect.post",
+      "method": "POST",
+      "path": "/oauth/v3/token/introspect",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v3.definitions.get",
+      "method": "GET",
+      "path": "/communication-preferences/v3/definitions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v3.status.email.by.id.get",
+      "method": "GET",
+      "path": "/communication-preferences/v3/status/email/{emailAddress}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.definitions.get",
+      "method": "GET",
+      "path": "/communication-preferences/v4/definitions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.by.id.get",
+      "method": "GET",
+      "path": "/communication-preferences/v4/statuses/{subscriberIdString}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.by.id.unsubscribe.all.get",
+      "method": "GET",
+      "path": "/communication-preferences/v4/statuses/{subscriberIdString}/unsubscribe-all",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v3.subscribe.post",
+      "method": "POST",
+      "path": "/communication-preferences/v3/subscribe",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v3.unsubscribe.post",
+      "method": "POST",
+      "path": "/communication-preferences/v3/unsubscribe",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.by.id.unsubscribe.all.post",
+      "method": "POST",
+      "path": "/communication-preferences/v4/statuses/{subscriberIdString}/unsubscribe-all",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.batch.read.post",
+      "method": "POST",
+      "path": "/communication-preferences/v4/statuses/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ],
+      "readOnlyPost": true
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.batch.unsubscribe.all.post",
+      "method": "POST",
+      "path": "/communication-preferences/v4/statuses/batch/unsubscribe-all",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.batch.unsubscribe.all.read.post",
+      "method": "POST",
+      "path": "/communication-preferences/v4/statuses/batch/unsubscribe-all/read",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "communication_preferences",
+      "name": "communication_preferences.communication.preferences.v4.statuses.batch.write.post",
+      "method": "POST",
+      "path": "/communication-preferences/v4/statuses/batch/write",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.delete",
+      "method": "DELETE",
+      "path": "/conversations/v3/conversations/threads/{threadId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.delete",
+      "method": "DELETE",
+      "path": "/conversations/v3/custom-channels/{channelId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.actors.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/actors/{actorId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.channel.accounts.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/channel-accounts",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.channel.accounts.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/channel-accounts/{channelAccountId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.channels.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/channels",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.channels.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/channels/{channelId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.inboxes.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/inboxes",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.inboxes.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/inboxes/{inboxId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/threads",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/threads/{threadId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.messages.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/threads/{threadId}/messages",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.messages.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/threads/{threadId}/messages/{messageId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.messages.by.id.original.content.get",
+      "method": "GET",
+      "path": "/conversations/v3/conversations/threads/{threadId}/messages/{messageId}/original-content",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.get",
+      "method": "GET",
+      "path": "/conversations/v3/custom-channels",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/custom-channels/{channelId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.channel.accounts.get",
+      "method": "GET",
+      "path": "/conversations/v3/custom-channels/{channelId}/channel-accounts",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.channel.accounts.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/custom-channels/{channelId}/channel-accounts/{channelAccountId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.messages.by.id.get",
+      "method": "GET",
+      "path": "/conversations/v3/custom-channels/{channelId}/messages/{messageId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.custom.channels.2026.03.by.id.channel.account.staging.tokens.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/custom-channels/2026-03/{channelId}/channel-account-staging-tokens/{accountToken}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.custom.channels.2026.03.by.id.channel.accounts.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/custom-channels/2026-03/{channelId}/channel-accounts/{channelAccountId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/v3/conversations/threads/{threadId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/v3/custom-channels/{channelId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.channel.account.staging.tokens.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/v3/custom-channels/{channelId}/channel-account-staging-tokens/{accountToken}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.channel.accounts.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/v3/custom-channels/{channelId}/channel-accounts/{channelAccountId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.messages.by.id.patch",
+      "method": "PATCH",
+      "path": "/conversations/v3/custom-channels/{channelId}/messages/{messageId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.actors.batch.read.post",
+      "method": "POST",
+      "path": "/conversations/v3/conversations/actors/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ],
+      "readOnlyPost": true
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.conversations.threads.by.id.messages.post",
+      "method": "POST",
+      "path": "/conversations/v3/conversations/threads/{threadId}/messages",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.post",
+      "method": "POST",
+      "path": "/conversations/v3/custom-channels",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.channel.accounts.post",
+      "method": "POST",
+      "path": "/conversations/v3/custom-channels/{channelId}/channel-accounts",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "conversations",
+      "name": "conversations.conversations.v3.custom.channels.by.id.messages.post",
+      "method": "POST",
+      "path": "/conversations/v3/custom-channels/{channelId}/messages",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.by.id.by.id.labels.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/associations/v4/{fromObjectType}/{toObjectType}/labels/{associationTypeId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.objects.by.id.by.id.associations.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v4/objects/{objectType}/{objectId}/associations/{toObjectType}/{toObjectId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.marketing.events.2026.03.associations.by.id.by.id.lists.by.id.delete",
+      "method": "DELETE",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.by.id.lists.by.id.delete",
+      "method": "DELETE",
+      "path": "/marketing/v3/marketing-events/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.lists.by.id.delete",
+      "method": "DELETE",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.2026.03.definitions.configurations.all.get",
+      "method": "GET",
+      "path": "/crm/associations/2026-03/definitions/configurations/all",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.by.id.by.id.labels.get",
+      "method": "GET",
+      "path": "/crm/associations/v4/{fromObjectType}/{toObjectType}/labels",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.definitions.configurations.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/associations/v4/definitions/configurations/{fromObjectType}/{toObjectType}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.definitions.configurations.all.get",
+      "method": "GET",
+      "path": "/crm/associations/v4/definitions/configurations/all",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.limits.2026.03.associations.labels.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/associations/labels",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.limits.2026.03.associations.records.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/associations/records/{fromObjectTypeId}/{toObjectTypeId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.limits.2026.03.associations.records.by.id.to.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/associations/records/{fromObjectTypeId}/to",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.limits.2026.03.associations.records.from.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/associations/records/from",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v3.associations.by.id.by.id.types.get",
+      "method": "GET",
+      "path": "/crm/v3/associations/{fromObjectType}/{toObjectType}/types",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.objects.by.id.by.id.associations.by.id.get",
+      "method": "GET",
+      "path": "/crm/v4/objects/{objectType}/{objectId}/associations/{toObjectType}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.marketing.events.2026.03.associations.by.id.by.id.lists.get",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.by.id.lists.get",
+      "method": "GET",
+      "path": "/marketing/v3/marketing-events/associations/{externalAccountId}/{externalEventId}/lists",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.lists.get",
+      "method": "GET",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.2026.03.usage.high.usage.report.by.id.post",
+      "method": "POST",
+      "path": "/crm/associations/2026-03/usage/high-usage-report/{userId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.by.id.by.id.labels.post",
+      "method": "POST",
+      "path": "/crm/associations/v4/{fromObjectType}/{toObjectType}/labels",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.definitions.configurations.by.id.by.id.batch.create.post",
+      "method": "POST",
+      "path": "/crm/associations/v4/definitions/configurations/{fromObjectType}/{toObjectType}/batch/create",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.definitions.configurations.by.id.by.id.batch.purge.post",
+      "method": "POST",
+      "path": "/crm/associations/v4/definitions/configurations/{fromObjectType}/{toObjectType}/batch/purge",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.definitions.configurations.by.id.by.id.batch.update.post",
+      "method": "POST",
+      "path": "/crm/associations/v4/definitions/configurations/{fromObjectType}/{toObjectType}/batch/update",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v3.associations.by.id.by.id.batch.archive.post",
+      "method": "POST",
+      "path": "/crm/v3/associations/{fromObjectType}/{toObjectType}/batch/archive",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v3.associations.by.id.by.id.batch.create.post",
+      "method": "POST",
+      "path": "/crm/v3/associations/{fromObjectType}/{toObjectType}/batch/create",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v3.associations.by.id.by.id.batch.read.post",
+      "method": "POST",
+      "path": "/crm/v3/associations/{fromObjectType}/{toObjectType}/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ],
+      "readOnlyPost": true
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.by.id.by.id.batch.archive.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/{fromObjectType}/{toObjectType}/batch/archive",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.by.id.by.id.batch.associate.default.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/{fromObjectType}/{toObjectType}/batch/associate/default",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.by.id.by.id.batch.create.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/{fromObjectType}/{toObjectType}/batch/create",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.by.id.by.id.batch.labels.archive.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/{fromObjectType}/{toObjectType}/batch/labels/archive",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.by.id.by.id.batch.read.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/{fromObjectType}/{toObjectType}/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ],
+      "readOnlyPost": true
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.associations.usage.high.usage.report.by.id.post",
+      "method": "POST",
+      "path": "/crm/v4/associations/usage/high-usage-report/{userId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.associations.v4.by.id.by.id.labels.put",
+      "method": "PUT",
+      "path": "/crm/associations/v4/{fromObjectType}/{toObjectType}/labels",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.objects.by.id.by.id.associations.default.by.id.by.id.put",
+      "method": "PUT",
+      "path": "/crm/v4/objects/{fromObjectType}/{fromObjectId}/associations/default/{toObjectType}/{toObjectId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.crm.v4.objects.by.id.by.id.associations.by.id.by.id.put",
+      "method": "PUT",
+      "path": "/crm/v4/objects/{objectType}/{objectId}/associations/{toObjectType}/{toObjectId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.marketing.events.2026.03.associations.by.id.by.id.lists.by.id.put",
+      "method": "PUT",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.by.id.lists.by.id.put",
+      "method": "PUT",
+      "path": "/marketing/v3/marketing-events/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.associations",
+      "name": "crm.associations.marketing.v3.marketing.events.associations.by.id.lists.by.id.put",
+      "method": "PUT",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.calling.2026.03.transcripts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/extensions/calling/2026-03/transcripts/{transcriptId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.cards.dev.2026.03.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/{cardId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.lists.2026.03.by.id.schedule.conversion.delete",
+      "method": "DELETE",
+      "path": "/crm/lists/2026-03/{listId}/schedule-conversion",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.lists.2026.03.folders.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/lists/2026-03/folders/{folderId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/objects/v3/{objectType}/{objectId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.projects.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/objects/v3/projects/{projectId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.by.id.settings.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/extensions/calling/{appId}/settings",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.by.id.settings.channel.connection.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/extensions/calling/{appId}/settings/channel-connection",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.transcripts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/extensions/calling/transcripts/{transcriptId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.cards.dev.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/extensions/cards-dev/{appId}/{cardId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.videoconferencing.settings.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/extensions/videoconferencing/settings/{appId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.memberships.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/lists/{listId}/memberships",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.schedule.conversion.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/lists/{listId}/schedule-conversion",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.folders.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/lists/folders/{folderId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/{objectType}/{objectId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.162.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/0-162/{serviceId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.3.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/0-3/{dealId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.410.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/0-410/{courseId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.420.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/0-420/{listingId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.calls.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/calls/{callId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.carts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/carts/{cartId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.commerce.payments.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/commerce_payments/{commercePaymentId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.communications.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/communications/{communicationId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.companies.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/companies/{companyId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.contacts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/contacts/{contactId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.contracts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/contracts/{contractId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.discounts.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/discounts/{discountId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.emails.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/emails/{emailId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.fees.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/fees/{feeId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.goal.targets.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/goal_targets/{goalTargetId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.invoices.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/invoices/{invoiceId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.leads.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/leads/{leadsId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.line.items.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/line_items/{lineItemId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.meetings.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/meetings/{meetingId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.notes.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/notes/{noteId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.orders.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/orders/{orderId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.postal.mail.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/postal_mail/{postalMailId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.products.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/products/{productId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.quotes.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/quotes/{quoteId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.subscriptions.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/subscriptions/{subscriptionId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.tasks.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/tasks/{taskId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.taxes.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/taxes/{taxId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.tickets.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/tickets/{ticketId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.users.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/objects/users/{userId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.pipelines.by.id.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/pipelines/{objectType}/{pipelineId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.pipelines.by.id.by.id.stages.by.id.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/pipelines/{objectType}/{pipelineId}/stages/{stageId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.calling.2026.03.by.id.settings.channel.connection.get",
+      "method": "GET",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings/channel-connection",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.cards.dev.2026.03.by.id.get",
+      "method": "GET",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.cards.dev.2026.03.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/{cardId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.extensions.cards.dev.2026.03.sample.response.get",
+      "method": "GET",
+      "path": "/crm/extensions/cards-dev/2026-03/sample-response",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.limits.2026.03.calculated.properties.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/calculated-properties",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.limits.2026.03.custom.object.types.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/custom-object-types",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.limits.2026.03.custom.properties.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/custom-properties",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.limits.2026.03.pipelines.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/pipelines",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.limits.2026.03.records.get",
+      "method": "GET",
+      "path": "/crm/limits/2026-03/records",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.lists.2026.03.get",
+      "method": "GET",
+      "path": "/crm/lists/2026-03",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.lists.2026.03.by.id.memberships.join.order.get",
+      "method": "GET",
+      "path": "/crm/lists/2026-03/{listId}/memberships/join-order",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.lists.2026.03.by.id.schedule.conversion.get",
+      "method": "GET",
+      "path": "/crm/lists/2026-03/{listId}/schedule-conversion",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.object.library.2026.03.enablement.get",
+      "method": "GET",
+      "path": "/crm/object-library/2026-03/enablement",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.object.library.2026.03.enablement.by.id.get",
+      "method": "GET",
+      "path": "/crm/object-library/2026-03/enablement/{objectTypeId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.by.id.get",
+      "method": "GET",
+      "path": "/crm/objects/v3/{objectType}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/objects/v3/{objectType}/{objectId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.projects.get",
+      "method": "GET",
+      "path": "/crm/objects/v3/projects",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.objects.v3.projects.by.id.get",
+      "method": "GET",
+      "path": "/crm/objects/v3/projects/{projectId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.owners.2026.03.get",
+      "method": "GET",
+      "path": "/crm/owners/2026-03",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.owners.2026.03.by.id.get",
+      "method": "GET",
+      "path": "/crm/owners/2026-03/{ownerId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.pipelines.2026.03.by.id.by.id.audit.get",
+      "method": "GET",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}/audit",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.pipelines.2026.03.by.id.by.id.stages.by.id.get",
+      "method": "GET",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}/stages/{stageId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.exports.export.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/exports/export/{exportId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.exports.export.async.tasks.by.id.status.get",
+      "method": "GET",
+      "path": "/crm/v3/exports/export/async/tasks/{taskId}/status",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.by.id.settings.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/calling/{appId}/settings",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.by.id.settings.channel.connection.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/calling/{appId}/settings/channel-connection",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.calling.transcripts.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/calling/transcripts/{transcriptId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.cards.dev.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/cards-dev/{appId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.cards.dev.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/cards-dev/{appId}/{cardId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.cards.dev.sample.response.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/cards-dev/sample-response",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.extensions.videoconferencing.settings.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/extensions/videoconferencing/settings/{appId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.imports.get",
+      "method": "GET",
+      "path": "/crm/v3/imports",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.imports.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/imports/{importId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.imports.by.id.errors.get",
+      "method": "GET",
+      "path": "/crm/v3/imports/{importId}/errors",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.get",
+      "method": "GET",
+      "path": "/crm/v3/lists",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.memberships.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/{listId}/memberships",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.memberships.join.order.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/{listId}/memberships/join-order",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.by.id.schedule.conversion.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/{listId}/schedule-conversion",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.folders.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/folders",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.idmapping.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/idmapping",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.object.type.id.by.id.name.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/object-type-id/{objectTypeId}/name/{listName}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.lists.records.by.id.by.id.memberships.get",
+      "method": "GET",
+      "path": "/crm/v3/lists/records/{objectTypeId}/{recordId}/memberships",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/{objectType}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.by.id.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/{objectType}/{objectId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.162.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-162",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.162.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-162/{serviceId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.3.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-3",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.3.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-3/{dealId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.410.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-410",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.410.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-410/{courseId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.420.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-420",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.0.420.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/0-420/{listingId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.calls.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/calls",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.calls.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/calls/{callId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.carts.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/carts",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.carts.by.id.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/carts/{cartId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "crm.objects",
+      "name": "crm.objects.crm.v3.objects.commerce.payments.get",
+      "method": "GET",
+      "path": "/crm/v3/objects/commerce_payments",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "proposed",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    }
+  ],
+  "docTriage": [],
+  "warnings": [
+    "Non-mutating proposal output only. Do not paste proposals blindly into the catalog.",
+    "Endpoint paths extracted from docs pages may include examples, deprecated paths, or incomplete template variables.",
+    "Every proposal needs command ergonomics, scope/tier notes, tests, and mutation safety review before implementation."
+  ]
+}

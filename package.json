@@ -1,0 +1,57 @@
+{
+  "name": "hsapi-cli",
+  "version": "0.0.0-local",
+  "private": true,
+  "description": "Portal-aware HubSpot API CLI and MCP server for agents and RevOps operators.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/your-org/hsapi-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/hsapi-cli/issues"
+  },
+  "homepage": "https://github.com/your-org/hsapi-cli#readme",
+  "bin": {
+    "hsapi": "bin/hsapi.js",
+    "hsapi-mcp": "bin/hsapi-mcp.js",
+    "hsapi-cli": "bin/hsapi-cli.js",
+    "hubspot-agent-cli": "bin/hubspot-agent-cli.js"
+  },
+  "files": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "bin/",
+    "src/",
+    "scripts/",
+    "data/",
+    "docs/DESKTOP_MCP_QUICKSTART.md",
+    "docs/INSTALL.md",
+    "docs/MCP.md",
+    "docs/OPENCLAW_MCP_CUTOVER.md",
+    "docs/TEST_PORTAL_MATRIX.md",
+    "docs/hubspot-api-context/",
+    "docs/hubspot-api-updates/",
+    "examples/",
+    "README.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "catalog:dashboard": "node scripts/write-hubspot-api-coverage-dashboard.js",
+    "catalog:weekly": "node scripts/update-hubspot-api-catalog.js --write-report --write-proposals && node scripts/write-hubspot-api-coverage-dashboard.js",
+    "catalog:update": "node scripts/update-hubspot-api-catalog.js",
+    "catalog:update:offline": "node scripts/update-hubspot-api-catalog.js --offline",
+    "catalog:diff": "node scripts/update-hubspot-api-catalog.js --propose-diff",
+    "release:gates": "node scripts/release-gates.js",
+    "test:live-read": "node scripts/live-read-smoke.js --json",
+    "test:disposable-write": "node scripts/disposable-write-smoke.js --json",
+    "test:pack-install": "node scripts/pack-install-smoke.js",
+    "test": "node test/test-hsapi.js && node bin/hsapi.js catalog coverage && node scripts/update-hubspot-api-catalog.js --offline --json && node scripts/release-gates.js && HSAPI_PORTALS_CONFIG=examples/portals.sample.json node bin/hsapi.js account details --show-request && node scripts/pack-install-smoke.js",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

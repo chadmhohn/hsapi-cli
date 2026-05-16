@@ -1,0 +1,32 @@
+name: Endpoint family request
+description: Request coverage for a HubSpot API family or endpoint set.
+title: "[api-family]: "
+labels:
+  - api-family
+body:
+  - type: input
+    id: api_family
+    attributes:
+      label: HubSpot API family
+      placeholder: crm.associations.schema, crm.imports, cms.pages
+    validations:
+      required: true
+  - type: textarea
+    id: endpoints
+    attributes:
+      label: Endpoints or docs URLs
+      description: Link official HubSpot docs when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: RevOps scenario
+      description: Explain when this endpoint matters and what workflow it should support.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety, scope, and tier notes
+      description: Include known mutation risk, required scopes, subscription limits, or expected 403 behavior.

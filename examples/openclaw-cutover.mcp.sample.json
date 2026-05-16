@@ -1,0 +1,29 @@
+{
+  "_comment": "Repo-safe OpenClaw cutover payloads for replacing two existing HubSpot MCP entries with the CLI-backed hsapi MCP server. Copy to a private operator path and adjust server names, wrapper/config/lookup paths, and profile names before use. Do not add raw credentials.",
+  "servers": {
+    "hubspot-portal-alpha": {
+      "command": "/path/outside-package/hsapi/neutral-token-wrapper",
+      "args": [
+        "hsapi-mcp"
+      ],
+      "env": {
+        "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.multi-portal.json",
+        "HSAPI_PORTAL": "portal-alpha",
+        "HSAPI_NEUTRAL_TOKEN_PROFILES": "portal-alpha,portal-beta",
+        "HSAPI_SECRET_LOOKUP_CMD": "/path/outside-package/hsapi/lookup-hsapi-secret"
+      }
+    },
+    "hubspot-portal-beta": {
+      "command": "/path/outside-package/hsapi/neutral-token-wrapper",
+      "args": [
+        "hsapi-mcp"
+      ],
+      "env": {
+        "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.multi-portal.json",
+        "HSAPI_PORTAL": "portal-beta",
+        "HSAPI_NEUTRAL_TOKEN_PROFILES": "portal-alpha,portal-beta",
+        "HSAPI_SECRET_LOOKUP_CMD": "/path/outside-package/hsapi/lookup-hsapi-secret"
+      }
+    }
+  }
+}

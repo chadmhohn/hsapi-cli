@@ -1,0 +1,1302 @@
+{
+  "generatedAt": "2026-05-09",
+  "sourceUrl": "https://developers.hubspot.com/docs/developer-tooling/platform/apis-by-tier",
+  "lastModified": "2026-04-29",
+  "note": "Generated from HubSpot APIs by tier docs. Availability still depends on app scopes, object access, portal configuration, and product-tier entitlements. The Free product group represents HubSpot's broad/global API surface and should not be used by itself to conclude that subscription-gated features such as custom object schemas are available in a portal.",
+  "products": [
+    {
+      "hub": {
+        "name": "Free",
+        "id": "free",
+        "icon": "https://mintlify-assets.b-cdn.net/Icons/lightbulb.svg"
+      },
+      "tiers": [
+        {
+          "name": "Free",
+          "id": "free",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Account Info",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Appointments",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/appointments/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Associations V3",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Associations V4",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Audit Logs",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/audit-logs/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Auth Oauth V1",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Auth Oauth V3",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Authors",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/authors/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Blog Settings",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/blog-settings/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Brands",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/brands/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CMS Media Bridge",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/media-bridge/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CMS Source Code",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/source-code/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM App Uninstalls",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/app-uninstalls/uninstall-app",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Associations Schema V3",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Associations Schema V4",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Calling Extensions",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Commerce Subscriptions",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/commerce-subscriptions/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Deal Splits",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/deal-splits/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Exports",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/exports/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecast Types",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/forecast-types/get-forecast-types",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecasts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/search/search-forecasts",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Imports",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Lists",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Object Library",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/object-library/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Objects",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Postal Mail",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/postal-mail/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Projects",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/projects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Property Validations",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/property-validations/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Feature Flags",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/app-management/feature-flags/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Subscription Lifecycle",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Calls",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/calls/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Carts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/carts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Cms Content Audit",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/content-audit/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Commerce Payments",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/commerce-payments/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Communication Preferences Subscriptions V3",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Communication Preferences Subscriptions V4",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Communications",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/communications/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Companies",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/companies/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Contacts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contacts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Contracts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contracts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Custom Channels",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Inbox & Messages",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Courses",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Crm Owners",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/owners/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Deals",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/deals/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Discounts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/discounts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Domains",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/domains/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Emails",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/emails/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Feedback Submissions",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/feedback-submissions/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Fees",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/fees/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Files",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Forms",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/forms/global-form-events",
+          "disclaimer": null
+        },
+        {
+          "name": "Goal Targets",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/goals/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Hubdb",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/hubdb/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Invoices",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/invoices/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Leads",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/leads/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Limits Tracking",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Line Items",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/line-items/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Listings",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Marketing Campaigns",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Marketing Emails",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/marketing-emails/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Marketing Events",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/marketing-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Meetings",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/meetings/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Meta Origins",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Notes",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/notes/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Orders",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/orders/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Pages",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/pages/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Partner Clients",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Partner Services",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Pipelines",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Posts",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Products",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/products/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Properties",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Public App Crm Cards",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/crm-cards/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Quotes",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/quotes/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Scheduler Meetings",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Sequences",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/sequences/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Services",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/services/get-services",
+          "disclaimer": null
+        },
+        {
+          "name": "Settings Multicurrency",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/settings/multicurrency/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Settings Tax Rates",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Single-send",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/transactional-emails/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Site Search",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/site-search/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Tags",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/tags/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Tasks",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/activities/tasks/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Taxes",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/taxes/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Tickets",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/tickets/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Timeline",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/crm/extensions/timeline/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Transactional Single Send",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/transactional-emails/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Transcriptions",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Url Mappings",
+          "minTier": "free",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Url Redirects",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/url-redirects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "User Provisioning",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/settings/user-provisioning/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Users",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/users/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Video Conferencing Extension",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/video-conferencing-extension/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Webhooks",
+          "minTier": "free",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Marketing Hub",
+        "id": "marketing",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/MarketingHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Starter",
+          "id": "starter",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Blog Settings",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/blog-settings/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Brands",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/brands/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Communication Preferences Subscriptions V3",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Communication Preferences Subscriptions V4",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Goal Targets",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/goals/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Hubdb",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/hubdb/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Marketing Campaigns",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Posts",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Single-send",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/transactional-emails/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Site Search",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/site-search/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Tags",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/tags/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Transactional Single Send",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/transactional-emails/guide",
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Url Redirects",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/url-redirects/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Sales Hub",
+        "id": "sales",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/SalesHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Starter",
+          "id": "starter",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": "Requires access to relevant associated objects"
+        },
+        {
+          "name": "Conversations Custom Channels",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Deal Splits",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/deal-splits/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecast Types",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/forecast-types/get-forecast-types",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecasts",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/search/search-forecasts",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Goal Targets",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/goals/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Leads",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/leads/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Sequences",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/sequences/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Service Hub",
+        "id": "service",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/ServiceHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Custom Channels",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecast Types",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/forecast-types/get-forecast-types",
+          "disclaimer": null
+        },
+        {
+          "name": "CRM Forecasts",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/search/search-forecasts",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Feedback Submissions",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/feedback-submissions/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Goal Targets",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/goals/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Sequences",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/sequences/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Content Hub",
+        "id": "content",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/ContentHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Starter",
+          "id": "starter",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Blog Settings",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/blog-settings/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Brands",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/brands/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Cms Content Audit",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/content-audit/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "CMS Source Code",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/source-code/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Hubdb",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/hubdb/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Posts",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Site Search",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/site-search/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Tags",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/tags/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Url Redirects",
+          "minTier": "starter",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/url-redirects/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Commerce Hub",
+        "id": "commerce",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/CommerceHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Smart CRM",
+        "id": "crm",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/SmartCRM.svg"
+      },
+      "tiers": [
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        }
+      ]
+    },
+    {
+      "hub": {
+        "name": "Data Hub",
+        "id": "data",
+        "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/DataHub.svg"
+      },
+      "tiers": [
+        {
+          "name": "Professional",
+          "id": "pro",
+          "rateLimit": "100 reqs/10 sec*"
+        },
+        {
+          "name": "Enterprise",
+          "id": "enterprise",
+          "rateLimit": "100 reqs/10 sec*"
+        }
+      ],
+      "features": [
+        {
+          "name": "Automation Actions V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Automation V4",
+          "minTier": "pro",
+          "docsUrl": null,
+          "disclaimer": null
+        },
+        {
+          "name": "Conversations Visitor Identification",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
+          "disclaimer": null
+        },
+        {
+          "name": "Custom Objects",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Events",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Definitions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Event Completions",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
+          "disclaimer": null
+        },
+        {
+          "name": "Schemas",
+          "minTier": "enterprise",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
+          "disclaimer": null
+        }
+      ]
+    }
+  ]
+}
