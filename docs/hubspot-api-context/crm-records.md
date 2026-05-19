@@ -1,8 +1,10 @@
 # CRM record operations
 
-Use CRM record commands for direct record-level work after checking object scopes and portal safety. Standard object names such as `contacts`, `companies`, `deals`, and `tickets` are supported, and object type IDs can be used when HubSpot's docs require them.
+Use CRM record commands for direct record-level work after checking object scopes and portal safety. Standard object names such as `contacts`, `companies`, `deals`, and `tickets` are supported, and standard aliases resolve before any custom-object lookup. For example, `project` and `project object` resolve to HubSpot's standard `projects` object with object type ID `0-970`.
 
-Use `hsapi crm object-types --family commerce` or `--family activity` when you need the exact object type spelling for broader CRM objects.
+Use `hsapi crm object-types --family commerce`, `--family activity`, or `--family optional` when you need the exact object type spelling and type ID for broader CRM objects. Use `hsapi crm resolve-object <name>` before reaching for custom schemas when a user gives a natural object label.
+
+Optional standard objects such as appointments, courses, listings, services, and leads may need to be activated in the portal before records are available. Use `hsapi object-library status <object>` to check activation; the command resolves standard aliases to the object library type ID.
 
 Create and update commands accept a JSON `properties` object. Create also accepts HubSpot association specs:
 

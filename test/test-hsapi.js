@@ -486,14 +486,14 @@ async function main() {
       const commerceOutput = JSON.parse(commerceTypes.stdout);
       assert.strictEqual(commerceOutput.ok, true);
       assert.strictEqual(commerceOutput.family, 'commerce');
-      assert.strictEqual(commerceOutput.count, 11);
+      assert.strictEqual(commerceOutput.count, 13);
       assert(commerceOutput.objectTypes.some((entry) => entry.objectType === 'line_items'));
       assert(commerceOutput.objectTypes.some((entry) => entry.objectType === 'commerce_payments'));
       assert(commerceOutput.objectTypes.some((entry) => entry.objectType === 'subscriptions'));
 
       const commerceCount = await run(['crm', 'object-types', '--family', 'commerce', '--select', 'count', '--raw-value'], noConfigEnv);
       assert.strictEqual(commerceCount.status, 0, commerceCount.stderr || commerceCount.stdout);
-      assert.strictEqual(commerceCount.stdout, '11\n');
+      assert.strictEqual(commerceCount.stdout, '13\n');
 
       const commerceNames = await run(['crm', 'object-types', '--family', 'commerce', '--names-only'], noConfigEnv);
       assert.strictEqual(commerceNames.status, 0, commerceNames.stderr || commerceNames.stdout);
@@ -508,7 +508,9 @@ async function main() {
         'carts',
         'fees',
         'discounts',
-        'taxes'
+        'taxes',
+        'listings',
+        'services'
       ]);
 
       const activityNames = await run(['crm', 'object-types', '--family', 'activity', '--names-only'], noConfigEnv);
@@ -2412,6 +2414,64 @@ async function main() {
         pathname: '/crm/objects/2026-03/contacts/batch/archive',
         endpointId: 'objects.batch_archive',
         body: { inputs: [{ id: '101' }, { id: '102' }] }
+      });
+      {
+        const output = parseJsonOutput(await run(['crm', 'object-types', '--family', 'optional'], baseEnv));
+        assert.strictEqual(output.ok, true);
+        assert(output.names === undefined, 'full object-type output should include object metadata');
+        assert(output.objectTypes.some((entry) => entry.objectType === 'appointments' && entry.objectTypeId === '0-421'));
+        assert(output.objectTypes.some((entry) => entry.objectType === 'leads' && entry.objectTypeId === '0-136'));
+      }
+      {
+        const output = parseJsonOutput(await run(['crm', 'resolve-object', 'project'], baseEnv));
+        assert.strictEqual(output.resolved, true);
+        assert.strictEqual(output.source, 'standard-catalog');
+        assert.strictEqual(output.objectType, 'projects');
+        assert.strictEqual(output.objectTypeId, '0-970');
+        assert.strictEqual(output.customLookup, undefined);
+      }
+      {
+        const before = requests.length;
+        const output = parseJsonOutput(await run(['crm', 'resolve-object', 'project', '--custom-fallback'], {
+          ...baseEnv,
+          HSAPI_TEST_TOKEN: 'profile-token'
+        }));
+        assert.strictEqual(output.resolved, true);
+        assert.strictEqual(output.source, 'standard-catalog');
+        assert.strictEqual(output.objectTypeId, '0-970');
+        assert.strictEqual(requests.length, before, 'standard objects should resolve before any custom-schema lookup');
+      }
+      {
+        const before = requests.length;
+        const result = await run(['crm', 'resolve-object', 'widget', '--custom-fallback'], {
+          ...baseEnv,
+          HSAPI_TEST_TOKEN: 'profile-token'
+        });
+        assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+        const output = parseJsonOutput(result);
+        assert.strictEqual(output.resolved, false);
+        assert.strictEqual(output.source, 'unresolved');
+        assert.deepStrictEqual(output.customLookup, {
+          attempted: true,
+          available: false,
+          status: 403,
+          statusText: 'Forbidden',
+          note: 'A 403 on custom-object/schema endpoints can mean either the app token is missing the needed API scope, or the portal subscription does not include custom objects/schemas. Check both the token scopes and the HubSpot tier matrix before assuming the API is broken.'
+        });
+        assert.strictEqual(requests.length, before + 1, 'custom fallback should make one schema lookup for unresolved objects');
+        assert.strictEqual(requests.at(-1).url, '/crm-object-schemas/2026-03/schemas');
+      }
+      await expectShowRequest(['crm', 'get', 'project object', '101'], baseEnv, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/objects/2026-03/projects/101',
+        endpointId: 'objects.get'
+      });
+      await expectShowRequest(['object-library', 'status', 'project'], baseEnv, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/object-library/2026-03/enablement/0-970',
+        endpointId: 'object_library.enablement_for_type'
       });
       {
         const result = await run(['crm', 'search', 'companies', '--filter', 'hs_object_id:GT:0', '--count-only'], {
