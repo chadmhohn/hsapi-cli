@@ -2,6 +2,8 @@
 
 HubSpot custom object and schema endpoints are a frequent source of confusing 403s.
 
+Resolve HubSpot standard objects first. Newer and optional standard objects such as projects, appointments, listings, services, leads, courses, orders, invoices, payments, and subscriptions have standard object type IDs and should not trigger custom schema discovery just because a user says "object." Use `hsapi crm resolve-object <name>` and `hsapi crm object-types --family all` before calling `hsapi schemas list`.
+
 Two different things can block them:
 
 - the private app token is missing the required API scope; or
@@ -20,4 +22,5 @@ When in doubt, use:
 
 - `hsapi account subscription` for portal context;
 - `hsapi tiers portal` for the tier-aware summary;
+- `hsapi crm resolve-object <name> --custom-fallback` when standard-object resolution fails and custom lookup is worth attempting;
 - `hsapi schemas list` for the actual failure surface.

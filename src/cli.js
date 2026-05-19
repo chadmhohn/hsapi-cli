@@ -154,148 +154,460 @@ const CRM_OBJECT_TYPE_CATALOG = [
   {
     family: 'core',
     objectType: 'contacts',
+    objectTypeId: '0-1',
     label: 'Contacts',
+    aliases: ['contact'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contacts/guide'
   },
   {
     family: 'core',
     objectType: 'companies',
+    objectTypeId: '0-2',
     label: 'Companies',
+    aliases: ['company'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/companies/guide'
   },
   {
     family: 'core',
     objectType: 'deals',
+    objectTypeId: '0-3',
     label: 'Deals',
+    aliases: ['deal'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/deals/guide'
   },
   {
     family: 'core',
     objectType: 'tickets',
+    objectTypeId: '0-5',
     label: 'Tickets',
+    aliases: ['ticket'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/tickets/guide'
   },
   {
     family: 'commerce',
     objectType: 'products',
+    objectTypeId: '0-7',
     label: 'Products',
+    aliases: ['product'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/products/guide',
     notes: 'Common product library object. Frequently associated to line items.'
   },
   {
     family: 'commerce',
     objectType: 'line_items',
+    objectTypeId: '0-8',
     label: 'Line items',
+    aliases: ['line_item', 'line item', 'line items'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/line-items/guide',
     notes: 'Line items usually need name, quantity, and price, then associations to deals, quotes, invoices, or subscriptions.'
   },
   {
     family: 'commerce',
     objectType: 'quotes',
+    objectTypeId: '0-14',
     label: 'Quotes',
+    aliases: ['quote'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/quotes/guide',
     notes: 'Quote records usually sit in a commerce workflow with deals and line items.'
   },
   {
     family: 'commerce',
     objectType: 'invoices',
+    objectTypeId: '0-53',
     label: 'Invoices',
+    aliases: ['invoice'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/invoices/guide',
     notes: 'Invoice records depend on commerce/payment setup and should be tested in disposable portals first.'
   },
   {
     family: 'commerce',
     objectType: 'commerce_payments',
+    objectTypeId: '0-101',
     label: 'Commerce payments',
+    aliases: ['commerce_payment', 'payment', 'payments'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/commerce-payments/guide',
     notes: 'Payment records are tied to HubSpot payments or Stripe payment processing setup.'
   },
   {
     family: 'commerce',
     objectType: 'subscriptions',
+    objectTypeId: '0-69',
     label: 'Commerce subscriptions',
+    aliases: ['subscription', 'commerce_subscription', 'commerce subscriptions'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/commerce-subscriptions/guide',
     notes: 'Commerce subscriptions use the subscriptions object type, distinct from marketing communication preferences.'
   },
   {
     family: 'commerce',
     objectType: 'orders',
+    objectTypeId: '0-123',
     label: 'Orders',
+    aliases: ['order'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/orders/guide'
   },
   {
     family: 'commerce',
     objectType: 'carts',
+    objectTypeId: '0-142',
     label: 'Carts',
+    aliases: ['cart'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/carts/guide'
   },
   {
     family: 'commerce',
     objectType: 'fees',
+    objectTypeId: '0-85',
     label: 'Fees',
+    aliases: ['fee'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/fees/guide'
   },
   {
     family: 'commerce',
     objectType: 'discounts',
+    objectTypeId: '0-84',
     label: 'Discounts',
+    aliases: ['discount'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/discounts/guide'
   },
   {
     family: 'commerce',
     objectType: 'taxes',
+    objectTypeId: '0-86',
     label: 'Taxes',
+    aliases: ['tax'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/taxes/guide'
+  },
+  {
+    family: 'commerce',
+    objectType: 'listings',
+    objectTypeId: '0-420',
+    label: 'Listings',
+    aliases: ['listing'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/listings/guide',
+    notes: 'Optional object-library object. Check enablement before assuming records are available.'
+  },
+  {
+    family: 'commerce',
+    objectType: 'services',
+    objectTypeId: '0-162',
+    label: 'Services',
+    aliases: ['service'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/services/guide',
+    notes: 'Optional object-library object. Check enablement before assuming records are available.'
   },
   {
     family: 'activity',
     objectType: 'calls',
+    objectTypeId: '0-48',
     label: 'Calls',
+    aliases: ['call'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/calls/guide'
   },
   {
     family: 'activity',
     objectType: 'meetings',
+    objectTypeId: '0-47',
     label: 'Meetings',
+    aliases: ['meeting'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/meetings/guide'
   },
   {
     family: 'activity',
     objectType: 'notes',
+    objectTypeId: '0-46',
     label: 'Notes',
+    aliases: ['note'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/notes/guide'
   },
   {
     family: 'activity',
     objectType: 'emails',
+    objectTypeId: '0-49',
     label: 'Emails',
+    aliases: ['email'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/emails/guide'
   },
   {
     family: 'activity',
     objectType: 'tasks',
+    objectTypeId: '0-27',
     label: 'Tasks',
+    aliases: ['task'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/tasks/guide'
   },
   {
     family: 'activity',
     objectType: 'communications',
+    objectTypeId: '0-18',
     label: 'Communications',
+    aliases: ['communication'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/communications/guide'
   },
   {
     family: 'activity',
     objectType: 'postal_mail',
+    objectTypeId: '0-116',
     label: 'Postal mail',
+    aliases: ['postal mail', 'postal_mail'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/postal-mail/guide'
   },
   {
     family: 'activity',
     objectType: 'projects',
+    objectTypeId: '0-970',
     label: 'Projects',
+    aliases: ['project'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/projects/guide'
+  },
+  {
+    family: 'optional',
+    objectType: 'appointments',
+    objectTypeId: '0-421',
+    label: 'Appointments',
+    aliases: ['appointment'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/appointments/guide',
+    notes: 'Optional object-library object. Check enablement before assuming records are available.'
+  },
+  {
+    family: 'optional',
+    objectType: 'courses',
+    objectTypeId: '0-410',
+    label: 'Courses',
+    aliases: ['course'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/courses/guide',
+    notes: 'Optional object-library object. Check enablement before assuming records are available.'
+  },
+  {
+    family: 'optional',
+    objectType: 'leads',
+    objectTypeId: '0-136',
+    label: 'Leads',
+    aliases: ['lead'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/leads/guide',
+    notes: 'Optional object-library object. Check enablement before assuming records are available.'
+  },
+  {
+    family: 'optional',
+    objectType: 'feedback_submissions',
+    objectTypeId: '0-19',
+    label: 'Feedback submissions',
+    aliases: ['feedback_submission', 'feedback submission', 'feedback submissions'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/feedback-submissions/guide'
+  },
+  {
+    family: 'optional',
+    objectType: 'goals',
+    objectTypeId: '0-74',
+    label: 'Goals',
+    aliases: ['goal'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/goals/guide'
+  },
+  {
+    family: 'optional',
+    objectType: 'users',
+    objectTypeId: '0-115',
+    label: 'Users',
+    aliases: ['user', 'owner', 'owners'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/users/guide'
   }
 ];
+
+const CRM_OBJECT_TYPE_RESOLUTION_CACHE = new Map();
+
+function normalizeCrmObjectLookupValue(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^hubspot[\s_-]+/, '')
+    .replace(/['"`]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function crmObjectLookupKeys(value) {
+  const normalized = normalizeCrmObjectLookupValue(value);
+  if (!normalized) return [];
+  const keys = new Set([normalized]);
+  for (const suffix of ['_object', '_objects', '_record', '_records']) {
+    if (normalized.endsWith(suffix)) keys.add(normalized.slice(0, -suffix.length));
+  }
+  for (const key of [...keys]) {
+    if (key.endsWith('ies')) keys.add(`${key.slice(0, -3)}y`);
+    if (key.endsWith('s')) keys.add(key.slice(0, -1));
+  }
+  return [...keys].filter(Boolean);
+}
+
+function crmObjectCatalogEntryForOutput(entry) {
+  const output = {
+    family: entry.family,
+    objectType: entry.objectType,
+    objectTypeId: entry.objectTypeId,
+    label: entry.label,
+    docsUrl: entry.docsUrl
+  };
+  if (entry.aliases && entry.aliases.length) output.aliases = [...entry.aliases];
+  if (entry.notes) output.notes = entry.notes;
+  return output;
+}
+
+function standardCrmObjectTypeIndex() {
+  const index = new Map();
+  for (const entry of CRM_OBJECT_TYPE_CATALOG) {
+    const valuesToIndex = [
+      entry.objectType,
+      entry.objectTypeId,
+      entry.label,
+      ...(entry.aliases || [])
+    ];
+    for (const value of valuesToIndex) {
+      for (const key of crmObjectLookupKeys(value)) {
+        if (!index.has(key)) index.set(key, entry);
+      }
+    }
+  }
+  return index;
+}
+
+const STANDARD_CRM_OBJECT_TYPE_INDEX = standardCrmObjectTypeIndex();
+
+function resolveStandardCrmObjectType(input) {
+  const trimmedInput = String(input || '').trim();
+  for (const key of crmObjectLookupKeys(input)) {
+    const entry = STANDARD_CRM_OBJECT_TYPE_INDEX.get(key);
+    if (entry) {
+      const suppliedObjectTypeId = trimmedInput === entry.objectTypeId;
+      return {
+        resolved: true,
+        source: 'standard-catalog',
+        input,
+        objectType: entry.objectType,
+        objectTypeId: entry.objectTypeId,
+        pathObjectType: suppliedObjectTypeId ? entry.objectTypeId : entry.objectType,
+        standard: true,
+        catalogEntry: crmObjectCatalogEntryForOutput(entry)
+      };
+    }
+  }
+  return null;
+}
+
+function looksLikeCustomObjectTypeId(input) {
+  return /^2-\d+$/i.test(String(input || '').trim());
+}
+
+function looksLikeFullyQualifiedCustomObjectName(input) {
+  return /^p\d+_[a-z0-9_]+$/i.test(String(input || '').trim());
+}
+
+function unresolvedCrmObjectType(input) {
+  const pathObjectType = String(input || '').trim();
+  return {
+    resolved: false,
+    source: looksLikeCustomObjectTypeId(pathObjectType) ? 'custom-object-type-id'
+      : (looksLikeFullyQualifiedCustomObjectName(pathObjectType) ? 'custom-fully-qualified-name' : 'unresolved'),
+    input,
+    objectType: pathObjectType,
+    objectTypeId: looksLikeCustomObjectTypeId(pathObjectType) ? pathObjectType : null,
+    pathObjectType,
+    standard: false
+  };
+}
+
+function resolveCrmObjectType(input) {
+  const cacheKey = String(input || '').trim();
+  if (CRM_OBJECT_TYPE_RESOLUTION_CACHE.has(cacheKey)) {
+    return { ...CRM_OBJECT_TYPE_RESOLUTION_CACHE.get(cacheKey) };
+  }
+  const resolved = resolveStandardCrmObjectType(cacheKey) || unresolvedCrmObjectType(cacheKey);
+  CRM_OBJECT_TYPE_RESOLUTION_CACHE.set(cacheKey, resolved);
+  return { ...resolved };
+}
+
+function resolvedCrmPathObjectType(input) {
+  return resolveCrmObjectType(input).pathObjectType;
+}
+
+function resolvedCrmObjectTypeIdOrInput(input) {
+  const resolution = resolveCrmObjectType(input);
+  return resolution.objectTypeId || resolution.pathObjectType;
+}
+
+function schemaLookupValues(schema) {
+  if (!schema || typeof schema !== 'object') return [];
+  const labels = schema.labels && typeof schema.labels === 'object' ? schema.labels : {};
+  return [
+    schema.objectTypeId,
+    schema.fullyQualifiedName,
+    schema.name,
+    labels.singular,
+    labels.plural
+  ].filter(Boolean);
+}
+
+function customSchemaMatchesInput(schema, input) {
+  const wanted = new Set(crmObjectLookupKeys(input));
+  return schemaLookupValues(schema).some((value) => (
+    crmObjectLookupKeys(value).some((key) => wanted.has(key))
+  ));
+}
+
+async function resolveCrmObjectTypeWithCustomFallback(portal, input, flags) {
+  const standard = resolveCrmObjectType(input);
+  if (standard.resolved || standard.source !== 'unresolved') return standard;
+
+  const lookup = await hubspotFetchAllowError(portal, 'GET', '/crm-object-schemas/2026-03/schemas', flags);
+  if (!lookup.ok) {
+    return {
+      ...standard,
+      customLookup: {
+        attempted: true,
+        available: false,
+        status: lookup.status,
+        statusText: lookup.statusText,
+        note: accessNoteForError(lookup.url, lookup.status) || null
+      }
+    };
+  }
+
+  const schemas = lookup.data && Array.isArray(lookup.data.results) ? lookup.data.results : [];
+  const match = schemas.find((schema) => customSchemaMatchesInput(schema, input));
+  if (!match) {
+    return {
+      ...standard,
+      customLookup: {
+        attempted: true,
+        available: true,
+        matched: false,
+        schemaCount: schemas.length
+      }
+    };
+  }
+
+  const objectTypeId = match.objectTypeId || match.fullyQualifiedName || standard.pathObjectType;
+  return {
+    resolved: true,
+    source: 'custom-schema',
+    input,
+    objectType: objectTypeId,
+    objectTypeId: match.objectTypeId || null,
+    pathObjectType: objectTypeId,
+    standard: false,
+    customSchema: {
+      objectTypeId: match.objectTypeId || null,
+      fullyQualifiedName: match.fullyQualifiedName || null,
+      name: match.name || null,
+      labels: match.labels || null
+    },
+    customLookup: {
+      attempted: true,
+      available: true,
+      matched: true,
+      schemaCount: schemas.length
+    }
+  };
+}
 
 function usage() {
   return `hsapi - portal-aware HubSpot API CLI
@@ -303,7 +615,8 @@ function usage() {
 Usage:
   hsapi profiles list [--json]
   hsapi request <METHOD> <PATH_OR_URL> [--portal <name>] [--query k=v] [--body <json|@file>] [--yes] [--read-only] [--paginate]
-  hsapi crm object-types [--family core|commerce|activity|all] [--names-only]
+  hsapi crm object-types [--family core|commerce|activity|optional|all] [--names-only]
+  hsapi crm resolve-object <name|objectTypeId> [--custom-fallback]
   hsapi crm list <objectType> [--portal <name>] [--properties a,b] [--limit n] [--archived] [--count-only]
   hsapi crm get <objectType> <id> [--portal <name>] [--properties a,b] [--properties-with-history a,b] [--id-property name]
   hsapi crm search <objectType> [--portal <name>] --filter property:OP:value [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only]
@@ -2853,6 +3166,59 @@ async function hubspotFetchResponse(url, options, method) {
   }
 }
 
+async function hubspotFetchAllowError(portal, method, inputPath, flags, body, endpointOverride = null) {
+  const url = buildUrl(portal, inputPath, flags);
+  const endpoint = endpointOverride || findEndpointDefinition(method, url.pathname);
+  const auth = requestAuthMetadata(portal, endpoint);
+  if (boolFlag(flags, 'show-request')) {
+    showRequestPreview(portal, method, url, body, endpoint, { auth });
+  }
+
+  const credential = await resolveRequestCredential(portal, auth);
+  const headers = {
+    Accept: 'application/json'
+  };
+  applyCredentialToRequest(url, headers, credential);
+
+  const options = {
+    method,
+    headers
+  };
+  if (body !== undefined) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await hubspotFetchResponse(url, options, method);
+  const text = await response.text();
+  let payload = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch (_error) {
+      payload = text;
+    }
+  }
+
+  const output = {
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    ...responseMeta(response),
+    portal: portal.name,
+    method,
+    url: redactTokenUrl(url.toString())
+  };
+  if (response.ok) {
+    output.data = payload;
+  } else {
+    output.response = redactSensitiveValue(payload);
+    const accessNote = accessNoteForError(output.url, response.status);
+    if (accessNote) output.note = accessNote;
+  }
+  return output;
+}
+
 async function hubspotFetch(portal, method, inputPath, flags, body, endpointOverride = null) {
   const url = buildUrl(portal, inputPath, flags);
   const endpoint = endpointOverride || findEndpointDefinition(method, url.pathname);
@@ -4486,11 +4852,11 @@ function firstCrmResult(data) {
 
 function crmObjectTypesFromFlags(flags) {
   const family = String(flags.family || 'all').toLowerCase();
-  const allowed = new Set(['all', 'core', 'commerce', 'activity']);
-  if (!allowed.has(family)) fail('crm object-types --family must be core, commerce, activity, or all.');
+  const allowed = new Set(['all', 'core', 'commerce', 'activity', 'optional']);
+  if (!allowed.has(family)) fail('crm object-types --family must be core, commerce, activity, optional, or all.');
   const objectTypes = CRM_OBJECT_TYPE_CATALOG
     .filter((entry) => family === 'all' || entry.family === family)
-    .map((entry) => ({ ...entry }));
+    .map((entry) => crmObjectCatalogEntryForOutput(entry));
   if (boolFlag(flags, 'names-only')) {
     return {
       ok: true,
@@ -4913,8 +5279,23 @@ async function runCrm(portal, action, rest, flags) {
     return;
   }
 
-  const objectType = rest[0];
-  if (!objectType) fail('Missing CRM object type.');
+  if (action === 'resolve-object') {
+    const input = rest.join(' ');
+    if (!input) fail('crm resolve-object requires <name|objectTypeId>.');
+    const resolution = boolFlag(flags, 'custom-fallback')
+      ? await resolveCrmObjectTypeWithCustomFallback(portal, input, flags)
+      : resolveCrmObjectType(input);
+    printJson({
+      ok: true,
+      portal: portal.name,
+      ...resolution
+    });
+    return;
+  }
+
+  const objectTypeInput = rest[0];
+  if (!objectTypeInput) fail('Missing CRM object type.');
+  const objectType = resolvedCrmPathObjectType(objectTypeInput);
 
   if (action === 'list') {
     const queryFlags = { ...flags };
@@ -5104,8 +5485,9 @@ async function runCrm(portal, action, rest, flags) {
 }
 
 async function runProperties(portal, action, rest, flags) {
-  const objectType = rest[0];
-  if (!objectType) fail('Missing object type.');
+  const objectTypeInput = rest[0];
+  if (!objectTypeInput) fail('Missing object type.');
+  const objectType = resolvedCrmPathObjectType(objectTypeInput);
   const base = `/crm/properties/2026-03/${pathPart(objectType)}`;
 
   if (action === 'list' || action === 'names') {
@@ -5155,11 +5537,12 @@ async function runProperties(portal, action, rest, flags) {
 }
 
 async function runAssociations(portal, action, rest, flags) {
-  const [fromType, second, third, fourth] = rest;
-  if (!fromType || !second) fail('Missing association arguments.');
+  const [fromTypeInput, second, third, fourth] = rest;
+  if (!fromTypeInput || !second) fail('Missing association arguments.');
+  const fromType = resolvedCrmPathObjectType(fromTypeInput);
 
   if (action === 'types') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const result = await hubspotFetch(portal, 'GET', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/labels`, flags, undefined, endpointDefinitionById('associations.labels'));
     printJson(result);
     return;
@@ -5167,8 +5550,8 @@ async function runAssociations(portal, action, rest, flags) {
 
   if (action === 'list') {
     const fromId = second;
-    const toType = third;
-    if (!toType) fail('associations list requires <fromType> <fromId> <toType>.');
+    if (!third) fail('associations list requires <fromType> <fromId> <toType>.');
+    const toType = resolvedCrmPathObjectType(third);
     const queryFlags = { ...flags, query: values(flags.query) };
     queryFlags.query.push(`limit=${flags.limit || 100}`);
     const result = boolFlag(flags, 'paginate')
@@ -5180,18 +5563,18 @@ async function runAssociations(portal, action, rest, flags) {
 
   if (action === 'create-default') {
     const fromId = second;
-    const toType = third;
     const toId = fourth;
-    if (!toType || !toId) fail('associations create-default requires <fromType> <fromId> <toType> <toId>.');
+    if (!third || !toId) fail('associations create-default requires <fromType> <fromId> <toType> <toId>.');
+    const toType = resolvedCrmPathObjectType(third);
     printJson(await guardedFetch(portal, 'PUT', `/crm/objects/2026-03/${pathPart(fromType)}/${pathPart(fromId)}/associations/default/${pathPart(toType)}/${pathPart(toId)}`, flags));
     return;
   }
 
   if (action === 'create') {
     const fromId = second;
-    const toType = third;
     const toId = fourth;
-    if (!toType || !toId) fail('associations create requires <fromType> <fromId> <toType> <toId>.');
+    if (!third || !toId) fail('associations create requires <fromType> <fromId> <toType> <toId>.');
+    const toType = resolvedCrmPathObjectType(third);
     const body = associationTypesBodyFromFlags(flags);
     printJson(await guardedFetch(portal, 'PUT', `/crm/objects/2026-03/${pathPart(fromType)}/${pathPart(fromId)}/associations/${pathPart(toType)}/${pathPart(toId)}`, flags, body));
     return;
@@ -5199,15 +5582,15 @@ async function runAssociations(portal, action, rest, flags) {
 
   if (action === 'delete' || action === 'archive') {
     const fromId = second;
-    const toType = third;
     const toId = fourth;
-    if (!toType || !toId) fail(`associations ${action} requires <fromType> <fromId> <toType> <toId>.`);
+    if (!third || !toId) fail(`associations ${action} requires <fromType> <fromId> <toType> <toId>.`);
+    const toType = resolvedCrmPathObjectType(third);
     printJson(await guardedFetch(portal, 'DELETE', `/crm/objects/2026-03/${pathPart(fromType)}/${pathPart(fromId)}/associations/${pathPart(toType)}/${pathPart(toId)}`, flags));
     return;
   }
 
   if (action === 'batch-read') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const body = { inputs: parseIdInputs(flags.ids, 'ids') };
     const result = await hubspotFetch(portal, 'POST', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/batch/read`, flags, body);
     printJson(result);
@@ -5215,28 +5598,28 @@ async function runAssociations(portal, action, rest, flags) {
   }
 
   if (action === 'batch-create-default') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const body = associationBatchBodyFromFlags(flags, 'associations batch-create-default');
     printJson(await guardedFetch(portal, 'POST', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/batch/associate/default`, flags, body));
     return;
   }
 
   if (action === 'batch-create') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const body = associationBatchBodyFromFlags(flags, 'associations batch-create');
     printJson(await guardedFetch(portal, 'POST', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/batch/create`, flags, body));
     return;
   }
 
   if (action === 'batch-archive') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const body = associationBatchBodyFromFlags(flags, 'associations batch-archive');
     printJson(await guardedFetch(portal, 'POST', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/batch/archive`, flags, body));
     return;
   }
 
   if (action === 'batch-labels-archive') {
-    const toType = second;
+    const toType = resolvedCrmPathObjectType(second);
     const body = associationBatchBodyFromFlags(flags, 'associations batch-labels-archive');
     printJson(await guardedFetch(portal, 'POST', `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/batch/labels/archive`, flags, body));
     return;
@@ -5339,8 +5722,9 @@ async function runTiers(portal, action, flags) {
 }
 
 async function runPropertyGroups(portal, action, rest, flags) {
-  const objectType = rest[0];
-  if (!objectType) fail('property-groups requires <objectType>.');
+  const objectTypeInput = rest[0];
+  if (!objectTypeInput) fail('property-groups requires <objectType>.');
+  const objectType = resolvedCrmPathObjectType(objectTypeInput);
   const base = `/crm/properties/2026-03/${pathPart(objectType)}/groups`;
 
   if (action === 'list') {
@@ -5379,8 +5763,9 @@ async function runPropertyGroups(portal, action, rest, flags) {
 }
 
 async function runPropertyValidations(portal, action, rest, flags) {
-  const [objectType, propertyName, ruleType] = rest;
-  if (!objectType) fail('property-validations requires <objectType>.');
+  const [objectTypeInput, propertyName, ruleType] = rest;
+  if (!objectTypeInput) fail('property-validations requires <objectType>.');
+  const objectType = resolvedCrmPathObjectType(objectTypeInput);
 
   if (action === 'list') {
     printJson(await hubspotFetch(portal, 'GET', `/crm/property-validations/2026-03/${pathPart(objectType)}`, flags));
@@ -5455,10 +5840,12 @@ async function runSchemas(portal, action, rest, flags) {
 
 async function runObjectLibrary(portal, action, rest, flags) {
   if (action === 'status') {
-    const objectType = rest[0];
-    const target = objectType
-      ? `/crm/v3/object-library/enablement/${pathPart(objectType)}`
-      : '/crm/v3/object-library/enablement';
+    const objectTypeInput = rest[0];
+    const resolution = objectTypeInput ? resolveCrmObjectType(objectTypeInput) : null;
+    const objectTypeId = resolution && resolution.objectTypeId ? resolution.objectTypeId : objectTypeInput;
+    const target = objectTypeInput
+      ? `/crm/object-library/2026-03/enablement/${pathPart(objectTypeId)}`
+      : '/crm/object-library/2026-03/enablement';
     printJson(await hubspotFetch(portal, 'GET', target, flags));
     return;
   }
@@ -5467,8 +5854,10 @@ async function runObjectLibrary(portal, action, rest, flags) {
 }
 
 async function runAssociationLabels(portal, action, rest, flags) {
-  const [fromType, toType, typeId] = rest;
-  if (!fromType || !toType) fail('association-labels requires <fromType> <toType>.');
+  const [fromTypeInput, toTypeInput, typeId] = rest;
+  if (!fromTypeInput || !toTypeInput) fail('association-labels requires <fromType> <toType>.');
+  const fromType = resolvedCrmPathObjectType(fromTypeInput);
+  const toType = resolvedCrmPathObjectType(toTypeInput);
   const base = `/crm/associations/2026-03/${pathPart(fromType)}/${pathPart(toType)}/labels`;
 
   if (action === 'list') {
@@ -5507,8 +5896,10 @@ async function runAssociationLabels(portal, action, rest, flags) {
 }
 
 async function runAssociationLimits(portal, action, rest, flags) {
-  const [fromType, toType] = rest;
-  if (!fromType || !toType) fail('association-limits requires <fromType> <toType>.');
+  const [fromTypeInput, toTypeInput] = rest;
+  if (!fromTypeInput || !toTypeInput) fail('association-limits requires <fromType> <toType>.');
+  const fromType = resolvedCrmPathObjectType(fromTypeInput);
+  const toType = resolvedCrmPathObjectType(toTypeInput);
   const base = `/crm/associations/2026-03/definitions/configurations/${pathPart(fromType)}/${pathPart(toType)}`;
 
   if (action === 'list') {
@@ -5530,8 +5921,9 @@ async function runAssociationLimits(portal, action, rest, flags) {
 }
 
 async function runPipelines(portal, action, rest, flags) {
-  const objectType = rest[0];
-  if (!objectType) fail('pipelines requires <objectType>.');
+  const objectTypeInput = rest[0];
+  if (!objectTypeInput) fail('pipelines requires <objectType>.');
+  const objectType = resolvedCrmPathObjectType(objectTypeInput);
   const base = `/crm/pipelines/2026-03/${pathPart(objectType)}`;
 
   if (action === 'list') {
@@ -5631,8 +6023,9 @@ async function runLists(portal, action, rest, flags) {
   }
 
   if (action === 'get-by-name') {
-    const [objectTypeId, listName] = rest;
-    if (!objectTypeId || !listName) fail('lists get-by-name requires <objectTypeId> <listName>.');
+    const [objectTypeIdInput, listName] = rest;
+    if (!objectTypeIdInput || !listName) fail('lists get-by-name requires <objectTypeId> <listName>.');
+    const objectTypeId = resolvedCrmObjectTypeIdOrInput(objectTypeIdInput);
     const queryFlags = { ...flags, query: values(flags.query) };
     if (boolFlag(flags, 'include-filters')) queryFlags.query.push('includeFilters=true');
     printJson(await hubspotFetch(portal, 'GET', `${base}/object-type-id/${pathPart(objectTypeId)}/name/${pathPart(listName)}`, queryFlags));
@@ -5694,8 +6087,9 @@ async function runLists(portal, action, rest, flags) {
   }
 
   if (action === 'record-memberships') {
-    const [objectTypeId, recordId] = rest;
-    if (!objectTypeId || !recordId) fail('lists record-memberships requires <objectTypeId> <recordId>.');
+    const [objectTypeIdInput, recordId] = rest;
+    if (!objectTypeIdInput || !recordId) fail('lists record-memberships requires <objectTypeId> <recordId>.');
+    const objectTypeId = resolvedCrmObjectTypeIdOrInput(objectTypeIdInput);
     printJson(await hubspotFetch(portal, 'GET', `${base}/records/${pathPart(objectTypeId)}/${pathPart(recordId)}/memberships`, flags));
     return;
   }

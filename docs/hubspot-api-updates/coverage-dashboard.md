@@ -1,6 +1,6 @@
 # HubSpot API Coverage Dashboard
 
-Generated: 2026-05-16
+Generated: 2026-05-19
 
 ## Snapshot
 - Typed commands: 274
