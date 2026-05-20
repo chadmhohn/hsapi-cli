@@ -14,6 +14,8 @@ Auth boundary: CMS REST APIs are `hsapi --portal <profile>` account-scoped comma
 
 ## Common Commands
 
+- `hsapi cms doctor --portal <profile>`
+- `hsapi cms doctor --portal <profile> --content-id 123 --type SITE_PAGE`
 - `hsapi cms site-pages list --state PUBLISHED_OR_SCHEDULED`
 - `hsapi cms site-pages list --state PUBLISHED_OR_SCHEDULED --id-name-map --max-results 20`
 - `hsapi cms site-pages create --name "New page" --template-path @hubspot/basic/templates/layouts/blank.html`
@@ -26,6 +28,7 @@ Auth boundary: CMS REST APIs are `hsapi --portal <profile>` account-scoped comma
 
 ## Safety Notes
 
+- Start with `hsapi cms doctor` when a CMS command fails due to a possible auth or capability mismatch. It runs read-only GET checks only and reports missing scopes/permissions, unavailable account features, and unexpected failures separately.
 - Mutations require `--yes`.
 - Use `--show-request` before publishing or deleting CMS content.
 - Use `--ids-only`, `--names-only`, or `--id-name-map` for CMS discovery/list responses when you only need compact identifiers or page names.

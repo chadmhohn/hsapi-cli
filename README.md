@@ -171,6 +171,8 @@ hsapi conversations message-create thread-1 --text "Following up from hsapi" --a
   hsapi forms list --form-types hubspot --limit 10 --show-request
   hsapi forms submissions form-guid-123 --limit 20 --show-request
   hsapi forms secure-submit 123456 form-guid-123 --fields '[{"name":"email","value":"ada@example.com"}]' --show-request
+  hsapi cms doctor --portal example
+  hsapi cms doctor --portal example --content-id 123 --type SITE_PAGE
   hsapi cms site-pages list --state PUBLISHED_OR_SCHEDULED --show-request
   hsapi cms blog-posts create --name "Draft post" --content-group-id 123 --post-body "<p>Hello</p>" --show-request
   hsapi cms redirects create --route-prefix /old --destination /new --redirect-style 301 --show-request
@@ -240,6 +242,8 @@ HubSpot 401 and 403 responses mean different things by auth family:
 - `developer/client_credentials`: a 401 usually means the developer app client ID/secret pair is invalid. A 403 usually means the app-level token lacks required developer scopes or the developer feature is unavailable.
 
 If `hsapi` CMS access and `hs project ...` access differ, treat that as a credential-boundary signal. `hsapi --portal <profile>` uses the portal profile auth configured for account-scoped REST APIs; the official HubSpot CLI uses its own account and developer-tooling auth. Diagnose each side independently and do not copy tokens between `hsapi` config and `~/.hscli/config.yml`.
+
+For CMS-specific failures, start with `hsapi cms doctor --portal <profile>`. It runs read-only checks for domains, pages, blog posts, redirects, site search, and optional indexed-data access, then separates missing scopes or permissions from unavailable portal features and unexpected API failures without printing credential values.
 
 This matters most for custom objects, schema configuration, association labels/limits, calculated properties, and other tier-gated CRM configuration APIs.
 

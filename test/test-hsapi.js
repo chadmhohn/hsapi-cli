@@ -292,6 +292,31 @@ function startServer() {
   });
 }
 
+function startCmsDoctorFixtureServer(handler) {
+  const requests = [];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      requests.push({ method: req.method, url: req.url, headers: req.headers, body });
+      const url = new URL(req.url, 'http://127.0.0.1');
+      const headers = {
+        'content-type': 'application/json',
+        'x-hubspot-correlation-id': 'cms-doctor-correlation'
+      };
+      handler(req, res, url, headers);
+    });
+  });
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({ server, requests, baseUrl: `http://127.0.0.1:${port}` });
+    });
+  });
+}
+
 function run(args, env) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [CLI, ...args], {
@@ -3653,6 +3678,88 @@ async function main() {
         pathname: '/cms/source-code/2026-03/draft/content/theme/main.css',
         endpointId: 'cms.source_code.delete'
       });
+      {
+        const before = requests.length;
+        const result = await run(['cms', 'doctor', '--content-id', '123', '--type', 'SITE_PAGE'], {
+          ...baseEnv,
+          HSAPI_TEST_TOKEN: 'profile-token'
+        });
+        assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+        const output = parseJsonOutput(result);
+        assert.strictEqual(output.ok, true);
+        assert.strictEqual(output.ready, true);
+        assert.strictEqual(output.portal.name, 'test');
+        assert.strictEqual(output.auth.authFamily, AUTH_FAMILIES.PORTAL_BEARER);
+        assert.strictEqual(output.auth.credentialSource.name, 'HSAPI_TEST_TOKEN');
+        assert.strictEqual(output.summary.success, 7);
+        assert.strictEqual(output.summary.pass, 7);
+        assert(!result.stdout.includes('profile-token'), 'cms doctor must not print token values');
+        assert(output.checks.every((check) => check.request.method === 'GET'), 'cms doctor must only run GET checks');
+        assert.deepStrictEqual(requests.slice(before).map((request) => `${request.method} ${new URL(request.url, baseUrl).pathname}`), [
+          'GET /cms/domains/2026-03',
+          'GET /cms/pages/2026-03/site-pages',
+          'GET /cms/pages/2026-03/landing-pages',
+          'GET /cms/blogs/2026-03/posts',
+          'GET /cms/url-redirects/2026-03',
+          'GET /cms/site-search/2026-03/search',
+          'GET /cms/site-search/2026-03/indexed-data/123'
+        ]);
+      }
+      {
+        const before = requests.length;
+        const output = parseJsonOutput(await run(['cms', 'doctor', '--show-request'], {
+          ...baseEnv,
+          HSAPI_TEST_TOKEN: 'profile-token'
+        }));
+        assert.strictEqual(output.showRequest, true);
+        assert.strictEqual(output.dryRun, true);
+        assert.strictEqual(output.checks.find((check) => check.id === 'indexed_data').skipped, true);
+        assert.strictEqual(requests.length, before, 'cms doctor --show-request must not call network');
+      }
+      {
+        const partial = await startCmsDoctorFixtureServer((req, res, url, headers) => {
+          if (url.pathname === '/cms/pages/2026-03/site-pages') {
+            res.writeHead(403, headers);
+            res.end(JSON.stringify({ category: 'MISSING_SCOPES', message: 'missing content scope' }));
+            return;
+          }
+          if (url.pathname === '/cms/pages/2026-03/landing-pages') {
+            res.writeHead(403, headers);
+            res.end(JSON.stringify({ category: 'FEATURE_NOT_AVAILABLE', message: 'Account does not have access to landing pages feature' }));
+            return;
+          }
+          if (url.pathname === '/cms/blogs/2026-03/posts') {
+            res.writeHead(500, headers);
+            res.end(JSON.stringify({ message: 'upstream failed' }));
+            return;
+          }
+          res.writeHead(200, headers);
+          res.end(JSON.stringify({ total: 1, results: [{ id: 'cms-1', name: 'CMS fixture' }] }));
+        });
+        try {
+          const partialConfig = writeTempConfig(partial.baseUrl);
+          const result = await run(['cms', 'doctor', '--content-id', 'abc'], {
+            HSAPI_PORTALS_CONFIG: partialConfig,
+            HSAPI_TEST_TOKEN: 'partial-token'
+          });
+          assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+          const output = parseJsonOutput(result);
+          assert.strictEqual(output.ok, true);
+          assert.strictEqual(output.ready, false);
+          const byId = Object.fromEntries(output.checks.map((check) => [check.id, check]));
+          assert.strictEqual(byId.site_pages.capability, 'missing_scopes_or_permissions');
+          assert.strictEqual(byId.site_pages.status, 'warn');
+          assert.strictEqual(byId.landing_pages.capability, 'unavailable_feature_or_tier');
+          assert.strictEqual(byId.landing_pages.status, 'warn');
+          assert.strictEqual(byId.blog_posts.capability, 'unexpected_api_failure');
+          assert.strictEqual(byId.blog_posts.status, 'fail');
+          assert.strictEqual(byId.indexed_data.capability, 'success');
+          assert(!result.stdout.includes('partial-token'), 'cms doctor partial output must not print token values');
+          assert(partial.requests.every((request) => request.method === 'GET'), 'cms doctor partial fixture must only receive GET checks');
+        } finally {
+          partial.server.close();
+        }
+      }
       await expectShowRequest(['marketing', 'emails', 'create', '--name', 'Launch Email', '--subject', 'Launch', '--content', '{"templatePath":"@hubspot/email/dnd/welcome.html"}'], baseEnv, {
         requests,
         method: 'POST',
