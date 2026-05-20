@@ -81,6 +81,8 @@ hs project list --account <account>
 
 For CMS capability mismatches, run `hsapi cms doctor --portal <profile>` first. The diagnostic is read-only and reports representative CMS REST surfaces, redacted auth provenance, and whether failures look like missing scopes/permissions, unavailable account features, or unexpected API failures.
 
+For Projects/local developer tooling, run `hsapi project doctor --account <account>` first. The bridge delegates to the official HubSpot CLI, requires an explicit account, previews delegated argv with `--show-request`, and blocks upload/deploy/delete-style commands unless `--yes` is present.
+
 ## MCP Server Mode
 
 Direct CLI mode is the default operator surface: run `hsapi ...` directly from a shell, script, or agent runtime that is allowed to execute commands. MCP server mode is for OpenClaw or another MCP client: the client starts `hsapi-mcp` or `hsapi mcp serve` over stdio and calls the exposed tools.

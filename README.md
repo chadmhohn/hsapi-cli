@@ -64,6 +64,8 @@ Developer API keys are only injected for catalog endpoints marked `auth.family: 
 
 CMS REST API commands and HubSpot Projects use separate auth surfaces. Use `hsapi --portal <profile>` for CMS REST APIs backed by the selected portal profile, and use the official HubSpot CLI `hs project ... --account <account>` for Projects/local developer workflows unless a future explicit bridge delegates to it. `hsapi` must not silently consume `~/.hscli/config.yml` or pasted personal access keys. See `docs/CMS_PROJECTS_AUTH_BOUNDARY.md`.
 
+For explicit HubSpot Projects delegation, use `hsapi project doctor --account <account>` first. The project bridge requires `--account`, reports that it is delegating to the official HubSpot CLI, previews delegated argv with `--show-request`, and blocks mutating or deploy-style commands such as upload/deploy/delete unless `--yes` is present. See `docs/hubspot-api-context/projects.md`.
+
 ## MCP Adapter Planning
 
 Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-project-plan.md. The target is one shared HubSpot config/auth/catalog/request core with two surfaces: direct hsapi CLI usage and a stdio MCP server for OpenClaw or other MCP clients. Live replacement of existing HubSpot MCP entries requires neutral token sourcing plus explicit operator approval for any Gateway restart.
@@ -168,6 +170,9 @@ hsapi webhooks settings 12345 --show-request
 hsapi webhook-journal journal-batch-read --offsets 101,102 --show-request
 hsapi conversations threads --inbox-id inbox-1 --show-request
 hsapi conversations message-create thread-1 --text "Following up from hsapi" --actor-id actor-1 --show-request
+hsapi project doctor --account example
+hsapi project list --account example
+hsapi project deploy --account example --project "my-project" --build 5 --show-request
   hsapi forms list --form-types hubspot --limit 10 --show-request
   hsapi forms submissions form-guid-123 --limit 20 --show-request
   hsapi forms secure-submit 123456 form-guid-123 --fields '[{"name":"email","value":"ada@example.com"}]' --show-request
@@ -244,6 +249,8 @@ HubSpot 401 and 403 responses mean different things by auth family:
 If `hsapi` CMS access and `hs project ...` access differ, treat that as a credential-boundary signal. `hsapi --portal <profile>` uses the portal profile auth configured for account-scoped REST APIs; the official HubSpot CLI uses its own account and developer-tooling auth. Diagnose each side independently and do not copy tokens between `hsapi` config and `~/.hscli/config.yml`.
 
 For CMS-specific failures, start with `hsapi cms doctor --portal <profile>`. It runs read-only checks for domains, pages, blog posts, redirects, site search, and optional indexed-data access, then separates missing scopes or permissions from unavailable portal features and unexpected API failures without printing credential values.
+
+For Projects/local developer tooling failures, run `hsapi project doctor --account <account>`. This verifies official HubSpot CLI availability, account selection, and project-list readiness without mutating HubSpot or reading `hsapi` portal credentials.
 
 This matters most for custom objects, schema configuration, association labels/limits, calculated properties, and other tier-gated CRM configuration APIs.
 

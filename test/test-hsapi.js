@@ -368,6 +368,63 @@ function runNodeScript(scriptPath, args, env) {
   });
 }
 
+function writeMockHsCli() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-mock-hs-'));
+  const binPath = path.join(dir, 'hs');
+  const logPath = path.join(dir, 'calls.jsonl');
+  fs.writeFileSync(binPath, `#!/usr/bin/env node
+const fs = require('fs');
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.HSAPI_MOCK_HS_LOG, JSON.stringify(args) + '\\n');
+if (args[0] === '--version') {
+  console.log('8.4.0');
+  process.exit(0);
+}
+if (args[0] === 'accounts' && args[1] === 'info') {
+  const account = args[2] || 'missing-account';
+  if (account === 'bad-account') {
+    console.error('Account not found: bad-account');
+    process.exit(1);
+  }
+  console.log('Account name: ' + account);
+  console.log('Account ID: 123456');
+  console.log('Scopes available:');
+  console.log('  developer.projects.write');
+  process.exit(0);
+}
+if (args[0] === 'project' && args[1] === 'list') {
+  const account = args[args.indexOf('--account') + 1] || 'unknown';
+  if (account === 'empty') {
+    console.error('✖ ERROR No projects found for account empty [standard] (123456)');
+    process.exit(1);
+  }
+  console.log('No projects found for ' + account);
+  process.exit(0);
+}
+if (args[0] === 'project' && args[1] === 'deploy') {
+  console.log('Deploy delegated for ' + (args[args.indexOf('--project') + 1] || 'unknown-project'));
+  process.exit(0);
+}
+if (args[0] === 'project' && args[1] === 'info') {
+  console.log('Project info');
+  process.exit(0);
+}
+console.log('mock hs called: ' + args.join(' '));
+process.exit(0);
+`, 'utf8');
+  fs.chmodSync(binPath, 0o755);
+  return { dir, binPath, logPath };
+}
+
+function readMockHsCalls(logPath) {
+  if (!fs.existsSync(logPath)) return [];
+  return fs.readFileSync(logPath, 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
 function runMcpConversation(messages, env, expectedResponses, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [MCP_CLI], {
@@ -550,6 +607,80 @@ async function main() {
         'postal_mail',
         'projects'
       ]);
+    }
+
+    {
+      const mockHs = writeMockHsCli();
+      const projectEnv = {
+        HSAPI_PORTALS_CONFIG: path.join(os.tmpdir(), 'hsapi-project-bridge-no-config.json'),
+        HSAPI_MOCK_HS_LOG: mockHs.logPath
+      };
+      const doctor = await run(['project', 'doctor', '--account', 'sandbox', '--hs-bin', mockHs.binPath], projectEnv);
+      assert.strictEqual(doctor.status, 0, doctor.stderr || doctor.stdout);
+      const doctorOutput = parseJsonOutput(doctor);
+      assert.strictEqual(doctorOutput.ready, true);
+      assert.strictEqual(doctorOutput.delegatedTo, 'official_hubspot_cli');
+      assert.strictEqual(doctorOutput.account.selector, 'sandbox');
+      assert.match(doctorOutput.account.note, /does not treat ~\/\.hscli\/config\.yml as portal bearer auth/);
+      assert(!doctor.stdout.includes('developer-projects-secret'), 'project doctor must not print token-like values');
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [
+        ['--version'],
+        ['accounts', 'info', 'sandbox'],
+        ['project', 'list', '--account', 'sandbox']
+      ]);
+
+      fs.writeFileSync(mockHs.logPath, '');
+      const preview = await run(['project', 'list', '--account', 'sandbox', '--hs-bin', mockHs.binPath, '--compact', '--show-request'], projectEnv);
+      assert.strictEqual(preview.status, 0, preview.stderr || preview.stdout);
+      const previewOutput = parseJsonOutput(preview);
+      assert.strictEqual(previewOutput.ok, true);
+      assert.strictEqual(previewOutput.dryRun, true);
+      assert.strictEqual(previewOutput.command.display, 'hs project list --account sandbox');
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [], 'project --show-request must not call hs');
+
+      const list = await run(['project', 'list', '--account', 'sandbox', '--hs-bin', mockHs.binPath], projectEnv);
+      assert.strictEqual(list.status, 0, list.stderr || list.stdout);
+      const listOutput = parseJsonOutput(list);
+      assert.strictEqual(listOutput.ok, true);
+      assert.strictEqual(listOutput.result.stdout, 'No projects found for sandbox');
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [
+        ['project', 'list', '--account', 'sandbox']
+      ]);
+
+      fs.writeFileSync(mockHs.logPath, '');
+      const emptyList = await run(['project', 'list', '--account', 'empty', '--hs-bin', mockHs.binPath], projectEnv);
+      assert.strictEqual(emptyList.status, 0, emptyList.stderr || emptyList.stdout);
+      const emptyListOutput = parseJsonOutput(emptyList);
+      assert.strictEqual(emptyListOutput.ok, true);
+      assert.strictEqual(emptyListOutput.result.normalizedReason, 'no_projects_found');
+      assert.strictEqual(emptyListOutput.result.empty, true);
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [
+        ['project', 'list', '--account', 'empty']
+      ]);
+
+      fs.writeFileSync(mockHs.logPath, '');
+      const blockedDeploy = await run(['project', 'deploy', '--account', 'sandbox', '--project', 'demo', '--build', '5', '--hs-bin', mockHs.binPath], projectEnv);
+      assert.strictEqual(blockedDeploy.status, 2, blockedDeploy.stderr || blockedDeploy.stdout);
+      const blockedOutput = parseJsonOutput(blockedDeploy);
+      assert.strictEqual(blockedOutput.ok, false);
+      assert.strictEqual(blockedOutput.dryRun, true);
+      assert.match(blockedOutput.message, /blocked/);
+      assert.strictEqual(blockedOutput.safety.requiresConfirmation, true);
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [], 'project deploy without --yes must not call hs');
+
+      const confirmedDeploy = await run(['project', 'deploy', '--account', 'sandbox', '--project', 'demo', '--build', '5', '--hs-bin', mockHs.binPath, '--yes'], projectEnv);
+      assert.strictEqual(confirmedDeploy.status, 0, confirmedDeploy.stderr || confirmedDeploy.stdout);
+      const confirmedOutput = parseJsonOutput(confirmedDeploy);
+      assert.strictEqual(confirmedOutput.mutationConfirmed, true);
+      assert.strictEqual(confirmedOutput.command.display, 'hs project deploy --project demo --build 5 --account sandbox');
+      assert.strictEqual(confirmedOutput.result.stdout, 'Deploy delegated for demo');
+      assert.deepStrictEqual(readMockHsCalls(mockHs.logPath), [
+        ['project', 'deploy', '--project', 'demo', '--build', '5', '--account', 'sandbox']
+      ]);
+
+      const missingAccount = await run(['project', 'list', '--hs-bin', mockHs.binPath], projectEnv);
+      assert.notStrictEqual(missingAccount.status, 0);
+      assert.match(missingAccount.stderr, /requires --account/);
     }
 
     {
