@@ -69,6 +69,16 @@ hsapi <command> --show-request
 
 `--show-request` prints `authFamily`, `authSubtype`, scopes, and redacted credential source names before any request is sent.
 
+## CMS vs HubSpot Projects Auth
+
+CMS REST API commands use `hsapi --portal <profile>` and the selected portal profile auth, usually `portal_bearer`. HubSpot Projects and local developer workflows remain official HubSpot CLI workflows:
+
+```bash
+hs project list --account <account>
+```
+
+`hsapi` must not silently consume `~/.hscli/config.yml`, HubSpot CLI personal access keys, or pasted secrets as portal credentials. If CMS commands work in `hsapi` but project commands fail in `hs`, fix the HubSpot CLI account/auth setup. If `hs project ...` works but `hsapi` CMS commands fail, fix the `hsapi` portal token, scopes, or portal feature access. Use `docs/CMS_PROJECTS_AUTH_BOUNDARY.md` as the operational boundary.
+
 ## MCP Server Mode
 
 Direct CLI mode is the default operator surface: run `hsapi ...` directly from a shell, script, or agent runtime that is allowed to execute commands. MCP server mode is for OpenClaw or another MCP client: the client starts `hsapi-mcp` or `hsapi mcp serve` over stdio and calls the exposed tools.
