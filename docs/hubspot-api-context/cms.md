@@ -2,6 +2,8 @@
 
 The CMS slice covers HubSpot-hosted content operations: site pages, landing pages, blog posts, URL redirects, domains, and site search.
 
+Auth boundary: CMS REST APIs are `hsapi --portal <profile>` account-scoped commands backed by the selected portal profile, usually `portal_bearer`. HubSpot Projects and local developer workflows remain official HubSpot CLI `hs project ... --account <account>` workflows unless `hsapi` grows an explicit bridge. Do not silently read `~/.hscli/config.yml` or HubSpot CLI personal access keys for CMS commands. See `docs/CMS_PROJECTS_AUTH_BOUNDARY.md`.
+
 ## Working Notes
 
 - Pages and blog posts have draft/live flows. Use draft read/update/reset before `push-live` or `schedule`.

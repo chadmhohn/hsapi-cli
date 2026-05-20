@@ -62,6 +62,8 @@ Endpoint catalog entries declare auth metadata with one of the shared auth famil
 
 Developer API keys are only injected for catalog endpoints marked `auth.family: developer` and `auth.subtype: developer_api_key`; current typed usage is classic app webhooks, where `hapikey` is added as a query parameter and the app ID comes from the command path. Personal access keys are treated as bearer credentials only for endpoints explicitly cataloged as `developer/personal_access_key`, matching HubSpot CLI and local developer-tooling workflows. Webhooks Journal is cataloged as `developer/client_credentials`; `hsapi` requests a short-lived app-level OAuth token with the endpoint scopes and stores it in the developer token cache, which is separate from the installed-app OAuth cache.
 
+CMS REST API commands and HubSpot Projects use separate auth surfaces. Use `hsapi --portal <profile>` for CMS REST APIs backed by the selected portal profile, and use the official HubSpot CLI `hs project ... --account <account>` for Projects/local developer workflows unless a future explicit bridge delegates to it. `hsapi` must not silently consume `~/.hscli/config.yml` or pasted personal access keys. See `docs/CMS_PROJECTS_AUTH_BOUNDARY.md`.
+
 ## MCP Adapter Planning
 
 Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-project-plan.md. The target is one shared HubSpot config/auth/catalog/request core with two surfaces: direct hsapi CLI usage and a stdio MCP server for OpenClaw or other MCP clients. Live replacement of existing HubSpot MCP entries requires neutral token sourcing plus explicit operator approval for any Gateway restart.
@@ -236,6 +238,8 @@ HubSpot 401 and 403 responses mean different things by auth family:
 - `developer/developer_api_key`: a 401 usually means the developer API key env var is missing or invalid. A 403 can mean the app/account is not allowed to manage that developer surface or the endpoint does not accept that developer credential shape.
 - `developer/personal_access_key`: a 401 usually means the personal access key is missing or invalid. A 403 can mean HubSpot rejected user-level developer auth for an account API endpoint; do not retry by falling back to portal bearer unless catalog metadata requires `portal_bearer`.
 - `developer/client_credentials`: a 401 usually means the developer app client ID/secret pair is invalid. A 403 usually means the app-level token lacks required developer scopes or the developer feature is unavailable.
+
+If `hsapi` CMS access and `hs project ...` access differ, treat that as a credential-boundary signal. `hsapi --portal <profile>` uses the portal profile auth configured for account-scoped REST APIs; the official HubSpot CLI uses its own account and developer-tooling auth. Diagnose each side independently and do not copy tokens between `hsapi` config and `~/.hscli/config.yml`.
 
 This matters most for custom objects, schema configuration, association labels/limits, calculated properties, and other tier-gated CRM configuration APIs.
 

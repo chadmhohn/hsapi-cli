@@ -25,6 +25,7 @@ This project is not ready for public release until these checks are complete.
 - Run `npm pack --dry-run --json`.
 - Run the installed-tarball smoke test from a temp prefix.
 - Verify `hsapi-mcp` and `hsapi mcp serve` are packaged stdio MCP entry points and that `docs/MCP.md` plus `examples/mcp-server.sample.json` stay secret-free.
+- Verify `docs/CMS_PROJECTS_AUTH_BOUNDARY.md` ships in the package and still says CMS REST APIs use `hsapi --portal <profile>` while HubSpot Projects use explicit official HubSpot CLI project tooling.
 - Test installed tarball from outside this workspace.
 - Add mock tests for every typed command path/body/query mapping.
 - Add docs/context overlays for high-risk and obscure API families.

@@ -34,6 +34,11 @@ const REQUIRED_DOC_PHRASES = [
   ['docs/DESKTOP_MCP_QUICKSTART.md', 'Claude Desktop Quickstart'],
   ['docs/DESKTOP_MCP_QUICKSTART.md', 'HSAPI_PORTALS_CONFIG'],
   ['docs/MCP.md', 'Reversible Local Migration Runbook'],
+  ['docs/CMS_PROJECTS_AUTH_BOUNDARY.md', 'CMS and Projects Auth Boundary'],
+  ['docs/CMS_PROJECTS_AUTH_BOUNDARY.md', 'hsapi --portal <profile>'],
+  ['docs/CMS_PROJECTS_AUTH_BOUNDARY.md', 'hs project'],
+  ['docs/CMS_PROJECTS_AUTH_BOUNDARY.md', '~/.hscli/config.yml'],
+  ['docs/CMS_PROJECTS_AUTH_BOUNDARY.md', 'must not silently consume'],
   ['docs/OPENCLAW_MCP_CUTOVER.md', 'OpenClaw MCP Cutover Runbook'],
   ['docs/OPENCLAW_MCP_CUTOVER.md', 'hubspot-portal-alpha'],
   ['docs/OPENCLAW_MCP_CUTOVER.md', 'hubspot-portal-beta'],
@@ -80,6 +85,10 @@ const REQUIRED_MCP_PACKAGE_FILES = [
 const REQUIRED_NEUTRAL_TOKEN_FILES = [
   'examples/neutral-token-wrapper.sample.sh',
   'examples/portals.multi-portal.sample.json'
+];
+
+const REQUIRED_AUTH_BOUNDARY_PACKAGE_FILES = [
+  'docs/CMS_PROJECTS_AUTH_BOUNDARY.md'
 ];
 
 const REQUIRED_BIN_ENTRIES = {
@@ -280,6 +289,16 @@ function validateMcpPackageSurface(failures, files) {
     requiredFiles: REQUIRED_MCP_PACKAGE_FILES,
     binEntries: REQUIRED_BIN_ENTRIES
   };
+}
+
+function validateAuthBoundaryPackageSurface(failures, files) {
+  const packageFileSet = new Set(files);
+  for (const relativePath of REQUIRED_AUTH_BOUNDARY_PACKAGE_FILES) {
+    if (!packageFileSet.has(relativePath)) {
+      failures.push('Package dry-run must include auth-boundary doc: ' + relativePath + '.');
+    }
+  }
+  return { requiredFiles: REQUIRED_AUTH_BOUNDARY_PACKAGE_FILES };
 }
 
 function validateMcpToolMetadata(failures) {
@@ -555,6 +574,7 @@ function validateOpenClawCutover(failures, files) {
 function validateMcp(failures, files) {
   return {
     packageSurface: validateMcpPackageSurface(failures, files),
+    authBoundaryPackageSurface: validateAuthBoundaryPackageSurface(failures, files),
     toolMetadata: validateMcpToolMetadata(failures),
     sampleConfig: validateMcpSampleConfig(failures),
     safety: validateMcpServerSafety(failures),
