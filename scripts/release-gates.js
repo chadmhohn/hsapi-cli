@@ -21,10 +21,13 @@ const CATALOG_FILE = path.join(PACKAGE_ROOT, 'data', 'hubspot-api-catalog.json')
 
 const REQUIRED_DOC_PHRASES = [
   ['README.md', 'hsapi auth doctor'],
+  ['README.md', 'hsapi cms doctor'],
   ['README.md', 'hsapi catalog commands'],
   ['docs/INSTALL.md', 'Auth Families'],
   ['docs/INSTALL.md', 'hsapi auth doctor'],
+  ['docs/INSTALL.md', 'hsapi cms doctor'],
   ['docs/INSTALL.md', 'MCP Server Mode'],
+  ['docs/hubspot-api-context/cms.md', 'hsapi cms doctor'],
   ['docs/MCP.md', 'Direct CLI Mode'],
   ['docs/MCP.md', 'MCP Server Mode'],
   ['docs/MCP.md', 'OpenClaw Config'],
