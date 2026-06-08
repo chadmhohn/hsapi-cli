@@ -8,6 +8,10 @@ const root = path.resolve(__dirname, '..');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-cli-pack-smoke-'));
 const prefix = path.join(tempRoot, 'prefix');
 const cacheDir = path.join(tempRoot, 'npm-cache');
+const npmBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const hsapiBin = process.platform === 'win32'
+  ? path.join(prefix, 'hsapi.cmd')
+  : path.join(prefix, 'bin', 'hsapi');
 const env = {
   ...process.env,
   npm_config_cache: cacheDir,
@@ -16,8 +20,15 @@ const env = {
 
 let tarballPath;
 
+function execCommand(command, args, options) {
+  if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command)) {
+    return execFileSync(process.env.ComSpec || 'cmd.exe', ['/d', '/c', command, ...args], options);
+  }
+  return execFileSync(command, args, options);
+}
+
 function runNpm(args, options = {}) {
-  return execFileSync('npm', args, {
+  return execCommand(npmBin, args, {
     cwd: root,
     env,
     encoding: 'utf8',
@@ -34,14 +45,16 @@ try {
   const pack = JSON.parse(packOutput)[0];
   tarballPath = path.join(root, pack.filename);
 
-  execFileSync('npm', ['install', '-g', '--prefix', prefix, tarballPath], {
+  execCommand(npmBin, ['install', '-g', '--prefix', prefix, tarballPath], {
     cwd: root,
     env,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  const installedRoot = path.join(prefix, 'lib', 'node_modules', 'hsapi-cli');
+  const installedRoot = process.platform === 'win32'
+    ? path.join(prefix, 'node_modules', 'hsapi-cli')
+    : path.join(prefix, 'lib', 'node_modules', 'hsapi-cli');
   const requiredFiles = [
     'AGENTS.md',
     'CLAUDE.md',
@@ -58,7 +71,7 @@ try {
     }
   }
 
-  const helpOutput = execFileSync(path.join(prefix, 'bin', 'hsapi'), ['--help'], {
+  const helpOutput = execCommand(hsapiBin, ['--help'], {
     cwd: root,
     env,
     encoding: 'utf8',

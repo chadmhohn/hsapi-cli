@@ -377,7 +377,16 @@ function queryArgv(query) {
 
 function bodyArgv(args) {
   if (!Object.prototype.hasOwnProperty.call(args, 'body')) return [];
-  return ['--body', JSON.stringify(args.body)];
+  return ['--body', JSON.stringify(normalizedBodyArg(args.body))];
+}
+
+function normalizedBodyArg(body) {
+  if (typeof body !== 'string') return body;
+  try {
+    return JSON.parse(body);
+  } catch (_error) {
+    throw new Error('body must be a JSON value. Pass MCP body as an object/array, or as a valid JSON-encoded string.');
+  }
 }
 
 function requestArgv(args) {

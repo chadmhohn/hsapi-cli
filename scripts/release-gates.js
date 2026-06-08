@@ -18,6 +18,14 @@ const { TOOLS: MCP_TOOLS } = require('../src/mcp-server');
 
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const CATALOG_FILE = path.join(PACKAGE_ROOT, 'data', 'hubspot-api-catalog.json');
+const NPM_BIN = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+function execCommand(command, args, options) {
+  if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command)) {
+    return execFileSync(process.env.ComSpec || 'cmd.exe', ['/d', '/c', command, ...args], options);
+  }
+  return execFileSync(command, args, options);
+}
 
 const REQUIRED_DOC_PHRASES = [
   ['README.md', 'hsapi auth doctor'],
@@ -175,7 +183,7 @@ function readJson(relativePath) {
 }
 
 function packageFiles() {
-  const output = execFileSync('npm', ['pack', '--dry-run', '--json'], {
+  const output = execCommand(NPM_BIN, ['pack', '--dry-run', '--json'], {
     cwd: PACKAGE_ROOT,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe']
@@ -277,7 +285,7 @@ function validateMcpPackageSurface(failures, files) {
     if (!text.startsWith('#!/usr/bin/env node')) {
       failures.push('Bin entry file must start with a node shebang: ' + relativePath + '.');
     }
-    if ((fs.statSync(absolutePath).mode & 0o111) === 0) {
+    if (process.platform !== 'win32' && (fs.statSync(absolutePath).mode & 0o111) === 0) {
       failures.push('Bin entry file must be executable: ' + relativePath + '.');
     }
   }
@@ -492,26 +500,28 @@ function validateNeutralTokenSource(failures, files) {
     failures.push('Neutral token-source wrapper must not depend on old HubSpot MCP entry names.');
   }
 
-  try {
-    const dryRun = execFileSync('bash', ['examples/neutral-token-wrapper.sample.sh'], {
-      cwd: PACKAGE_ROOT,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        HSAPI_PORTALS_CONFIG: path.join(PACKAGE_ROOT, 'examples', 'portals.multi-portal.sample.json'),
-        HSAPI_SECRET_LOOKUP_CMD: '/bin/false',
-        HSAPI_NEUTRAL_TOKEN_PROFILES: 'portal-alpha,portal-beta',
-        HSAPI_NEUTRAL_TOKEN_DRY_RUN: '1',
-        HUBSPOT_ACCESS_TOKEN_PORTAL_ALPHA: '',
-        HUBSPOT_ACCESS_TOKEN_PORTAL_BETA: ''
-      },
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-    if (/pat-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9]/.test(dryRun)) {
-      failures.push('Neutral token-source dry-run output must not include token-like values.');
+  if (process.platform !== 'win32') {
+    try {
+      const dryRun = execFileSync('bash', ['examples/neutral-token-wrapper.sample.sh'], {
+        cwd: PACKAGE_ROOT,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          HSAPI_PORTALS_CONFIG: path.join(PACKAGE_ROOT, 'examples', 'portals.multi-portal.sample.json'),
+          HSAPI_SECRET_LOOKUP_CMD: '/bin/false',
+          HSAPI_NEUTRAL_TOKEN_PROFILES: 'portal-alpha,portal-beta',
+          HSAPI_NEUTRAL_TOKEN_DRY_RUN: '1',
+          HUBSPOT_ACCESS_TOKEN_PORTAL_ALPHA: '',
+          HUBSPOT_ACCESS_TOKEN_PORTAL_BETA: ''
+        },
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      if (/pat-[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9]/.test(dryRun)) {
+        failures.push('Neutral token-source dry-run output must not include token-like values.');
+      }
+    } catch (error) {
+      failures.push('Neutral token-source wrapper dry-run failed: ' + error.message + '.');
     }
-  } catch (error) {
-    failures.push('Neutral token-source wrapper dry-run failed: ' + error.message + '.');
   }
 
   return {
