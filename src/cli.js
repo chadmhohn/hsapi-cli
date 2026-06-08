@@ -5070,7 +5070,10 @@ function projectBridgeCommandPreview(hsBin, args) {
 }
 
 function runHubSpotCliProjectCommand(hsBin, args, options = {}) {
-  const result = spawnSync(hsBin, args, {
+  const useCmdShim = process.platform === 'win32' && !/\.(?:exe|com)$/i.test(hsBin);
+  const command = useCmdShim ? (process.env.ComSpec || 'cmd.exe') : hsBin;
+  const commandArgs = useCmdShim ? ['/d', '/c', hsBin, ...args] : args;
+  const result = spawnSync(command, commandArgs, {
     cwd: process.cwd(),
     env: process.env,
     encoding: 'utf8',

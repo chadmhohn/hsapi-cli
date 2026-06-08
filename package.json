@@ -49,7 +49,7 @@
     "test:live-read": "node scripts/live-read-smoke.js --json",
     "test:disposable-write": "node scripts/disposable-write-smoke.js --json",
     "test:pack-install": "node scripts/pack-install-smoke.js",
-    "test": "node test/test-hsapi.js && node bin/hsapi.js catalog coverage && node scripts/update-hubspot-api-catalog.js --offline --json && node scripts/release-gates.js && HSAPI_PORTALS_CONFIG=examples/portals.sample.json node bin/hsapi.js account details --show-request && node scripts/pack-install-smoke.js",
+    "test": "node test/test-hsapi.js && node bin/hsapi.js catalog coverage && node scripts/update-hubspot-api-catalog.js --offline --json && node scripts/release-gates.js && node scripts/sample-show-request.js && node scripts/pack-install-smoke.js",
     "pack:dry-run": "npm pack --dry-run"
   },
   "engines": {

@@ -370,9 +370,10 @@ function runNodeScript(scriptPath, args, env) {
 
 function writeMockHsCli() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-mock-hs-'));
-  const binPath = path.join(dir, 'hs');
+  const scriptPath = process.platform === 'win32' ? path.join(dir, 'hs-mock.js') : path.join(dir, 'hs');
+  const binPath = process.platform === 'win32' ? path.join(dir, 'hs.cmd') : scriptPath;
   const logPath = path.join(dir, 'calls.jsonl');
-  fs.writeFileSync(binPath, `#!/usr/bin/env node
+  fs.writeFileSync(scriptPath, `#!/usr/bin/env node
 const fs = require('fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.HSAPI_MOCK_HS_LOG, JSON.stringify(args) + '\\n');
@@ -412,7 +413,10 @@ if (args[0] === 'project' && args[1] === 'info') {
 console.log('mock hs called: ' + args.join(' '));
 process.exit(0);
 `, 'utf8');
-  fs.chmodSync(binPath, 0o755);
+  fs.chmodSync(scriptPath, 0o755);
+  if (process.platform === 'win32') {
+    fs.writeFileSync(binPath, `@echo off\r\n"${process.execPath}" "%~dp0hs-mock.js" %*\r\n`, 'utf8');
+  }
   return { dir, binPath, logPath };
 }
 
@@ -857,8 +861,38 @@ async function main() {
               path: '/uncataloged/test'
             }
           }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 6,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts',
+              body: { properties: { email: 'ada@example.com' } },
+              showRequest: true
+            }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 7,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts',
+              body: '{"properties":{"email":"ada@example.com"}}',
+              showRequest: true
+            }
+          }
         }
-      ], { ...baseEnv, HSAPI_TEST_TOKEN: 'mcp-token' }, 5);
+      ], { ...baseEnv, HSAPI_TEST_TOKEN: 'mcp-token' }, 7);
       assert.strictEqual(mcp.stderr, '');
       const commandRead = mcpStructuredContent(mcp.responses[1]);
       assert.strictEqual(commandRead.ok, true);
@@ -900,6 +934,13 @@ async function main() {
       assert.strictEqual(uncataloged.error.code, 'not_catalog_backed');
       assert.strictEqual(uncataloged.safety.catalogBacked, false);
       assert.strictEqual(uncataloged.preview.auth.provenance, 'generic_request_default');
+      const objectBodyPreview = mcpStructuredContent(mcp.responses[5]);
+      assert.strictEqual(objectBodyPreview.ok, true);
+      assert.deepStrictEqual(objectBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
+
+      const stringBodyPreview = mcpStructuredContent(mcp.responses[6]);
+      assert.strictEqual(stringBodyPreview.ok, true);
+      assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
     }
 

@@ -11,6 +11,10 @@ const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const CATALOG_FILE = path.join(PACKAGE_ROOT, 'data', 'hubspot-api-catalog.json');
 const REPORT_DIR = path.join(PACKAGE_ROOT, 'docs', 'hubspot-api-updates');
 
+function repoRelativePath(filePath) {
+  return path.relative(PACKAGE_ROOT, filePath).split(path.sep).join('/');
+}
+
 const SOURCE_DOCS = [
   {
     id: 'llms',
@@ -682,7 +686,7 @@ async function main() {
       && comparison.failedRequiredSources.length === 0,
     date,
     mode: flags.offline ? 'offline' : 'network',
-    catalog: path.relative(PACKAGE_ROOT, CATALOG_FILE),
+    catalog: repoRelativePath(CATALOG_FILE),
     health,
     sources,
     comparison,
@@ -692,7 +696,7 @@ async function main() {
   if (flags['write-proposals']) {
     fs.mkdirSync(REPORT_DIR, { recursive: true });
     const proposalsPath = path.join(REPORT_DIR, `${date}.proposals.json`);
-    result.proposalsPath = path.relative(PACKAGE_ROOT, proposalsPath);
+    result.proposalsPath = repoRelativePath(proposalsPath);
     fs.writeFileSync(proposalsPath, `${JSON.stringify(proposals, null, 2)}\n`);
   }
 
@@ -700,7 +704,7 @@ async function main() {
     fs.mkdirSync(REPORT_DIR, { recursive: true });
     const reportPath = path.join(REPORT_DIR, `${date}.md`);
     fs.writeFileSync(reportPath, renderReport(result));
-    result.report = path.relative(PACKAGE_ROOT, reportPath);
+    result.report = repoRelativePath(reportPath);
   }
 
   if (flags.json) {
