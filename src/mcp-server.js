@@ -2,6 +2,7 @@ const { runCli } = require('./cli');
 const packageJson = require('../package.json');
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
+const SUPPORTED_PROTOCOL_VERSIONS = Object.freeze(['2024-11-05', '2025-03-26', '2025-06-18']);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const READ_RISKS = new Set(['read', 'sensitive-read']);
 const DEFAULT_MCP_MAX_RESULTS = 50;
@@ -608,8 +609,11 @@ async function handleRequest(message) {
   const params = message.params || {};
 
   if (method === 'initialize') {
+    const requestedProtocolVersion = typeof params.protocolVersion === 'string' ? params.protocolVersion : null;
     return jsonRpcResult(id, {
-      protocolVersion: params.protocolVersion || MCP_PROTOCOL_VERSION,
+      protocolVersion: requestedProtocolVersion && SUPPORTED_PROTOCOL_VERSIONS.includes(requestedProtocolVersion)
+        ? requestedProtocolVersion
+        : MCP_PROTOCOL_VERSION,
       capabilities: {
         tools: {}
       },
@@ -708,13 +712,15 @@ function serveMcpStdio(options = {}) {
       buffer = parsed.rest;
       for (const entry of parsed.messages) {
         const { message, mode } = entry;
-        if (!message.id && String(message.method || '').startsWith('notifications/')) continue;
+        // JSON-RPC: a message without an id is a notification (of any method name)
+        // and must never receive a response. id 0 is a valid request id.
+        if (message.id === undefined || message.id === null) continue;
         queue = queue.then(async () => {
           const response = await handleRequest(message);
           if (response) writeMessage(stdout, response, mode);
         }).catch((error) => {
           stderr.write((error.stack || error.message) + '\n');
-          if (message.id) writeMessage(stdout, jsonRpcError(message.id, -32603, error.message), mode);
+          writeMessage(stdout, jsonRpcError(message.id, -32603, error.message), mode);
         });
       }
     } catch (error) {

@@ -797,6 +797,49 @@ async function main() {
     }
 
     {
+      // Issue #16: id-less notifications of any method name must be ignored (no
+      // id-less responses written), and initialize must clamp unknown protocol versions.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: 'draft-9999-test',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-hygiene', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'initialized' },
+        { jsonrpc: '2.0', method: 'cancelled', params: { reason: 'test' } },
+        { jsonrpc: '2.0', id: 2, method: 'tools/list' }
+      ], baseEnv, 2);
+      assert.strictEqual(mcp.stderr, '');
+      assert.strictEqual(mcp.responses.length, 2);
+      assert.strictEqual(mcp.responses[0].result.protocolVersion, '2024-11-05');
+      assert(mcp.responses.every((response) => response.id !== undefined && response.id !== null));
+      assert.strictEqual(mcp.responses[1].id, 2);
+      assert(Array.isArray(mcp.responses[1].result.tools));
+
+      const supported = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2025-06-18',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-hygiene-2', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', id: 2, method: 'ping' }
+      ], baseEnv, 2);
+      assert.strictEqual(supported.stderr, '');
+      assert.strictEqual(supported.responses[0].result.protocolVersion, '2025-06-18');
+      assert.strictEqual(supported.responses[1].id, 2);
+    }
+
+    {
       const before = requests.length;
       const mcp = await runMcpConversation([
         {
