@@ -131,6 +131,21 @@ function startServer() {
         res.end(JSON.stringify({ message: 'rate limited once' }));
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/crm/objects/2026-03/retry_targets/search') {
+        if (routeCounts[routeKey] === 1) {
+          res.writeHead(429, { ...headers, 'retry-after': '0' });
+          res.end(JSON.stringify({ message: 'search rate limited once' }));
+          return;
+        }
+        res.writeHead(200, headers);
+        res.end(JSON.stringify({ total: 0, results: [] }));
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/crm/objects/2026-03/retry_targets') {
+        res.writeHead(429, { ...headers, 'retry-after': '0' });
+        res.end(JSON.stringify({ message: 'always rate limited' }));
+        return;
+      }
       if (req.method === 'POST' && url.pathname === '/oauth/2026-03/token') {
         const params = new URLSearchParams(body);
         if (params.get('grant_type') === 'client_credentials') {
@@ -990,6 +1005,23 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #22: catalog read-only POSTs (CRM search) retry transient 429s like
+      // safe GETs do; mutating POSTs never retry.
+      const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+      const searchKey = 'POST /crm/objects/2026-03/retry_targets/search';
+      const searchBefore = routeCounts[searchKey] || 0;
+      const searchResult = parseJsonOutput(await run(['crm', 'search', 'retry_targets', '--filter', 'email:HAS_PROPERTY'], env));
+      assert.strictEqual(searchResult.ok, true);
+      assert.strictEqual((routeCounts[searchKey] || 0) - searchBefore, 2, 'read-only POST search should retry one transient 429');
+
+      const createKey = 'POST /crm/objects/2026-03/retry_targets';
+      const createBefore = routeCounts[createKey] || 0;
+      const createResult = await run(['crm', 'create', 'retry_targets', '--properties', '{"email":"x@example.com"}', '--yes'], env);
+      assert.notStrictEqual(createResult.status, 0);
+      assert.strictEqual((routeCounts[createKey] || 0) - createBefore, 1, 'mutating POST must never retry');
     }
 
     {

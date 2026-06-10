@@ -3143,12 +3143,18 @@ function safeRetryLimit() {
   return Math.min(value, 3);
 }
 
-function retryDelayMs(response) {
+const MAX_RETRY_AFTER_MS = 15000;
+
+function retryDelayMs(response, attempt = 0) {
   const retryAfter = response.headers.get('retry-after');
-  if (!retryAfter) return 0;
-  const seconds = Number(retryAfter);
-  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
-  return Math.min(seconds * 1000, 3000);
+  if (retryAfter !== null && retryAfter !== '') {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds)) {
+      if (seconds <= 0) return 0;
+      return Math.min(seconds * 1000, MAX_RETRY_AFTER_MS) + Math.floor(Math.random() * 100);
+    }
+  }
+  return Math.min(200 * (attempt + 1), 1000) + Math.floor(Math.random() * 100);
 }
 
 function sleep(ms) {
@@ -3167,18 +3173,27 @@ function applyCredentialToRequest(url, headers, credential) {
   headers.Authorization = `Bearer ${credential.token}`;
 }
 
-function shouldRetryResponse(method, response, attempt, limit) {
-  return attempt < limit
-    && SAFE_METHODS.has(method)
-    && (response.status === 429 || response.status >= 500);
+function shouldRetryResponse(method, response, attempt, limit, options = {}) {
+  if (attempt >= limit) return false;
+  if (response.status !== 429 && response.status < 500) return false;
+  // Safe HTTP methods are always retryable. Catalog-marked read-only POSTs
+  // (CRM search and friends - HubSpot's tightest rate limit) are read
+  // semantics over POST and are equally safe to retry.
+  return SAFE_METHODS.has(method) || options.readOnlyPostRetry === true;
 }
 
-async function hubspotFetchResponse(url, options, method) {
+function readOnlyPostRetryOption(endpoint) {
+  return {
+    readOnlyPostRetry: Boolean(endpoint && endpoint.readOnlyPost === true && endpoint.risk === 'read')
+  };
+}
+
+async function hubspotFetchResponse(url, options, method, retryOptions = {}) {
   const limit = safeRetryLimit();
   for (let attempt = 0; ; attempt += 1) {
     const response = await fetch(url, options);
-    if (!shouldRetryResponse(method, response, attempt, limit)) return response;
-    await sleep(retryDelayMs(response));
+    if (!shouldRetryResponse(method, response, attempt, limit, retryOptions)) return response;
+    await sleep(retryDelayMs(response, attempt));
   }
 }
 
@@ -3205,7 +3220,7 @@ async function hubspotFetchAllowError(portal, method, inputPath, flags, body, en
     options.body = JSON.stringify(body);
   }
 
-  const response = await hubspotFetchResponse(url, options, method);
+  const response = await hubspotFetchResponse(url, options, method, readOnlyPostRetryOption(endpoint));
   const text = await response.text();
   let payload = null;
   if (text) {
@@ -3259,7 +3274,7 @@ async function hubspotFetch(portal, method, inputPath, flags, body, endpointOver
     options.body = JSON.stringify(body);
   }
 
-  const response = await hubspotFetchResponse(url, options, method);
+  const response = await hubspotFetchResponse(url, options, method, readOnlyPostRetryOption(endpoint));
   const text = await response.text();
   let payload = null;
   if (text) {
