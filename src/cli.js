@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const {
@@ -813,16 +814,23 @@ function assertConfigObject(value, label) {
   return value;
 }
 
+function resolveHomeDirectory() {
+  const explicitHome = configString(process.env.HOME);
+  if (explicitHome) return explicitHome;
+  const detectedHome = os.homedir();
+  return detectedHome && detectedHome.trim() ? detectedHome : null;
+}
+
 function expandUserPath(rawPath) {
   const value = String(rawPath);
   if (value === '~') {
-    const home = process.env.HOME;
-    if (!home) fail('Cannot expand "~" because HOME is not set.');
+    const home = resolveHomeDirectory();
+    if (!home) fail('Cannot expand "~" because no home directory is available (HOME is unset and os.homedir() returned nothing).');
     return home;
   }
   if (value.startsWith('~/')) {
-    const home = process.env.HOME;
-    if (!home) fail(`Cannot expand "${value}" because HOME is not set.`);
+    const home = resolveHomeDirectory();
+    if (!home) fail(`Cannot expand "${value}" because no home directory is available (HOME is unset and os.homedir() returned nothing).`);
     return path.join(home, value.slice(2));
   }
   return path.resolve(value);
