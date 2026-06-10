@@ -1007,6 +1007,47 @@ async function main() {
     }
 
     {
+      // Issue #18: packaged context docs are reachable through MCP.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-context-docs', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: {} } },
+        { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'crm-records' } } },
+        { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'docs/hubspot-api-context/associations.md', maxChars: 1000 } } },
+        { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: '../../package.json' } } }
+      ], baseEnv, 5);
+      assert.strictEqual(mcp.stderr, '');
+
+      const listing = mcpStructuredContent(mcp.responses[1]);
+      assert.strictEqual(listing.ok, true);
+      assert(listing.docs.some((doc) => doc.name === 'crm-records'));
+      assert(listing.docs.every((doc) => doc.path.startsWith('docs/hubspot-api-context/')));
+
+      const crmRecords = mcpStructuredContent(mcp.responses[2]);
+      assert.strictEqual(crmRecords.ok, true);
+      assert.strictEqual(crmRecords.name, 'crm-records');
+      assert(crmRecords.markdown.length > 100);
+
+      const associations = mcpStructuredContent(mcp.responses[3]);
+      assert.strictEqual(associations.ok, true);
+      assert.strictEqual(associations.name, 'associations');
+      assert(associations.markdown.length <= 1000 + 20);
+
+      const traversal = mcpStructuredContent(mcp.responses[4]);
+      assert.strictEqual(traversal.ok, false);
+      assert.strictEqual(traversal.error.code, 'unknown_context_doc');
+    }
+
+    {
       // Issue #20: mutations and showRequest keep the preview-first flow; safe
       // reads (typed command or generic request) run once with no preview.
       const mcp = await runMcpConversation([
