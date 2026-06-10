@@ -987,6 +987,93 @@ async function main() {
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
     }
 
+    {
+      // Issue #15: regression coverage for the MCP request-body double-encoding fix
+      // (2ac3582). The HTTP body HubSpot receives must be the JSON object form whether
+      // the MCP client passes body as an object or as a JSON-encoded string, and an
+      // unparseable string body must error without sending any request.
+      const before = requests.length;
+      const searchBody = { filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: 'ada@example.com' }] }], limit: 1 };
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-body-encoding', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        {
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts/search',
+              body: searchBody,
+              readOnly: true
+            }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts/search',
+              body: JSON.stringify(searchBody),
+              readOnly: true
+            }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 4,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts/search',
+              body: 'not json {',
+              readOnly: true
+            }
+          }
+        }
+      ], { ...baseEnv, HSAPI_TEST_TOKEN: 'mcp-token' }, 4);
+      assert.strictEqual(mcp.stderr, '');
+
+      const objectBodyExecuted = mcpStructuredContent(mcp.responses[1]);
+      assert.strictEqual(objectBodyExecuted.ok, true, JSON.stringify(objectBodyExecuted));
+      assert.strictEqual(objectBodyExecuted.executed, true);
+
+      const stringBodyExecuted = mcpStructuredContent(mcp.responses[2]);
+      assert.strictEqual(stringBodyExecuted.ok, true, JSON.stringify(stringBodyExecuted));
+      assert.strictEqual(stringBodyExecuted.executed, true);
+
+      const invalidBody = mcpStructuredContent(mcp.responses[3]);
+      assert.strictEqual(invalidBody.ok, false);
+      assert(/body must be a JSON value/i.test(invalidBody.error.message), invalidBody.error.message);
+
+      const searchRequests = requests.slice(before).filter((request) => request.url.startsWith('/crm/objects/2026-03/contacts/search'));
+      assert.strictEqual(searchRequests.length, 2, 'invalid string body must not reach HubSpot');
+      for (const request of searchRequests) {
+        const received = JSON.parse(request.body);
+        assert.deepStrictEqual(received, searchBody, 'HTTP body must be the JSON object form, not a double-encoded string');
+      }
+    }
+
     const explicitPortalBearerConfig = writeTempConfig(baseUrl, {
       tokenEnv: null,
       auth: {
