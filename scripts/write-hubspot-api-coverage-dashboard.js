@@ -79,7 +79,10 @@ function renderSurfaces(catalog) {
 }
 
 function buildMarkdown(catalog, coverage) {
-  const generatedAt = new Date().toISOString().slice(0, 10);
+  // Use the catalog's own generation date so dashboard output is a pure function
+  // of the catalog. Stamping the wall clock here made the CI drift check fail on
+  // every PR opened after the last regeneration day (issue #37).
+  const generatedAt = catalog.generatedAt || 'unknown';
   const catalogOnlyCount = coverage.byStatus?.['catalog-only'] || 0;
   const catalogOnlySurfaceCount = coverage.surfacesByStatus?.['catalog-only'] || 0;
   const lines = [
