@@ -621,7 +621,7 @@ Usage:
   hsapi crm resolve-object <name|objectTypeId> [--custom-fallback]
   hsapi crm list <objectType> [--portal <name>] [--properties a,b] [--limit n] [--archived] [--count-only]
   hsapi crm get <objectType> <id> [--portal <name>] [--properties a,b] [--properties-with-history a,b] [--id-property name]
-  hsapi crm search <objectType> [--portal <name>] --filter property:OP:value [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only]
+  hsapi crm search <objectType> [--portal <name>] --filter property:OP[:value] [--filter-group "expr;expr"] [--search-body <json|@file>] [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only]
   hsapi crm count <objectType> [--portal <name>] [--filter property:OP:value] [--search text]
   hsapi crm exists <objectType> [--portal <name>] --filter property:OP:value
   hsapi crm find-one <objectType> [--portal <name>] --filter property:OP:value [--properties a,b]
@@ -727,6 +727,7 @@ Output:
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
 
 Notes:
+  - CRM search filters: property:OP:value (EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, ...), property:IN:a,b / property:NOT_IN:a,b, property:BETWEEN:low:high, property:HAS_PROPERTY / property:NOT_HAS_PROPERTY. Multiple --filter flags AND within one group; repeat --filter-group "expr;expr" for OR between groups; --search-body sends a full HubSpot search JSON body.
   - Tokens are read from env vars declared in the portal config; secrets are not stored in config.
   - Mutating requests require --yes. Use request/crm update without --yes to preview.
   - Some HubSpot read endpoints use POST. Generic --read-only is allowed only for catalog-marked read-only POST endpoints.
@@ -4740,9 +4741,9 @@ async function collectPages(portal, method, inputPath, flags, body) {
 function crmSearchRequestFromFlags(flags, options = {}) {
   const criteria = crmSearchCriteriaFromFlags(flags, options);
   const body = {
-    filterGroups: [{ filters: criteria.filters }],
     limit: Number(flags.limit || options.defaultLimit || 10)
   };
+  if (criteria.filterGroups.length) body.filterGroups = criteria.filterGroups;
   if (options.includeProperties !== false && criteria.properties.length) body.properties = criteria.properties;
   if (options.includePropertiesWithHistory !== false && criteria.propertiesWithHistory.length) {
     body.propertiesWithHistory = criteria.propertiesWithHistory;
@@ -4753,34 +4754,91 @@ function crmSearchRequestFromFlags(flags, options = {}) {
   return { body, criteria };
 }
 
+const CRM_FILTER_NO_VALUE_OPERATORS = new Set(['HAS_PROPERTY', 'NOT_HAS_PROPERTY']);
+const CRM_FILTER_MULTI_VALUE_OPERATORS = new Set(['IN', 'NOT_IN']);
+
+function parseCrmFilterExpression(raw) {
+  const text = String(raw).trim();
+  const parts = text.split(':');
+  if (parts.length < 2 || !parts[0].trim() || !parts[1].trim()) {
+    fail(`Invalid --filter "${raw}". Expected property:OP[:value], e.g. dealstage:EQ:closedwon, email:HAS_PROPERTY, dealstage:IN:a,b, amount:BETWEEN:1:100`);
+  }
+  const propertyName = parts[0].trim();
+  const operator = parts[1].trim().toUpperCase();
+  const valueParts = parts.slice(2);
+
+  if (CRM_FILTER_NO_VALUE_OPERATORS.has(operator)) {
+    if (valueParts.join(':').trim() !== '') {
+      fail(`Invalid --filter "${raw}". ${operator} takes no value.`);
+    }
+    return { propertyName, operator };
+  }
+
+  if (!valueParts.length) {
+    fail(`Invalid --filter "${raw}". ${operator} requires a value, e.g. ${propertyName}:${operator}:<value>`);
+  }
+
+  if (CRM_FILTER_MULTI_VALUE_OPERATORS.has(operator)) {
+    const filterValues = valueParts.join(':').split(',').map((item) => item.trim()).filter(Boolean);
+    if (!filterValues.length) {
+      fail(`Invalid --filter "${raw}". ${operator} requires at least one comma-separated value.`);
+    }
+    return { propertyName, operator, values: filterValues };
+  }
+
+  if (operator === 'BETWEEN') {
+    if (valueParts.length !== 2 || !valueParts[0].trim() || !valueParts[1].trim()) {
+      fail(`Invalid --filter "${raw}". BETWEEN requires exactly two values: ${propertyName}:BETWEEN:<low>:<high>`);
+    }
+    return { propertyName, operator, value: valueParts[0].trim(), highValue: valueParts[1].trim() };
+  }
+
+  return { propertyName, operator, value: valueParts.join(':') };
+}
+
 function crmSearchCriteriaFromFlags(flags, options = {}) {
   const commandName = options.commandName || 'crm search';
-  let rawFilters = values(flags.filter);
+  const rawFilters = values(flags.filter);
+  const rawGroups = values(flags['filter-group']);
+  if (rawFilters.length && rawGroups.length) {
+    fail(`${commandName} accepts --filter or --filter-group, not both. Put every condition into --filter-group expressions when using OR groups.`);
+  }
+
+  let filterGroups;
   let defaultFilter = false;
-  if (!rawFilters.length && options.defaultAllFilter === true) {
-    rawFilters = ['hs_object_id:GT:0'];
-    defaultFilter = true;
-  }
-
-  const filters = rawFilters.map((raw) => {
-    const parts = String(raw).split(':');
-    if (parts.length < 3) {
-      fail(`Invalid --filter "${raw}". Expected property:OP:value, e.g. dealstage:EQ:closedwon`);
+  if (rawGroups.length) {
+    filterGroups = rawGroups.map((groupRaw) => {
+      const expressions = String(groupRaw).split(';').map((item) => item.trim()).filter(Boolean);
+      if (!expressions.length) {
+        fail(`Invalid --filter-group "${groupRaw}". Expected one or more ;-separated filter expressions.`);
+      }
+      return { filters: expressions.map(parseCrmFilterExpression) };
+    });
+  } else {
+    let effectiveFilters = rawFilters;
+    if (!effectiveFilters.length && options.defaultAllFilter === true) {
+      effectiveFilters = ['hs_object_id:GT:0'];
+      defaultFilter = true;
     }
-    const [propertyName, operator, ...valueParts] = parts;
-    return { propertyName, operator, value: valueParts.join(':') };
-  });
-
-  if (!filters.length && options.requireFilter !== false) {
-    fail(`${commandName} requires at least one --filter property:OP:value`);
+    filterGroups = effectiveFilters.length
+      ? [{ filters: effectiveFilters.map(parseCrmFilterExpression) }]
+      : [];
   }
 
+  if (!filterGroups.length && options.requireFilter !== false) {
+    fail(`${commandName} requires at least one --filter property:OP[:value] or --filter-group "expr;expr"`);
+  }
+
+  const filters = filterGroups.length === 1 ? filterGroups[0].filters : [];
   const properties = parsePropertiesList(flags.properties);
   const propertiesWithHistory = parsePropertiesList(flags['properties-with-history']);
   const sorts = parseSearchSorts(flags.sort);
   return {
+    filterGroups,
     filters,
-    filterSummary: filters.map(formatCrmFilter),
+    filterSummary: filterGroups.length === 1
+      ? filterGroups[0].filters.map(formatCrmFilter)
+      : filterGroups.map((group) => group.filters.map(formatCrmFilter)),
     defaultFilter,
     properties,
     propertiesWithHistory,
@@ -4794,6 +4852,9 @@ function searchBodyFromFlags(flags) {
 }
 
 function formatCrmFilter(filter) {
+  if (Array.isArray(filter.values)) return `${filter.propertyName}:${filter.operator}:${filter.values.join(',')}`;
+  if (filter.highValue !== undefined) return `${filter.propertyName}:${filter.operator}:${filter.value}:${filter.highValue}`;
+  if (filter.value === undefined) return `${filter.propertyName}:${filter.operator}`;
   return `${filter.propertyName}:${filter.operator}:${filter.value}`;
 }
 
@@ -5721,6 +5782,18 @@ async function runCrm(portal, action, rest, flags) {
   }
 
   if (action === 'search') {
+    if (flags['search-body'] !== undefined) {
+      if (boolFlag(flags, 'count-only')) {
+        fail('crm search --search-body does not support --count-only; read data.total from the response instead.');
+      }
+      if (flags.filter !== undefined || flags['filter-group'] !== undefined) {
+        fail('crm search --search-body cannot be combined with --filter or --filter-group.');
+      }
+      const body = assertObjectBody(parseBody(flags['search-body']), 'crm search --search-body');
+      if (body.limit === undefined && flags.limit !== undefined) body.limit = optionalNumber(flags.limit);
+      printJson(await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body));
+      return;
+    }
     const countOnly = boolFlag(flags, 'count-only');
     const { body, criteria } = crmSearchRequestFromFlags(
       countOnly ? { ...flags, limit: 1 } : flags,

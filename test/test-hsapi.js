@@ -993,6 +993,107 @@ async function main() {
     }
 
     {
+      // Issue #13: filter mini-language - IN/NOT_IN (values array), BETWEEN
+      // (value+highValue), HAS_PROPERTY/NOT_HAS_PROPERTY (no value), OR groups
+      // via --filter-group, and --search-body as the full-JSON escape hatch.
+      const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+      const inPreview = await expectShowRequest(['crm', 'search', 'deals', '--filter', 'dealstage:IN:closedwon,closedlost'], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/deals/search'
+      });
+      assert.deepStrictEqual(inPreview.request.body.filterGroups, [{
+        filters: [{ propertyName: 'dealstage', operator: 'IN', values: ['closedwon', 'closedlost'] }]
+      }]);
+
+      const betweenPreview = await expectShowRequest(['crm', 'search', 'deals', '--filter', 'amount:BETWEEN:100:5000'], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/deals/search'
+      });
+      assert.deepStrictEqual(betweenPreview.request.body.filterGroups, [{
+        filters: [{ propertyName: 'amount', operator: 'BETWEEN', value: '100', highValue: '5000' }]
+      }]);
+
+      const hasPropertyPreview = await expectShowRequest(['crm', 'search', 'contacts', '--filter', 'email:HAS_PROPERTY'], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/contacts/search'
+      });
+      assert.deepStrictEqual(hasPropertyPreview.request.body.filterGroups, [{
+        filters: [{ propertyName: 'email', operator: 'HAS_PROPERTY' }]
+      }]);
+
+      const orGroupsPreview = await expectShowRequest([
+        'crm', 'search', 'contacts',
+        '--filter-group', 'lifecyclestage:EQ:customer;hs_lead_status:EQ:OPEN',
+        '--filter-group', 'email:NOT_HAS_PROPERTY'
+      ], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/contacts/search'
+      });
+      assert.deepStrictEqual(orGroupsPreview.request.body.filterGroups, [
+        {
+          filters: [
+            { propertyName: 'lifecyclestage', operator: 'EQ', value: 'customer' },
+            { propertyName: 'hs_lead_status', operator: 'EQ', value: 'OPEN' }
+          ]
+        },
+        { filters: [{ propertyName: 'email', operator: 'NOT_HAS_PROPERTY' }] }
+      ]);
+
+      const searchBodyPreview = await expectShowRequest([
+        'crm', 'search', 'contacts',
+        '--search-body', '{"filterGroups":[{"filters":[{"propertyName":"email","operator":"EQ","value":"ada@example.com"}]}],"properties":["email"]}',
+        '--limit', '3'
+      ], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/contacts/search'
+      });
+      assert.deepStrictEqual(searchBodyPreview.request.body.properties, ['email']);
+      assert.strictEqual(searchBodyPreview.request.body.limit, 3);
+
+      // Executed path: IN filter against the mock search route still round-trips.
+      const inExecuted = parseJsonOutput(await run(['crm', 'search', 'contacts', '--filter', 'email:IN:ada@example.com,grace@example.com', '--limit', '1'], env));
+      assert.strictEqual(inExecuted.ok, true);
+      const inRequestBody = JSON.parse(requests.at(-1).body);
+      assert.deepStrictEqual(inRequestBody.filterGroups[0].filters[0].values, ['ada@example.com', 'grace@example.com']);
+
+      // Operator case is normalized.
+      const lowercasePreview = await expectShowRequest(['crm', 'search', 'contacts', '--filter', 'email:eq:ada@example.com'], env, {
+        requests,
+        method: 'POST',
+        pathname: '/crm/objects/2026-03/contacts/search'
+      });
+      assert.strictEqual(lowercasePreview.request.body.filterGroups[0].filters[0].operator, 'EQ');
+
+      // Failure modes.
+      const hasPropertyWithValue = await run(['crm', 'search', 'contacts', '--filter', 'email:HAS_PROPERTY:x'], env);
+      assert.notStrictEqual(hasPropertyWithValue.status, 0);
+      assert.match(hasPropertyWithValue.stderr, /takes no value/);
+
+      const betweenWrongArity = await run(['crm', 'search', 'deals', '--filter', 'amount:BETWEEN:100'], env);
+      assert.notStrictEqual(betweenWrongArity.status, 0);
+      assert.match(betweenWrongArity.stderr, /BETWEEN requires exactly two values/);
+
+      const mixedFilterForms = await run(['crm', 'search', 'contacts', '--filter', 'email:HAS_PROPERTY', '--filter-group', 'email:HAS_PROPERTY'], env);
+      assert.notStrictEqual(mixedFilterForms.status, 0);
+      assert.match(mixedFilterForms.stderr, /--filter or --filter-group, not both/);
+
+      const emptyIn = await run(['crm', 'search', 'contacts', '--filter', 'email:IN:'], env);
+      assert.notStrictEqual(emptyIn.status, 0);
+      assert.match(emptyIn.stderr, /requires a value|at least one comma-separated value/);
+
+      // count/exists keep working with the new parser (single-group summary stays flat).
+      const countOutput = parseJsonOutput(await run(['crm', 'count', 'contacts', '--filter', 'email:HAS_PROPERTY'], env));
+      assert.strictEqual(countOutput.ok, true);
+      assert.deepStrictEqual(countOutput.filters, ['email:HAS_PROPERTY']);
+    }
+
+    {
       // Issue #12: typed owners commands, catalog-backed (so MCP generic requests
       // against /crm/v3/owners stop being blocked as not_catalog_backed).
       const ownersList = parseJsonOutput(await run(['owners', 'list', '--limit', '2'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }));
