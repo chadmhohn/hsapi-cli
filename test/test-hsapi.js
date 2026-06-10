@@ -962,8 +962,8 @@ async function main() {
       assert.strictEqual(commandRead.executed, true);
       assert.strictEqual(commandRead.safety.catalogBacked, true);
       assert.strictEqual(commandRead.safety.risk, 'read');
-      assert.strictEqual(commandRead.preview.auth.provenance, 'catalog');
-      assert.strictEqual(commandRead.preview.request.headers.Authorization, 'Bearer $HSAPI_TEST_TOKEN');
+      // Issue #20: safe reads run once and omit the preview from the envelope.
+      assert.strictEqual(commandRead.preview, undefined, 'safe command reads must not carry a preview');
       assert.strictEqual(commandRead.result.portal, 'test');
       assert.strictEqual(commandRead.result.data.results.length, 1);
       assert(!JSON.stringify(commandRead).includes('mcp-token'), 'MCP command read result must not expose raw token values');
@@ -973,8 +973,7 @@ async function main() {
       assert.strictEqual(read.executed, true);
       assert.strictEqual(read.safety.catalogBacked, true);
       assert.strictEqual(read.safety.risk, 'read');
-      assert.strictEqual(read.preview.auth.provenance, 'catalog');
-      assert.strictEqual(read.preview.request.headers.Authorization, 'Bearer $HSAPI_TEST_TOKEN');
+      assert.strictEqual(read.preview, undefined, 'safe request reads must not carry a preview');
       assert.strictEqual(read.result.portal, 'test');
       assert.strictEqual(read.result.data.results.length, 1);
       assert(!JSON.stringify(read).includes('mcp-token'), 'MCP request read result must not expose raw token values');
@@ -1005,6 +1004,69 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #20: mutations and showRequest keep the preview-first flow; safe
+      // reads (typed command or generic request) run once with no preview.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-single-run', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        {
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: { portal: 'test', method: 'GET', path: '/crm/v3/owners', maxResults: 2 }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: { portal: 'test', method: 'GET', path: '/crm/v3/owners', showRequest: true }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 4,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_command_execute',
+            arguments: { portal: 'test', argv: ['crm', 'create', 'contacts', '--properties', '{"email":"x@example.com"}'] }
+          }
+        }
+      ], { ...baseEnv, HSAPI_TEST_TOKEN: 'mcp-token' }, 4);
+      assert.strictEqual(mcp.stderr, '');
+
+      const ownersRead = mcpStructuredContent(mcp.responses[1]);
+      assert.strictEqual(ownersRead.ok, true);
+      assert.strictEqual(ownersRead.executed, true);
+      assert.strictEqual(ownersRead.preview, undefined);
+      assert.strictEqual(ownersRead.safety.endpointId, 'owners.list');
+      assert.strictEqual(ownersRead.safety.catalogBacked, true);
+
+      const ownersPreview = mcpStructuredContent(mcp.responses[2]);
+      assert.strictEqual(ownersPreview.executed, false);
+      assert.strictEqual(ownersPreview.safety.showRequest, true);
+      assert(ownersPreview.preview, 'showRequest must still return the full preview');
+
+      const blockedMutation = mcpStructuredContent(mcp.responses[3]);
+      assert.strictEqual(blockedMutation.blocked, true);
+      assert.strictEqual(blockedMutation.error.code, 'mutation_blocked');
+      assert(blockedMutation.preview, 'blocked mutations must still include the preview');
     }
 
     {

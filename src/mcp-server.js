@@ -1,4 +1,5 @@
 const { runCli } = require('./cli');
+const { endpointDefinitions, findEndpointDefinition } = require('./catalog');
 const packageJson = require('../package.json');
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
@@ -494,6 +495,98 @@ function notCatalogBackedEnvelope(preview, argv) {
   };
 }
 
+function pathnameForRequestTarget(target) {
+  const raw = String(target || '');
+  try {
+    if (/^https?:\/\//i.test(raw)) return new URL(raw).pathname;
+    return new URL(raw.startsWith('/') ? raw : '/' + raw, 'https://api.hubapi.com').pathname;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function offlineEndpointForRequest(args) {
+  const method = String(args.method || '').toUpperCase();
+  const pathname = pathnameForRequestTarget(args.path);
+  if (!pathname) return null;
+  return findEndpointDefinition(method, pathname) || null;
+}
+
+function commandLiteralPrefix(command) {
+  const tokens = String(command || '').split(/\s+/);
+  const literal = [];
+  for (const token of tokens) {
+    if (token.startsWith('<') || token.startsWith('[')) break;
+    literal.push(token);
+  }
+  return literal.join(' ');
+}
+
+function offlineEndpointForCommand(argv) {
+  const positionals = [];
+  for (const arg of argv) {
+    if (String(arg).startsWith('--')) break;
+    positionals.push(String(arg));
+  }
+  if (!positionals.length) return null;
+  const byLiteral = new Map();
+  for (const definition of endpointDefinitions()) {
+    if (!definition.command) continue;
+    const literal = commandLiteralPrefix(definition.command);
+    if (!byLiteral.has(literal)) byLiteral.set(literal, []);
+    byLiteral.get(literal).push(definition);
+  }
+  for (let length = positionals.length; length >= 1; length -= 1) {
+    const candidate = 'hsapi ' + positionals.slice(0, length).join(' ');
+    const matches = byLiteral.get(candidate) || [];
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1) return null;
+  }
+  return null;
+}
+
+function offlineReadExecutionAllowed(endpoint, options = {}) {
+  if (endpoint && SAFE_METHODS.has(String(endpoint.method || '').toUpperCase())) return true;
+  if (!endpoint || !READ_RISKS.has(endpoint.risk)) return false;
+  if (endpoint.readOnlyPost === true) return options.readOnlyPostAllowed === true;
+  return true;
+}
+
+function offlineSafetySummary(endpoint, options = {}) {
+  return {
+    catalogBacked: Boolean(endpoint && endpoint.id),
+    endpointId: endpoint && endpoint.id || null,
+    risk: endpoint && endpoint.risk || 'unknown',
+    method: endpoint && endpoint.method || null,
+    readOnlyPost: Boolean(endpoint && endpoint.readOnlyPost),
+    confirmMutation: false,
+    readOnlyPostAllowed: Boolean(options.readOnlyPostAllowed)
+  };
+}
+
+// Safe reads run the CLI exactly once and omit the request preview from the
+// response (issue #20). Mutations, showRequest, uncataloged paths, and anything
+// the offline catalog lookup cannot resolve keep the preview-first flow.
+async function executeOfflineRead(argv, args, endpoint, options) {
+  const safety = offlineSafetySummary(endpoint, options);
+  const result = await runHsapiEnvelope(executionArgv(argv, args), {
+    skipOutputRedaction: INTENDED_CREDENTIAL_ENDPOINTS.has(safety.endpointId)
+  });
+  return {
+    ok: result.ok,
+    executed: result.status === 0,
+    status: result.status,
+    command: { argv },
+    safety,
+    result: result.output || null,
+    error: result.ok ? undefined : {
+      code: 'execution_failed',
+      message: result.error && result.error.message || result.stderr || 'hsapi execution failed.'
+    },
+    stderr: result.stderr
+  };
+}
+
 async function executeWithPreview(argv, args = {}, options = {}) {
   const showRequest = boolArg(args, 'showRequest', false);
   const confirmMutation = boolArg(args, 'confirmMutation', false);
@@ -613,17 +706,34 @@ async function callTool(name, args = {}) {
   }
 
   if (name === 'hsapi_command_execute') {
-    return executeWithPreview(normalizedCommandArgv(args), args, {
-      requireCatalog: true,
-      readOnlyPostAllowed: true
-    });
+    const argv = normalizedCommandArgv(args);
+    const options = { requireCatalog: true, readOnlyPostAllowed: true };
+    if (!boolArg(args, 'showRequest', false) && !boolArg(args, 'confirmMutation', false)) {
+      const endpoint = offlineEndpointForCommand(argv);
+      if (endpoint && offlineReadExecutionAllowed(endpoint, options)) {
+        return executeOfflineRead(argv, args, endpoint, options);
+      }
+    }
+    return executeWithPreview(argv, args, options);
   }
 
   if (name === 'hsapi_request_execute') {
-    return executeWithPreview(requestArgv(args), args, {
+    const argv = requestArgv(args);
+    const options = {
       requireCatalog: args.requireCatalog !== false,
       readOnlyPostAllowed: boolArg(args, 'readOnly', false)
-    });
+    };
+    if (!boolArg(args, 'showRequest', false) && !boolArg(args, 'confirmMutation', false)) {
+      const endpoint = offlineEndpointForRequest(args);
+      if (endpoint && offlineReadExecutionAllowed(endpoint, options)) {
+        return executeOfflineRead(argv, args, endpoint, options);
+      }
+      const method = String(args.method || '').toUpperCase();
+      if (!endpoint && options.requireCatalog === false && SAFE_METHODS.has(method)) {
+        return executeOfflineRead(argv, args, null, options);
+      }
+    }
+    return executeWithPreview(argv, args, options);
   }
 
   throw new Error('Unknown tool: ' + name);
