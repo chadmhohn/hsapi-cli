@@ -4673,6 +4673,38 @@ async function main() {
       ]);
     }
 
+    {
+      // Issue #11: ~ expansion must work when HOME is absent (Windows sets USERPROFILE,
+      // not HOME). os.homedir() is the fallback; explicit HOME still wins.
+      const homeFixConfigPath = writeTempConfig(baseUrl, {
+        auth: {
+          portalBearer: { tokenEnv: 'HSAPI_TEST_TOKEN' },
+          oauth: {
+            clientIdEnv: 'HSAPI_TEST_CLIENT_ID',
+            clientSecretEnv: 'HSAPI_TEST_CLIENT_SECRET',
+            refreshTokenEnv: 'HSAPI_TEST_REFRESH_TOKEN',
+            tokenCachePath: '~/hsapi-home-expansion-cache.json'
+          }
+        }
+      });
+      const noHome = await run(['profiles', 'list'], {
+        HSAPI_PORTALS_CONFIG: homeFixConfigPath,
+        HOME: undefined
+      });
+      assert.strictEqual(noHome.status, 0, noHome.stderr || noHome.stdout);
+      const noHomeOutput = JSON.parse(noHome.stdout);
+      assert.strictEqual(noHomeOutput.ok, true);
+      assert.strictEqual(noHomeOutput.profiles[0].oauth.tokenCache.path, '~/hsapi-home-expansion-cache.json');
+
+      const homeOverrideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-home-'));
+      const withHome = await run(['auth', 'doctor', '--portal', 'test'], {
+        HSAPI_PORTALS_CONFIG: homeFixConfigPath,
+        HOME: homeOverrideDir
+      });
+      assert.strictEqual(withHome.status, 0, withHome.stderr || withHome.stdout);
+      assert.strictEqual(JSON.parse(withHome.stdout).ok, true);
+    }
+
     console.log('hsapi tests passed');
   } finally {
     server.close();
