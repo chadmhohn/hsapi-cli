@@ -993,6 +993,48 @@ async function main() {
     }
 
     {
+      // Issue #12: typed owners commands, catalog-backed (so MCP generic requests
+      // against /crm/v3/owners stop being blocked as not_catalog_backed).
+      const ownersList = parseJsonOutput(await run(['owners', 'list', '--limit', '2'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }));
+      assert.strictEqual(ownersList.ok, true);
+      assert.strictEqual(ownersList.data.results.length, 2);
+      const ownersListRequest = requests.at(-1);
+      assert(ownersListRequest.url.startsWith('/crm/v3/owners?'), ownersListRequest.url);
+      assert(ownersListRequest.url.includes('limit=2'), ownersListRequest.url);
+
+      await expectShowRequest(['owners', 'list', '--email', 'ada@example.com', '--archived'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/v3/owners',
+        endpointId: 'owners.list'
+      });
+
+      await expectShowRequest(['owners', 'get', 'owner-1'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/v3/owners/owner-1',
+        endpointId: 'owners.get'
+      });
+
+      const ownerByUserId = await expectShowRequest(['owners', 'get', '42', '--id-property', 'userId'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/v3/owners/42',
+        endpointId: 'owners.get'
+      });
+      assert.strictEqual(ownerByUserId.request.query.idProperty, 'userId');
+
+      // The generic request path now resolves the catalog endpoint too.
+      const genericOwners = await expectShowRequest(['request', 'GET', '/crm/v3/owners'], { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' }, {
+        requests,
+        method: 'GET',
+        pathname: '/crm/v3/owners',
+        endpointId: 'owners.list'
+      });
+      assert.strictEqual(genericOwners.endpoint.risk, 'read');
+    }
+
+    {
       // Issue #14: endpoints whose purpose is returning a client-facing token
       // (visitor identification) must not have that token redacted by the MCP layer.
       const mcp = await runMcpConversation([
@@ -1854,7 +1896,9 @@ async function main() {
       assert.strictEqual(output.request.url, `${baseUrl}/crm/v3/owners`);
       assert.strictEqual(output.request.headers.Authorization, 'Bearer $HSAPI_TEST_TOKEN');
       assert.strictEqual(output.authFamily, AUTH_FAMILIES.PORTAL_BEARER);
-      assert.strictEqual(output.auth.provenance, 'generic_request_default');
+      // owners.list is catalog-backed since issue #12, so provenance resolves from the catalog.
+      assert.strictEqual(output.auth.provenance, 'catalog');
+      assert.strictEqual(output.endpoint.id, 'owners.list');
       assert.strictEqual(output.auth.credentialSource.name, 'HSAPI_TEST_TOKEN');
       assert.strictEqual(requests.length, before, '--show-request --agent must not make a network request');
     }
