@@ -33,10 +33,23 @@ const FORBIDDEN_COMMAND_FLAGS = new Set([
   'id-name-map'
 ]);
 
+const SERVER_INSTRUCTIONS = [
+  'hsapi exposes HubSpot through a catalog-gated CLI core. Reads execute directly;',
+  'mutations always return a blocked preview until you re-call with confirmMutation: true',
+  '(danger flags like --danger-merge are still required inside argv where hsapi demands them).',
+  'Prefer hsapi_command_execute (typed catalog commands - discover them with',
+  'hsapi_catalog_commands) over hsapi_request_execute for writes: named commands read',
+  'better in audit logs and avoid raw-body encoding mistakes. Use showRequest: true to',
+  'inspect any call before running it. Output is budgeted (maxResults/maxChars defaults);',
+  'use select/pick/discovery projections to keep responses small. Credentials resolve from',
+  'environment variables named in the portals config; token values never appear in output.'
+].join(' ');
+
 const TOOLS = [
   {
     name: 'hsapi_profiles_list',
     description: 'List configured hsapi portal profiles with redacted credential presence metadata.',
+    annotations: { title: 'List portal profiles', readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: 'object',
       properties: {},
@@ -46,6 +59,7 @@ const TOOLS = [
   {
     name: 'hsapi_catalog_coverage',
     description: 'Return hsapi catalog coverage summary, including auth-family and risk counts.',
+    annotations: { title: 'Catalog coverage summary', readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: 'object',
       properties: {},
@@ -55,6 +69,7 @@ const TOOLS = [
   {
     name: 'hsapi_catalog_commands',
     description: 'List catalog-backed hsapi commands with optional filters and a bounded result limit.',
+    annotations: { title: 'List catalog commands', readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -69,6 +84,7 @@ const TOOLS = [
   {
     name: 'hsapi_auth_doctor',
     description: 'Run offline hsapi auth doctor diagnostics with redacted credential-source metadata.',
+    annotations: { title: 'Auth doctor (offline)', readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -81,6 +97,7 @@ const TOOLS = [
   {
     name: 'hsapi_command_execute',
     description: 'Run a portal-aware catalog-backed hsapi command through shared CLI logic. Read commands execute; mutations return a blocked preview unless confirmMutation is true.',
+    annotations: { title: 'Execute hsapi command', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
     inputSchema: {
       type: 'object',
       properties: {
@@ -118,6 +135,7 @@ const TOOLS = [
   {
     name: 'hsapi_request_execute',
     description: 'Run a portal-aware catalog-backed generic hsapi request. Safe methods execute; catalog read-only POST requires readOnly; mutations return a blocked preview unless confirmMutation is true.',
+    annotations: { title: 'Execute generic HubSpot request', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
     inputSchema: {
       type: 'object',
       properties: {
@@ -628,7 +646,8 @@ async function handleRequest(message) {
       serverInfo: {
         name: 'hsapi-cli',
         version: packageJson.version
-      }
+      },
+      instructions: SERVER_INSTRUCTIONS
     });
   }
 
