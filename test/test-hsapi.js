@@ -995,12 +995,6 @@ async function main() {
     {
       // Issue #14: endpoints whose purpose is returning a client-facing token
       // (visitor identification) must not have that token redacted by the MCP layer.
-      // Issue #15: regression coverage for the MCP request-body double-encoding fix
-      // (2ac3582). The HTTP body HubSpot receives must be the JSON object form whether
-      // the MCP client passes body as an object or as a JSON-encoded string, and an
-      // unparseable string body must error without sending any request.
-      const before = requests.length;
-      const searchBody = { filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: 'ada@example.com' }] }], limit: 1 };
       const mcp = await runMcpConversation([
         {
           jsonrpc: '2.0',
@@ -1010,7 +1004,6 @@ async function main() {
             protocolVersion: '2024-11-05',
             capabilities: {},
             clientInfo: { name: 'hsapi-test-visitor-token', version: '0.0.0' }
-            clientInfo: { name: 'hsapi-test-body-encoding', version: '0.0.0' }
           }
         },
         { jsonrpc: '2.0', method: 'notifications/initialized' },
@@ -1024,13 +1017,6 @@ async function main() {
               portal: 'test',
               argv: ['conversations', 'visitor-token', '--email', 'ada@example.com', '--first-name', 'Ada'],
               confirmMutation: true
-            name: 'hsapi_request_execute',
-            arguments: {
-              portal: 'test',
-              method: 'POST',
-              path: '/crm/objects/2026-03/contacts/search',
-              body: searchBody,
-              readOnly: true
             }
           }
         },
@@ -1064,6 +1050,47 @@ async function main() {
       assert.strictEqual(normalRead.executed, true);
       assert(!JSON.stringify(normalRead).includes('mcp-token'),
         'non-exempt responses keep full redaction');
+    }
+
+    {
+      // Issue #15: regression coverage for the MCP request-body double-encoding fix
+      // (2ac3582). The HTTP body HubSpot receives must be the JSON object form whether
+      // the MCP client passes body as an object or as a JSON-encoded string, and an
+      // unparseable string body must error without sending any request.
+      const before = requests.length;
+      const searchBody = { filterGroups: [{ filters: [{ propertyName: 'email', operator: 'EQ', value: 'ada@example.com' }] }], limit: 1 };
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-body-encoding', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        {
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_request_execute',
+            arguments: {
+              portal: 'test',
+              method: 'POST',
+              path: '/crm/objects/2026-03/contacts/search',
+              body: searchBody,
+              readOnly: true
+            }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: {
             name: 'hsapi_request_execute',
             arguments: {
               portal: 'test',
