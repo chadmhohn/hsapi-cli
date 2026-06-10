@@ -1008,6 +1008,39 @@ async function main() {
     }
 
     {
+      // Issue #19: tool annotations + initialize instructions for modern MCP clients.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2025-06-18',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-annotations', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        { jsonrpc: '2.0', id: 2, method: 'tools/list' }
+      ], baseEnv, 2);
+      assert.strictEqual(mcp.stderr, '');
+      assert.strictEqual(typeof mcp.responses[0].result.instructions, 'string');
+      assert(mcp.responses[0].result.instructions.includes('confirmMutation'));
+
+      const tools = mcp.responses[1].result.tools;
+      const byName = Object.fromEntries(tools.map((tool) => [tool.name, tool]));
+      for (const readTool of ['hsapi_profiles_list', 'hsapi_catalog_coverage', 'hsapi_catalog_commands', 'hsapi_auth_doctor']) {
+        assert.strictEqual(byName[readTool].annotations.readOnlyHint, true, readTool);
+        assert.strictEqual(byName[readTool].annotations.openWorldHint, false, readTool);
+      }
+      for (const executeTool of ['hsapi_command_execute', 'hsapi_request_execute']) {
+        assert.strictEqual(byName[executeTool].annotations.readOnlyHint, false, executeTool);
+        assert.strictEqual(byName[executeTool].annotations.destructiveHint, true, executeTool);
+        assert.strictEqual(byName[executeTool].annotations.openWorldHint, true, executeTool);
+      }
+    }
+
+    {
       // Issue #22: catalog read-only POSTs (CRM search) retry transient 429s like
       // safe GETs do; mutating POSTs never retry.
       const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
