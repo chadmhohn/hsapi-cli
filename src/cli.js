@@ -651,6 +651,8 @@ Usage:
   hsapi associations batch-create <fromType> <toType> --inputs <json|@file> [--yes]
   hsapi associations batch-archive <fromType> <toType> --inputs <json|@file> [--yes]
   hsapi associations batch-labels-archive <fromType> <toType> --inputs <json|@file> [--yes]
+  hsapi owners list [--portal <name>] [--email <email>] [--limit n] [--after token] [--archived] [--paginate]
+  hsapi owners get <ownerId> [--portal <name>] [--id-property id|userId] [--archived]
   hsapi account details [--portal <name>]
   hsapi account usage [--portal <name>]
   hsapi account subscription [--portal <name>]
@@ -5468,6 +5470,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (area === 'owners' || area === 'owner') {
+    await runOwners(portal, action, rest, flags);
+    return;
+  }
+
   if (area === 'account') {
     await runAccount(portal, action, flags);
     return;
@@ -6007,6 +6014,35 @@ async function runAssociations(portal, action, rest, flags) {
   }
 
   fail(`Unknown associations action: ${action}`);
+}
+
+async function runOwners(portal, action, rest, flags) {
+  const base = '/crm/v3/owners';
+
+  if (action === 'list') {
+    const queryFlags = { ...flags, query: values(flags.query) };
+    if (flags.email !== undefined) queryFlags.query.push(`email=${flags.email}`);
+    if (flags.limit !== undefined) queryFlags.query.push(`limit=${flags.limit}`);
+    if (flags.after !== undefined) queryFlags.query.push(`after=${flags.after}`);
+    if (boolFlag(flags, 'archived')) queryFlags.query.push('archived=true');
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', base, queryFlags)
+      : await hubspotFetch(portal, 'GET', base, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  if (action === 'get') {
+    const ownerId = rest[0];
+    if (!ownerId) fail('owners get requires <ownerId>.');
+    const queryFlags = { ...flags, query: values(flags.query) };
+    if (flags['id-property'] !== undefined) queryFlags.query.push(`idProperty=${flags['id-property']}`);
+    if (boolFlag(flags, 'archived')) queryFlags.query.push('archived=true');
+    printJson(await hubspotFetch(portal, 'GET', `${base}/${pathPart(ownerId)}`, queryFlags));
+    return;
+  }
+
+  fail(`Unknown owners action: ${action}`);
 }
 
 async function runAccount(portal, action, flags) {

@@ -3852,6 +3852,48 @@
       }
     },
     {
+      "family": "crm.owners",
+      "name": "owners.list",
+      "method": "GET",
+      "path": "/crm/v3/owners",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi owners list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/owners/guide",
+      "contextUrl": "docs/hubspot-api-context/crm-records.md",
+      "requiredScopes": [
+        "crm.objects.owners.read"
+      ],
+      "scopeNotes": "Owners list supports email, after, limit, and archived query parameters. Owner records map HubSpot users to CRM ownership properties.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "crm.owners",
+      "name": "owners.get",
+      "method": "GET",
+      "path": "/crm/v3/owners/{ownerId}",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi owners get",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/owners/guide",
+      "contextUrl": "docs/hubspot-api-context/crm-records.md",
+      "requiredScopes": [
+        "crm.objects.owners.read"
+      ],
+      "scopeNotes": "Owner get accepts idProperty=id (default) or userId. Archived owners need archived=true.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
       "family": "crm.properties",
       "name": "properties.get",
       "method": "GET",
