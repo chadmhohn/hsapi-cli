@@ -8,6 +8,12 @@ const DEFAULT_MCP_MAX_RESULTS = 50;
 const DEFAULT_MCP_MAX_CHARS = 60000;
 const MAX_MCP_MAX_RESULTS = 500;
 const MAX_MCP_MAX_CHARS = 200000;
+// Endpoints whose documented purpose is returning a client-facing token. The MCP
+// redaction layer must not redact the very value the caller asked for; the catalog
+// already marks these sensitive-read and the CLI gates still apply.
+const INTENDED_CREDENTIAL_ENDPOINTS = new Set([
+  'conversations.visitor_token'
+]);
 const FORBIDDEN_COMMAND_FLAGS = new Set([
   'portal',
   'yes',
@@ -258,7 +264,7 @@ function redactMcpValue(value, parentKey = '') {
   return redacted;
 }
 
-async function runHsapiEnvelope(argv) {
+async function runHsapiEnvelope(argv, options = {}) {
   const result = await runCli(argv);
   const stdout = parseJsonMaybe(result.stdout);
   const stderr = result.stderr.trim();
@@ -267,7 +273,7 @@ async function runHsapiEnvelope(argv) {
     status: result.status
   };
   if (stdout.parsed) {
-    envelope.output = redactMcpValue(stdout.value);
+    envelope.output = options.skipOutputRedaction === true ? stdout.value : redactMcpValue(stdout.value);
     if (stdout.value && typeof stdout.value === 'object' && stdout.value.ok === false) envelope.ok = false;
   } else if (stdout.text) {
     envelope.stdout = truncateText(stdout.text);
@@ -522,7 +528,9 @@ async function executeWithPreview(argv, args = {}, options = {}) {
     };
   }
 
-  const result = await runHsapiEnvelope(executionArgv(argv, args));
+  const result = await runHsapiEnvelope(executionArgv(argv, args), {
+    skipOutputRedaction: INTENDED_CREDENTIAL_ENDPOINTS.has(safety.endpointId)
+  });
   return {
     ok: result.ok,
     executed: result.status === 0,
