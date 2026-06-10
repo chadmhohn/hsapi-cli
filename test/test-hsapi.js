@@ -280,6 +280,11 @@ function startServer() {
         res.end(JSON.stringify({ message: 'User level OAuth token is not allowed for this endpoint.' }));
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/visitor-identification/2026-03/tokens/create') {
+        res.writeHead(200, headers);
+        res.end(JSON.stringify({ token: 'visitor-token-fixture-value' }));
+        return;
+      }
       res.writeHead(200, headers);
       res.end(JSON.stringify({ results: [], paging: null }));
     });
@@ -985,6 +990,66 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #14: endpoints whose purpose is returning a client-facing token
+      // (visitor identification) must not have that token redacted by the MCP layer.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-visitor-token', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        {
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_command_execute',
+            arguments: {
+              portal: 'test',
+              argv: ['conversations', 'visitor-token', '--email', 'ada@example.com', '--first-name', 'Ada'],
+              confirmMutation: true
+            }
+          }
+        },
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: {
+            name: 'hsapi_command_execute',
+            arguments: {
+              portal: 'test',
+              argv: ['crm', 'list', 'contacts'],
+              maxResults: 1
+            }
+          }
+        }
+      ], { ...baseEnv, HSAPI_TEST_TOKEN: 'mcp-token' }, 3);
+      assert.strictEqual(mcp.stderr, '');
+
+      const visitorToken = mcpStructuredContent(mcp.responses[1]);
+      assert.strictEqual(visitorToken.ok, true, JSON.stringify(visitorToken));
+      assert.strictEqual(visitorToken.executed, true);
+      assert.strictEqual(visitorToken.safety.endpointId, 'conversations.visitor_token');
+      assert.strictEqual(visitorToken.result.data.token, 'visitor-token-fixture-value',
+        'intended-credential endpoint output must not be redacted');
+      assert(!JSON.stringify(visitorToken).includes('mcp-token'),
+        'portal bearer token must still never appear');
+
+      const normalRead = mcpStructuredContent(mcp.responses[2]);
+      assert.strictEqual(normalRead.ok, true);
+      assert.strictEqual(normalRead.executed, true);
+      assert(!JSON.stringify(normalRead).includes('mcp-token'),
+        'non-exempt responses keep full redaction');
     }
 
     {
