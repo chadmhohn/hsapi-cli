@@ -7,12 +7,12 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/your-org/hsapi-cli.git"
+    "url": "git+https://github.com/chadmhohn/hsapi-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/hsapi-cli/issues"
+    "url": "https://github.com/chadmhohn/hsapi-cli/issues"
   },
-  "homepage": "https://github.com/your-org/hsapi-cli#readme",
+  "homepage": "https://github.com/chadmhohn/hsapi-cli#readme",
   "bin": {
     "hsapi": "bin/hsapi.js",
     "hsapi-mcp": "bin/hsapi-mcp.js",
@@ -53,6 +53,6 @@
     "pack:dry-run": "npm pack --dry-run"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
