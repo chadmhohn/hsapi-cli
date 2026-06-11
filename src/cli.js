@@ -621,7 +621,7 @@ Usage:
   hsapi crm resolve-object <name|objectTypeId> [--custom-fallback]
   hsapi crm list <objectType> [--portal <name>] [--properties a,b] [--limit n] [--archived] [--count-only]
   hsapi crm get <objectType> <id> [--portal <name>] [--properties a,b] [--properties-with-history a,b] [--id-property name]
-  hsapi crm search <objectType> [--portal <name>] --filter property:OP[:value] [--filter-group "expr;expr"] [--search-body <json|@file>] [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only]
+  hsapi crm search <objectType> [--portal <name>] --filter property:OP[:value] [--filter-group "expr;expr"] [--search-body <json|@file>] [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only] [--paginate]
   hsapi crm count <objectType> [--portal <name>] [--filter property:OP:value] [--search text]
   hsapi crm exists <objectType> [--portal <name>] --filter property:OP:value
   hsapi crm find-one <objectType> [--portal <name>] --filter property:OP:value [--properties a,b]
@@ -727,6 +727,7 @@ Output:
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
 
 Notes:
+  - --paginate follows page cursors (crm list query-param after; crm search body after, stopping at HubSpot's 10K search window) and applies a default 1000-result cap. Pass --max-results <n> to change it or --max-results 0 for unlimited.
   - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.
   - CRM search filters: property:OP:value (EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, ...), property:IN:a,b / property:NOT_IN:a,b, property:BETWEEN:low:high, property:HAS_PROPERTY / property:NOT_HAS_PROPERTY. Multiple --filter flags AND within one group; repeat --filter-group "expr;expr" for OR between groups; --search-body sends a full HubSpot search JSON body.
   - Tokens are read from env vars declared in the portal config; secrets are not stored in config.
@@ -2803,6 +2804,13 @@ function processOutput(value, flags = {}) {
   return { raw: false, text };
 }
 
+function normalizeMaxResultsFlag(raw, flagName) {
+  const value = parseNonNegativeIntegerFlag(raw, flagName);
+  // Explicit 0 means unlimited (issue #21); undefined means "not set".
+  if (value === 0) return undefined;
+  return value;
+}
+
 function outputOptionsFromFlags(flags = {}) {
   const selectValues = values(flags.select).map((item) => parseOutputPathValue(item, 'select'));
   if (selectValues.length > 1) fail('--select accepts one path.');
@@ -2835,7 +2843,7 @@ function outputOptionsFromFlags(flags = {}) {
     rawValue,
     discoveryHelper: discoveryHelpers[0] || null,
     compact: boolFlag(flags, 'compact') || boolFlag(flags, 'agent'),
-    maxResults: parseNonNegativeIntegerFlag(flags['max-results'], 'max-results'),
+    maxResults: normalizeMaxResultsFlag(flags['max-results'], 'max-results'),
     maxChars: parseNonNegativeIntegerFlag(flags['max-chars'], 'max-chars'),
     includeTruncated: boolFlag(flags, 'include-truncated')
   };
@@ -4719,8 +4727,17 @@ function associationLimitBodyFromFlags(flags, options = {}) {
   return { inputs: [input] };
 }
 
+const DEFAULT_PAGINATE_MAX_RESULTS = 1000;
+
+function paginationBudgetFromFlags(flags) {
+  const raw = parseNonNegativeIntegerFlag(flags['max-results'], 'max-results');
+  if (raw === 0) return { maxResults: undefined, defaultCap: false };
+  if (raw === undefined) return { maxResults: DEFAULT_PAGINATE_MAX_RESULTS, defaultCap: true };
+  return { maxResults: raw, defaultCap: false };
+}
+
 async function collectPages(portal, method, inputPath, flags, body) {
-  const maxResults = parseNonNegativeIntegerFlag(flags['max-results'], 'max-results');
+  const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
   const firstUrl = buildUrl(portal, inputPath, flags);
   let after = firstUrl.searchParams.get('after');
   const results = [];
@@ -4750,6 +4767,8 @@ async function collectPages(portal, method, inputPath, flags, body) {
             reason: 'max-results',
             path: 'results',
             maxResults,
+            defaultCap: defaultCap || undefined,
+            note: defaultCap ? 'Default pagination cap. Pass an explicit --max-results, or --max-results 0 for unlimited.' : undefined,
             returnedResultCount: results.length,
             fetchedPageResultCount: data.results.length,
             pageCount,
@@ -4775,6 +4794,88 @@ async function collectPages(portal, method, inputPath, flags, body) {
     url: redactTokenUrl(firstUrl.toString()),
     pageCount,
     resultCount: results.length,
+    results
+  };
+  if (truncated) {
+    output.truncated = true;
+    output.truncation = truncation;
+  }
+  return output;
+}
+
+const CRM_SEARCH_WINDOW_LIMIT = 10000;
+
+async function collectSearchPages(portal, objectType, flags, baseBody) {
+  const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
+  const target = `/crm/objects/2026-03/${pathPart(objectType)}/search`;
+  const results = [];
+  let after = baseBody.after;
+  let pageCount = 0;
+  let last = null;
+  let truncated = false;
+  let truncation = null;
+
+  while (true) {
+    const body = { ...baseBody };
+    if (after === undefined || after === null) {
+      delete body.after;
+    } else {
+      body.after = String(after);
+    }
+    last = await hubspotFetch(portal, 'POST', target, flags, body);
+    pageCount += 1;
+
+    const data = last.data;
+    const pageResults = data && Array.isArray(data.results) ? data.results : [];
+    const nextAfter = data && data.paging && data.paging.next && data.paging.next.after;
+
+    if (maxResults === undefined) {
+      results.push(...pageResults);
+    } else {
+      const remaining = Math.max(maxResults - results.length, 0);
+      if (remaining > 0) results.push(...pageResults.slice(0, remaining));
+      if (pageResults.length > remaining || (results.length >= maxResults && nextAfter)) {
+        truncated = true;
+        truncation = {
+          reason: 'max-results',
+          path: 'results',
+          maxResults,
+          defaultCap: defaultCap || undefined,
+          note: defaultCap ? 'Default pagination cap. Pass an explicit --max-results, or --max-results 0 for unlimited.' : undefined,
+          returnedResultCount: results.length,
+          fetchedPageResultCount: pageResults.length,
+          pageCount,
+          nextAfter: nextAfter || null
+        };
+        break;
+      }
+    }
+
+    if (!nextAfter) break;
+    if (Number.isFinite(Number(nextAfter)) && Number(nextAfter) >= CRM_SEARCH_WINDOW_LIMIT) {
+      truncated = true;
+      truncation = {
+        reason: 'search-window',
+        message: `HubSpot CRM search only pages through the first ${CRM_SEARCH_WINDOW_LIMIT} results. Narrow the filters to fetch the rest.`,
+        returnedResultCount: results.length,
+        pageCount,
+        nextAfter: String(nextAfter)
+      };
+      break;
+    }
+    after = nextAfter;
+  }
+
+  const output = {
+    ok: true,
+    status: last.status,
+    portal: portal.name,
+    objectType,
+    method: 'POST',
+    url: redactTokenUrl(buildUrl(portal, target, { query: [] }).toString()),
+    pageCount,
+    resultCount: results.length,
+    total: last.data && typeof last.data.total === 'number' ? last.data.total : undefined,
     results
   };
   if (truncated) {
@@ -5837,7 +5938,9 @@ async function runCrm(portal, action, rest, flags) {
       }
       const body = assertObjectBody(parseBody(flags['search-body']), 'crm search --search-body');
       if (body.limit === undefined && flags.limit !== undefined) body.limit = optionalNumber(flags.limit);
-      printJson(await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body));
+      printJson(boolFlag(flags, 'paginate')
+        ? await collectSearchPages(portal, objectType, flags, body)
+        : await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body));
       return;
     }
     const countOnly = boolFlag(flags, 'count-only');
@@ -5845,6 +5948,10 @@ async function runCrm(portal, action, rest, flags) {
       countOnly ? { ...flags, limit: 1 } : flags,
       countOnly ? { defaultLimit: 1, includeProperties: false, includePropertiesWithHistory: false } : {}
     );
+    if (boolFlag(flags, 'paginate') && !countOnly) {
+      printJson(await collectSearchPages(portal, objectType, flags, body));
+      return;
+    }
     const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body);
     printJson(countOnly
       ? crmCountOutput(portal, objectType, 'crm.search', crmQuerySummaryFromSearchCriteria(criteria), result.data, 1)
