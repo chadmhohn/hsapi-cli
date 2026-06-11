@@ -412,14 +412,20 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Portal ID (also --portal-id; defaults to the active portal)."
+          "description": "Portal ID (also --portal-id; defaults to the active portal).",
+          "aliases": [
+            "portal-id"
+          ]
         },
         {
           "name": "formGuid",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form GUID (also --form-guid)."
+          "description": "Form GUID (also --form-guid).",
+          "aliases": [
+            "form-guid"
+          ]
         },
         {
           "name": "fields",
@@ -532,7 +538,11 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Subscriber email (also --email / --subscriber-id-string)."
+          "description": "Subscriber email (also --email / --subscriber-id-string).",
+          "aliases": [
+            "email",
+            "subscriber-id-string"
+          ]
         },
         {
           "name": "channel",
@@ -581,7 +591,11 @@
           "name": "email",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "email",
+            "subscriber-id-string"
+          ]
         },
         {
           "name": "channel",
@@ -630,7 +644,11 @@
           "name": "email",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "email",
+            "subscriber-id-string"
+          ]
         },
         {
           "name": "subscription-id",
@@ -648,7 +666,10 @@
             "UNSUBSCRIBED",
             "NOT_SPECIFIED"
           ],
-          "description": "Also --status-state."
+          "description": "Also --status-state.",
+          "aliases": [
+            "status-state"
+          ]
         },
         {
           "name": "legal-basis",
@@ -720,7 +741,11 @@
           "name": "email",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "email",
+            "subscriber-id-string"
+          ]
         },
         {
           "name": "channel",
@@ -1019,7 +1044,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Subscriber email (also --email)."
+          "description": "Subscriber email (also --email).",
+          "aliases": [
+            "email",
+            "subscriber-id-string"
+          ]
         },
         {
           "name": "language",
@@ -1332,7 +1361,10 @@
           "name": "properties",
           "kind": "flag",
           "type": "list",
-          "description": "Optional property list (also --property)."
+          "description": "Optional property list (also --property).",
+          "aliases": [
+            "property"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
@@ -2127,7 +2159,10 @@
         {
           "name": "id",
           "kind": "flag",
-          "type": "string"
+          "type": "string",
+          "aliases": [
+            "folder-id"
+          ]
         },
         {
           "name": "name",
@@ -2761,7 +2796,10 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
@@ -2790,7 +2828,10 @@
           "name": "appId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "target-url",
@@ -2847,7 +2888,10 @@
           "name": "appId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "yes",
@@ -2882,7 +2926,10 @@
           "name": "appId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "subscription-type",
@@ -2945,13 +2992,19 @@
           "name": "appId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "subscriptionId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "subscription-id"
+          ]
         },
         {
           "name": "active",
@@ -3002,7 +3055,10 @@
           "name": "appId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "inputs",
@@ -3192,7 +3248,10 @@
           "kind": "positional",
           "type": "integer",
           "required": true,
-          "description": "Journal offset (also --offset)."
+          "description": "Journal offset (also --offset).",
+          "aliases": [
+            "offset"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
@@ -3255,7 +3314,10 @@
           "kind": "positional",
           "type": "integer",
           "required": true,
-          "description": "Batch size (also --count)."
+          "description": "Batch size (also --count).",
+          "aliases": [
+            "count"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
@@ -3287,7 +3349,10 @@
           "kind": "positional",
           "type": "integer",
           "required": true,
-          "description": "Batch size (also --count)."
+          "description": "Batch size (also --count).",
+          "aliases": [
+            "count"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
@@ -3511,7 +3576,10 @@
           "name": "subscriptionId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "subscription-id"
+          ]
         },
         {
           "name": "yes",
@@ -3548,7 +3616,10 @@
           "name": "portalId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "portal-id"
+          ]
         },
         {
           "name": "yes",
@@ -3653,7 +3724,10 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Subscription ID (also --subscription-id)."
+          "description": "Subscription ID (also --subscription-id).",
+          "aliases": [
+            "subscription-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
@@ -3685,7 +3759,10 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Filter ID (also --filter-id)."
+          "description": "Filter ID (also --filter-id).",
+          "aliases": [
+            "filter-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
@@ -3716,7 +3793,10 @@
           "name": "filterId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "filter-id"
+          ]
         },
         {
           "name": "yes",
@@ -3902,6 +3982,106 @@
           "type": "boolean"
         },
         {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
           "name": "body",
           "kind": "flag",
           "type": "json",
@@ -3980,6 +4160,111 @@
           "kind": "flag",
           "type": "string",
           "description": "New assignee actor ID, e.g. A-123."
+        },
+        {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
         },
         {
           "name": "body",
@@ -4259,6 +4544,81 @@
         },
         {
           "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
           "kind": "flag",
           "type": "json"
         },
@@ -4877,6 +5237,101 @@
           "type": "json"
         },
         {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
           "name": "body",
           "kind": "flag",
           "type": "json",
@@ -4928,6 +5383,101 @@
         },
         {
           "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
           "kind": "flag",
           "type": "json"
         },
@@ -5163,6 +5713,96 @@
           "type": "json"
         },
         {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
           "name": "body",
           "kind": "flag",
           "type": "json",
@@ -5234,6 +5874,81 @@
         },
         {
           "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
           "kind": "flag",
           "type": "json"
         },
@@ -5328,6 +6043,106 @@
           "type": "json"
         },
         {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
           "name": "body",
           "kind": "flag",
           "type": "json",
@@ -5376,6 +6191,101 @@
           "name": "last-name",
           "kind": "flag",
           "type": "string"
+        },
+        {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "assignee-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
         },
         {
           "name": "body",
@@ -5471,7 +6381,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form ID (also --form-id)."
+          "description": "Form ID (also --form-id).",
+          "aliases": [
+            "form-id"
+          ]
         },
         {
           "name": "archived",
@@ -5575,7 +6488,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form ID (also --form-id)."
+          "description": "Form ID (also --form-id).",
+          "aliases": [
+            "form-id"
+          ]
         },
         {
           "name": "name",
@@ -5652,7 +6568,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form ID (also --form-id)."
+          "description": "Form ID (also --form-id).",
+          "aliases": [
+            "form-id"
+          ]
         },
         {
           "name": "name",
@@ -5729,7 +6648,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form ID (also --form-id)."
+          "description": "Form ID (also --form-id).",
+          "aliases": [
+            "form-id"
+          ]
         },
         {
           "name": "yes",
@@ -5765,7 +6687,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form GUID (also --form-guid)."
+          "description": "Form GUID (also --form-guid).",
+          "aliases": [
+            "form-guid"
+          ]
         },
         {
           "name": "limit",
@@ -5805,14 +6730,20 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Portal ID (also --portal-id; defaults to the active portal)."
+          "description": "Portal ID (also --portal-id; defaults to the active portal).",
+          "aliases": [
+            "portal-id"
+          ]
         },
         {
           "name": "formGuid",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Form GUID (also --form-guid)."
+          "description": "Form GUID (also --form-guid).",
+          "aliases": [
+            "form-guid"
+          ]
         },
         {
           "name": "fields",
@@ -6011,7 +6942,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Marketing email ID (also --email-id)."
+          "description": "Marketing email ID (also --email-id).",
+          "aliases": [
+            "email-id"
+          ]
         },
         {
           "name": "name",
@@ -6144,7 +7078,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Marketing email ID (also --email-id)."
+          "description": "Marketing email ID (also --email-id).",
+          "aliases": [
+            "email-id"
+          ]
         },
         {
           "name": "yes",
@@ -6186,7 +7123,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full campaign body (also --campaign)."
+          "description": "Full campaign body (also --campaign).",
+          "aliases": [
+            "campaign"
+          ]
         },
         {
           "name": "yes",
@@ -6222,7 +7162,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Campaign GUID (also --campaign-guid / --campaign-id)."
+          "description": "Campaign GUID (also --campaign-guid / --campaign-id).",
+          "aliases": [
+            "campaign-guid",
+            "campaign-id"
+          ]
         }
       ],
       "auth": {
@@ -6252,7 +7196,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Campaign GUID (also --campaign-guid / --campaign-id)."
+          "description": "Campaign GUID (also --campaign-guid / --campaign-id).",
+          "aliases": [
+            "campaign-guid",
+            "campaign-id"
+          ]
         },
         {
           "name": "yes",
@@ -6383,7 +7331,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full event body (also --event)."
+          "description": "Full event body (also --event).",
+          "aliases": [
+            "event"
+          ]
         },
         {
           "name": "yes",
@@ -6482,7 +7433,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full event body (also --event)."
+          "description": "Full event body (also --event).",
+          "aliases": [
+            "event"
+          ]
         },
         {
           "name": "yes",
@@ -6566,7 +7520,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full send request (also --email)."
+          "description": "Full send request (also --email).",
+          "aliases": [
+            "email"
+          ]
         },
         {
           "name": "yes",
@@ -6646,7 +7603,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Table ID or name (also --table-id-or-name / --table)."
+          "description": "Table ID or name (also --table-id-or-name / --table).",
+          "aliases": [
+            "table-id-or-name",
+            "table"
+          ]
         }
       ],
       "auth": {
@@ -6719,7 +7680,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full table definition (also --table)."
+          "description": "Full table definition (also --table).",
+          "aliases": [
+            "table"
+          ]
         },
         {
           "name": "yes",
@@ -6754,7 +7718,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Table ID or name (also --table-id-or-name / --table)."
+          "description": "Table ID or name (also --table-id-or-name / --table).",
+          "aliases": [
+            "table-id-or-name",
+            "table"
+          ]
         },
         {
           "name": "limit",
@@ -6805,7 +7773,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Table ID or name (also --table-id-or-name / --table)."
+          "description": "Table ID or name (also --table-id-or-name / --table).",
+          "aliases": [
+            "table-id-or-name",
+            "table"
+          ]
         },
         {
           "name": "values",
@@ -6838,7 +7810,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full row body (also --row)."
+          "description": "Full row body (also --row).",
+          "aliases": [
+            "row"
+          ]
         },
         {
           "name": "yes",
@@ -6874,14 +7849,21 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "draft or published (also --environment)."
+          "description": "draft or published (also --environment).",
+          "aliases": [
+            "environment"
+          ]
         },
         {
           "name": "path",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Design-manager file path (also --path / --source-path)."
+          "description": "Design-manager file path (also --path / --source-path).",
+          "aliases": [
+            "path",
+            "source-path"
+          ]
         },
         {
           "name": "file",
@@ -6929,14 +7911,21 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "draft or published (also --environment)."
+          "description": "draft or published (also --environment).",
+          "aliases": [
+            "environment"
+          ]
         },
         {
           "name": "path",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Design-manager file path (also --path / --source-path)."
+          "description": "Design-manager file path (also --path / --source-path).",
+          "aliases": [
+            "path",
+            "source-path"
+          ]
         },
         {
           "name": "file",
@@ -6978,14 +7967,21 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "draft or published (also --environment)."
+          "description": "draft or published (also --environment).",
+          "aliases": [
+            "environment"
+          ]
         },
         {
           "name": "path",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Design-manager file path (also --path / --source-path)."
+          "description": "Design-manager file path (also --path / --source-path).",
+          "aliases": [
+            "path",
+            "source-path"
+          ]
         },
         {
           "name": "yes",
@@ -7037,7 +8033,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Workflow ID (also --workflow-id)."
+          "description": "Workflow ID (also --workflow-id).",
+          "aliases": [
+            "workflow-id"
+          ]
         },
         {
           "name": "errors",
@@ -7076,7 +8075,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Contact vid (also --vid / --contact-id)."
+          "description": "Contact vid (also --vid / --contact-id).",
+          "aliases": [
+            "vid",
+            "contact-id"
+          ]
         }
       ],
       "auth": {
@@ -7103,14 +8106,20 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Workflow ID (also --workflow-id)."
+          "description": "Workflow ID (also --workflow-id).",
+          "aliases": [
+            "workflow-id"
+          ]
         },
         {
           "name": "email",
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Contact email (also --email)."
+          "description": "Contact email (also --email).",
+          "aliases": [
+            "email"
+          ]
         },
         {
           "name": "yes",
@@ -7191,7 +8200,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Sequence ID (also --sequence-id)."
+          "description": "Sequence ID (also --sequence-id).",
+          "aliases": [
+            "sequence-id"
+          ]
         },
         {
           "name": "user-id",
@@ -7253,7 +8265,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full enrollment body (also --enrollment)."
+          "description": "Full enrollment body (also --enrollment).",
+          "aliases": [
+            "enrollment"
+          ]
         },
         {
           "name": "yes",
@@ -7286,7 +8301,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Contact ID (also --contact-id)."
+          "description": "Contact ID (also --contact-id).",
+          "aliases": [
+            "contact-id"
+          ]
         }
       ],
       "auth": {
@@ -7313,7 +8331,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         }
       ],
       "auth": {
@@ -7340,7 +8361,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "yes",
@@ -7373,7 +8397,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         }
       ],
       "auth": {
@@ -7400,19 +8427,29 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "url",
           "kind": "flag",
           "type": "string",
-          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url)."
+          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url).",
+          "aliases": [
+            "recording-url",
+            "url-to-retrieve-authed-recording"
+          ]
         },
         {
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full settings body (also --settings)."
+          "description": "Full settings body (also --settings).",
+          "aliases": [
+            "settings"
+          ]
         },
         {
           "name": "yes",
@@ -7445,19 +8482,29 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "url",
           "kind": "flag",
           "type": "string",
-          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url)."
+          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url).",
+          "aliases": [
+            "recording-url",
+            "url-to-retrieve-authed-recording"
+          ]
         },
         {
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full settings body (also --settings)."
+          "description": "Full settings body (also --settings).",
+          "aliases": [
+            "settings"
+          ]
         },
         {
           "name": "yes",
@@ -7490,7 +8537,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "yes",
@@ -7528,7 +8578,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full body (also --ready)."
+          "description": "Full body (also --ready).",
+          "aliases": [
+            "ready"
+          ]
         },
         {
           "name": "yes",
@@ -7573,7 +8626,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full body (also --transcript)."
+          "description": "Full body (also --transcript).",
+          "aliases": [
+            "transcript"
+          ]
         },
         {
           "name": "yes",
@@ -7606,7 +8662,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Transcript/engagement ID (also --transcript-id)."
+          "description": "Transcript/engagement ID (also --transcript-id).",
+          "aliases": [
+            "transcript-id"
+          ]
         }
       ],
       "auth": {
@@ -7633,7 +8692,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         }
       ],
       "auth": {
@@ -7660,7 +8722,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Developer app ID (also --app-id)."
+          "description": "Developer app ID (also --app-id).",
+          "aliases": [
+            "app-id"
+          ]
         },
         {
           "name": "yes",
@@ -7743,7 +8808,10 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Meeting link slug (also --slug)."
+          "description": "Meeting link slug (also --slug).",
+          "aliases": [
+            "slug"
+          ]
         },
         {
           "name": "timezone",
@@ -7781,7 +8849,10 @@
           "name": "slug",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "required": true,
+          "aliases": [
+            "slug"
+          ]
         },
         {
           "name": "timezone",
@@ -7820,7 +8891,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Meeting link slug (also --slug)."
+          "description": "Meeting link slug (also --slug).",
+          "aliases": [
+            "slug"
+          ]
         },
         {
           "name": "email",
@@ -8429,7 +9503,10 @@
           "kind": "flag",
           "type": "json",
           "required": true,
-          "description": "Import request JSON (also --body; @file supported)."
+          "description": "Import request JSON (also --body; @file supported).",
+          "aliases": [
+            "body"
+          ]
         },
         {
           "name": "file",
@@ -8667,7 +9744,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full export request (also --export)."
+          "description": "Full export request (also --export).",
+          "aliases": [
+            "export"
+          ]
         },
         {
           "name": "yes",
@@ -8795,7 +9875,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full list definition (also --list)."
+          "description": "Full list definition (also --list).",
+          "aliases": [
+            "list"
+          ]
         },
         {
           "name": "yes",
@@ -9358,6 +10441,12 @@
           "type": "json"
         },
         {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full record body; overrides --properties/--associations."
+        },
+        {
           "name": "yes",
           "kind": "flag",
           "type": "boolean",
@@ -9399,6 +10488,12 @@
           "kind": "flag",
           "type": "json",
           "required": true
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full record body; overrides --properties/--associations."
         },
         {
           "name": "yes",
@@ -10121,7 +11216,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "JSON array of association type specs, or {\"types\":[...]}."
+          "description": "JSON array of association type specs, or {\"types\":[...]}.",
+          "aliases": [
+            "types"
+          ]
         },
         {
           "name": "yes",
@@ -10658,7 +11756,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full object schema definition (also --schema)."
+          "description": "Full object schema definition (also --schema).",
+          "aliases": [
+            "schema"
+          ]
         },
         {
           "name": "yes",
@@ -10695,7 +11796,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Schema patch (also --schema)."
+          "description": "Schema patch (also --schema).",
+          "aliases": [
+            "schema"
+          ]
         },
         {
           "name": "yes",
@@ -11472,7 +12576,10 @@
           "kind": "flag",
           "type": "string",
           "required": true,
-          "description": "Property group (also --group)."
+          "description": "Property group (also --group).",
+          "aliases": [
+            "group"
+          ]
         },
         {
           "name": "description",
@@ -11544,7 +12651,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full property definition body (also --property)."
+          "description": "Full property definition body (also --property).",
+          "aliases": [
+            "property"
+          ]
         },
         {
           "name": "yes",
@@ -11611,7 +12721,10 @@
           "name": "group-name",
           "kind": "flag",
           "type": "string",
-          "description": "Property group (also --group)."
+          "description": "Property group (also --group).",
+          "aliases": [
+            "group"
+          ]
         },
         {
           "name": "description",
@@ -11683,7 +12796,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full property definition body (also --property)."
+          "description": "Full property definition body (also --property).",
+          "aliases": [
+            "property"
+          ]
         },
         {
           "name": "yes",
@@ -11785,7 +12901,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Stage definition (also --stage)."
+          "description": "Stage definition (also --stage).",
+          "aliases": [
+            "stage"
+          ]
         },
         {
           "name": "yes",
@@ -11851,7 +12970,10 @@
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Stage patch (also --stage)."
+          "description": "Stage patch (also --stage).",
+          "aliases": [
+            "stage"
+          ]
         },
         {
           "name": "yes",
@@ -12051,7 +13173,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/pages/guide",
@@ -12223,7 +13348,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/pages/guide",
@@ -12252,7 +13380,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "name",
@@ -12400,7 +13531,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -12435,7 +13569,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -12470,7 +13607,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "pageId (also --page-id / --id)."
+          "description": "pageId (also --page-id / --id).",
+          "aliases": [
+            "page-id",
+            "id"
+          ]
         },
         {
           "name": "publish-date",
@@ -12517,7 +13658,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -12670,7 +13814,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/pages/guide",
@@ -12842,7 +13989,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/pages/guide",
@@ -12871,7 +14021,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "name",
@@ -13019,7 +14172,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -13054,7 +14210,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -13089,7 +14248,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "pageId (also --page-id / --id)."
+          "description": "pageId (also --page-id / --id).",
+          "aliases": [
+            "page-id",
+            "id"
+          ]
         },
         {
           "name": "publish-date",
@@ -13136,7 +14299,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Page ID (also --page-id)."
+          "description": "Page ID (also --page-id).",
+          "aliases": [
+            "page-id"
+          ]
         },
         {
           "name": "yes",
@@ -13282,7 +14448,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/guide",
@@ -13459,7 +14628,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/blogs/posts/guide",
@@ -13488,7 +14660,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         },
         {
           "name": "name",
@@ -13641,7 +14816,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         },
         {
           "name": "yes",
@@ -13676,7 +14854,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         },
         {
           "name": "yes",
@@ -13711,7 +14892,11 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "postId (also --post-id / --id)."
+          "description": "postId (also --post-id / --id).",
+          "aliases": [
+            "post-id",
+            "id"
+          ]
         },
         {
           "name": "publish-date",
@@ -13758,7 +14943,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Post ID (also --post-id)."
+          "description": "Post ID (also --post-id).",
+          "aliases": [
+            "post-id"
+          ]
         },
         {
           "name": "yes",
@@ -13836,7 +15024,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Redirect ID (also --redirect-id)."
+          "description": "Redirect ID (also --redirect-id).",
+          "aliases": [
+            "redirect-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/url-redirects/guide",
@@ -13953,7 +15144,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Redirect ID (also --redirect-id)."
+          "description": "Redirect ID (also --redirect-id).",
+          "aliases": [
+            "redirect-id"
+          ]
         },
         {
           "name": "route-prefix",
@@ -14044,7 +15238,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Redirect ID (also --redirect-id)."
+          "description": "Redirect ID (also --redirect-id).",
+          "aliases": [
+            "redirect-id"
+          ]
         },
         {
           "name": "yes",
@@ -14122,7 +15319,10 @@
           "kind": "positional",
           "type": "string",
           "required": false,
-          "description": "Domain ID (also --domain-id)."
+          "description": "Domain ID (also --domain-id).",
+          "aliases": [
+            "domain-id"
+          ]
         }
       ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/domains/guide",
@@ -14157,7 +15357,10 @@
           "name": "q",
           "kind": "flag",
           "type": "string",
-          "description": "Search term."
+          "description": "Search term.",
+          "aliases": [
+            "search"
+          ]
         },
         {
           "name": "type",
@@ -14272,7 +15475,10 @@
           "kind": "positional",
           "type": "string",
           "required": true,
-          "description": "Content ID (also --content-id)."
+          "description": "Content ID (also --content-id).",
+          "aliases": [
+            "content-id"
+          ]
         },
         {
           "name": "type",

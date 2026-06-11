@@ -1109,6 +1109,42 @@ async function main() {
         assert.match(customUsage.stdout, /hsapi zz-fake ping \.\.\. \[--portal <name>\]/);
       }
 
+      {
+        // Issue #17 (slice 3): unknown/mistyped flags are rejected from the argspecs.
+        const unknownFlag = await run(['owners', 'list', '--emial', 'ada@example.com'], baseEnv);
+        assert.notStrictEqual(unknownFlag.status, 0);
+        assert.match(unknownFlag.stderr, /Unknown flag --emial for "hsapi owners list"/);
+        assert.match(unknownFlag.stderr, /hsapi help owners list/);
+
+        const badInteger = await run(['owners', 'list', '--limit', 'abc'], baseEnv);
+        assert.notStrictEqual(badInteger.status, 0);
+        assert.match(badInteger.stderr, /--limit expects an integer for "hsapi owners list"/);
+
+        const missingValue = await run(['owners', 'list', '--email'], baseEnv);
+        assert.notStrictEqual(missingValue.status, 0);
+        assert.match(missingValue.stderr, /--email requires a value/);
+
+        const badBoolean = await run(['crm', 'list', 'contacts', '--count-only', 'sometimes'], baseEnv);
+        assert.notStrictEqual(badBoolean.status, 0);
+        assert.match(badBoolean.stderr, /--count-only is a boolean flag/);
+
+        // Catalog aliases pass validation (campaign-id aliases campaignGuid).
+        const aliasOk = parseJsonOutput(await run(['marketing', 'campaigns', 'get', '--campaign-id', 'a1b2', '--show-request'], baseEnv));
+        assert.strictEqual(aliasOk.ok, true);
+        assert.strictEqual(aliasOk.showRequest, true);
+
+        // Global output/budget flags are always allowed.
+        const globalsOk = parseJsonOutput(await run(['owners', 'list', '--paginate', '--max-results', '5', '--show-request'], baseEnv));
+        assert.strictEqual(globalsOk.showRequest, true);
+
+        // HSAPI_FLAG_VALIDATION=0 bypasses validation.
+        const bypass = parseJsonOutput(await run(['owners', 'list', '--emial', 'x', '--show-request'], {
+          ...baseEnv,
+          HSAPI_FLAG_VALIDATION: '0'
+        }));
+        assert.strictEqual(bypass.showRequest, true);
+      }
+
       const visitorTokenHelp = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
       assert.strictEqual(visitorTokenHelp.argsDocumented, true);
       assert(visitorTokenHelp.args.some((arg) => arg.name === 'yes' && arg.type === 'boolean'));

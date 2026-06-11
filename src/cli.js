@@ -10,6 +10,7 @@ const {
   endpointAuthRequirement
 } = require('./auth');
 const {
+  commandLiteralPrefix,
   endpointDefinitionById,
   endpointDefinitions,
   endpointForCommandTokens,
@@ -5657,6 +5658,62 @@ async function runProjectBridge(action, rest, flags) {
   if (!result.ok) exitCli(result.exitCode || 1);
 }
 
+const GLOBAL_FLAG_NAMES = new Set([
+  'portal', 'query', 'yes', 'show-request', 'show-secrets', 'help', 'json',
+  'select', 'pick', 'raw-value', 'ids-only', 'names-only', 'id-name-map',
+  'compact', 'agent', 'max-results', 'max-chars', 'include-truncated',
+  'limit', 'after', 'before', 'offset', 'sort', 'archived', 'paginate',
+  'properties', 'status', 'created-after', 'created-before', 'updated-after', 'updated-before'
+]);
+
+function flagValidationDisabled() {
+  const raw = (configString(process.env.HSAPI_FLAG_VALIDATION) || '').toLowerCase();
+  return raw === '0' || raw === 'false' || raw === 'off';
+}
+
+// Issue #17: reject unknown or mistyped flags for catalog-documented commands.
+// Unknown flags used to be silently ignored, so typos like --propeties produced
+// confusing full-table output instead of an error.
+function validateCommandFlags(positionals, flags) {
+  if (flagValidationDisabled()) return;
+  const endpoint = endpointForCommandTokens(positionals, CATALOG_FILE);
+  if (!endpoint || !endpoint.args.length) return;
+
+  const knownFlags = new Map();
+  for (const arg of endpoint.args) {
+    if (arg.kind === 'flag') knownFlags.set(arg.name, arg);
+    for (const alias of arg.aliases) knownFlags.set(alias, arg);
+  }
+
+  const helpTokens = commandLiteralPrefix(endpoint.command).replace(/^hsapi /, '');
+  const unknown = [];
+  for (const [name, rawValue] of Object.entries(flags)) {
+    const arg = knownFlags.get(name);
+    if (!arg) {
+      if (!GLOBAL_FLAG_NAMES.has(name)) unknown.push(name);
+      continue;
+    }
+    for (const value of values(rawValue)) {
+      if (arg.type === 'integer') {
+        if (value === true || value === '' || !Number.isFinite(Number(value))) {
+          fail(`--${name} expects an integer for "${endpoint.command}". Got ${value === true ? 'no value' : `"${value}"`}. Flags: hsapi help ${helpTokens}`);
+        }
+      } else if (arg.type === 'boolean') {
+        if (!(value === true || value === 'true' || value === 'false')) {
+          fail(`--${name} is a boolean flag for "${endpoint.command}". Pass it bare or as true/false; got "${value}".`);
+        }
+      } else if (value === true) {
+        fail(`--${name} requires a value for "${endpoint.command}". Flags: hsapi help ${helpTokens}`);
+      }
+    }
+  }
+
+  if (unknown.length) {
+    const label = unknown.length > 1 ? 'flags' : 'flag';
+    fail(`Unknown ${label} ${unknown.map((name) => `--${name}`).join(', ')} for "${endpoint.command}". List flags with: hsapi help ${helpTokens} (set HSAPI_FLAG_VALIDATION=0 to bypass validation)`);
+  }
+}
+
 async function main(argv = process.argv.slice(2)) {
   const { positionals, flags } = parseArgs(argv);
   currentOutputFlags = flags;
@@ -5684,6 +5741,7 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   outputOptionsFromFlags(flags);
+  validateCommandFlags(positionals, flags);
 
   if (area === 'catalog') {
     await runCatalog(action);

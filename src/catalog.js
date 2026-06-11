@@ -73,6 +73,7 @@ function validateEndpointArgs(raw, context) {
       required: item.required === true,
       repeatable: item.repeatable === true,
       enum: optionalStringArray(item.enum, 'enum', argContext),
+      aliases: optionalStringArray(item.aliases, 'aliases', argContext),
       description: optionalString(item.description)
     };
   });
@@ -217,7 +218,7 @@ function endpointDefinitions(filePath) {
   return loadCatalogData(filePath).endpoints.map((endpoint) => ({
     ...endpoint,
     requiredScopes: [...endpoint.requiredScopes],
-    args: endpoint.args.map((arg) => ({ ...arg, enum: [...arg.enum] })),
+    args: endpoint.args.map((arg) => ({ ...arg, enum: [...arg.enum], aliases: [...arg.aliases] })),
     auth: endpoint.auth ? {
       ...endpoint.auth,
       queryParams: [...endpoint.auth.queryParams],
