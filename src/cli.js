@@ -61,6 +61,7 @@ const {
   runConversations,
   runCrm,
   runCurrencies,
+  runEmailEvents,
   runEvents,
   runExports,
   runExtensions,
@@ -579,6 +580,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (area === 'account') {
     await runAccount(portal, action, flags);
+    return;
+  }
+
+  if (area === 'email-events' || area === 'email-event') {
+    await runEmailEvents(portal, action, rest, flags);
     return;
   }
 

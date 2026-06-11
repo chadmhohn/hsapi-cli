@@ -6075,3 +6075,64 @@ test('83 Issue #66: catalog-only backfill tranche 1 backs generic requests', asy
   assert.notStrictEqual(actionsList.status, 0);
   assert.match(actionsList.stderr, /Endpoint automation\.actions\.\w+ requires auth developer\/developer_api_key/);
 });
+
+test('85 Issue #66: email events typed family + currencies completion', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  await expectShowRequest(['email-events', 'list', '--recipient', 'ada@example.com', '--event-type', 'BOUNCE', '--limit', '50'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/email/public/v1/events',
+    endpointId: 'email.events.list'
+  });
+
+  await expectShowRequest(['email-events', 'get', '1748000000000', 'evt-1'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/email/public/v1/events/1748000000000/evt-1',
+    endpointId: 'email.events.get'
+  });
+
+  await expectShowRequest(['email-events', 'campaigns', '--limit', '10'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/email/public/v1/campaigns/by-id',
+    endpointId: 'email.events.campaigns'
+  });
+
+  await expectShowRequest(['email-events', 'campaign', '123', '--app-id', '7'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/email/public/v1/campaigns/123',
+    endpointId: 'email.events.campaign'
+  });
+
+  await expectShowRequest(['currencies', 'company-currency'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/currencies/2026-03/company-currency',
+    endpointId: 'settings.currencies.company_currency'
+  });
+
+  await expectShowRequest(['currencies', 'current-rates'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/currencies/2026-03/exchange-rates/current',
+    endpointId: 'settings.currencies.exchange_rates_current'
+  });
+
+  await expectShowRequest(['currencies', 'central-fx'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/currencies/2026-03/central-fx-rates/information',
+    endpointId: 'settings.currencies.central_fx_information'
+  });
+
+  // currencies write surface is catalog-only: generic mutations stay preview-gated
+  const blockedRate = await run(['request', 'POST', '/settings/currencies/2026-03/exchange-rates', '--body', '{"currencyCode":"EUR"}'], env);
+  assert.strictEqual(blockedRate.status, 2);
+
+  const missingPair = await run(['email-events', 'get', '1748000000000'], env);
+  assert.notStrictEqual(missingPair.status, 0);
+  assert.match(missingPair.stderr, /requires <created> <id>/);
+});

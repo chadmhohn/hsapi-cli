@@ -3,30 +3,30 @@
 Generated: 2026-05-10
 
 ## Snapshot
-- Typed commands: 308
-- Catalog-only endpoints: 95
+- Typed commands: 315
+- Catalog-only endpoints: 115
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 403
+- Endpoint count: 430
 - Non-HTTP surface count: 3
-- Total catalog items: 406
+- Total catalog items: 433
 
 ## Coverage by implementation status
-- typed: 308
-- catalog-only: 95
+- typed: 315
+- catalog-only: 115
 
 ## Coverage by risk
-- mutation: 155
-- read: 135
+- mutation: 166
+- read: 150
 - destructive: 57
-- sensitive-read: 56
+- sensitive-read: 57
 
 ## Coverage by auth family
-- portal_bearer: 352
+- portal_bearer: 379
 - developer: 46
 - oauth: 4
 
 ## Coverage by tier requirement
-- none: 387
+- none: 414
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
@@ -39,6 +39,7 @@ Generated: 2026-05-10
 - marketing.campaigns: 19
 - webhooks.journal: 19
 - conversations: 18
+- settings.currencies: 15
 - automation.actions: 14
 - marketing.emails: 14
 - crm.objects: 13
@@ -54,9 +55,9 @@ Generated: 2026-05-10
 - crm.extensions.calling: 9
 - crm.limits: 9
 - crm.associations.schema: 8
+- engagements.v1: 8
 - events.definitions: 8
 - automation.flows: 7
-- engagements.v1: 7
 - account: 6
 - files.folders: 6
 - marketing.forms: 6
@@ -66,16 +67,19 @@ Generated: 2026-05-10
 - crm.imports: 5
 - crm.properties: 5
 - crm.schemas: 5
+- email.events: 5
 - settings.users: 5
 - auth.oauth: 4
 - automation.sequences: 4
 - automation.workflows: 4
 - crm.property_groups: 4
+- email.subscriptions_v1: 4
 - scheduler.meetings: 4
 - cms.source_code: 3
 - crm.exports: 3
 - crm.extensions.videoconferencing: 3
 - crm.quotes: 3
+- email.smtp: 3
 - marketing.forms.submissions: 3
 - marketing.marketing_events: 3
 - analytics: 2
@@ -88,9 +92,9 @@ Generated: 2026-05-10
 - crm.property_validations: 2
 - events: 2
 - events.send: 2
-- settings.currencies: 2
 - business_units: 1
 - conversations.visitor_identification: 1
+- email.transactional_v1: 1
 - marketing.transactional_emails: 1
 - scheduler.calendar: 1
 - settings.roles: 1

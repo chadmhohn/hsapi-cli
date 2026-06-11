@@ -1,6 +1,7 @@
 // Aggregates every command family so the dispatcher imports one module.
 
 module.exports = {
+  ...require('./email-events'),
   ...require('./auth'),
   ...require('./maintenance'),
   ...require('./crm'),
