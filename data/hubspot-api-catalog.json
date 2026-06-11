@@ -18983,6 +18983,3339 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "automation.workflows",
+      "name": "automation.workflows.delete_automation_v2_workflows_enrollments_contacts",
+      "method": "DELETE",
+      "path": "/automation/v2/workflows/{workflowId}/enrollments/contacts/{email}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.workflows",
+      "name": "automation.workflows.delete_automation_v3_workflows",
+      "method": "DELETE",
+      "path": "/automation/v3/workflows/{workflowId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.delete_cms_hubdb_2026_03_tables",
+      "method": "DELETE",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.delete_cms_hubdb_2026_03_tables_rows_draft",
+      "method": "DELETE",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}/draft",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.delete_cms_hubdb_2026_03_tables_versions",
+      "method": "DELETE",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/versions/{versionId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.delete_cms_pages_2026_03_landing_pages_folders",
+      "method": "DELETE",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.delete_crm_extensions_calling_2026_03_transcripts",
+      "method": "DELETE",
+      "path": "/crm/extensions/calling/2026-03/transcripts/{transcriptId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.delete_crm_extensions_cards_dev_2026_03",
+      "method": "DELETE",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/{cardId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "files.folders",
+      "name": "files.folders.delete_files_v3_folders",
+      "method": "DELETE",
+      "path": "/files/v3/folders/{folderId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.delete_marketing_marketing_events_2026_03",
+      "method": "DELETE",
+      "path": "/marketing/marketing-events/2026-03/{objectId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.delete_marketing_marketing_events_2026_03_associations_lists",
+      "method": "DELETE",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.delete_marketing_marketing_events_2026_03_events",
+      "method": "DELETE",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.delete_marketing_v3_marketing_events_associations_lists",
+      "method": "DELETE",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.transactional",
+      "name": "marketing.transactional.delete_marketing_v3_transactional_smtp_tokens",
+      "method": "DELETE",
+      "path": "/marketing/v3/transactional/smtp-tokens/{tokenId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "oauth.refresh_tokens",
+      "name": "oauth.refresh_tokens.delete_oauth_v1_refresh_tokens",
+      "method": "DELETE",
+      "path": "/oauth/v1/refresh-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "webhooks.subscriptions",
+      "name": "webhooks.subscriptions.delete_webhooks_v3_subscriptions",
+      "method": "DELETE",
+      "path": "/webhooks/v3/{appId}/subscriptions/{subscriptionId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.action_types",
+      "name": "automation.action_types.get_automation_2026_09_beta_action_types",
+      "method": "GET",
+      "path": "/automation/2026-09-beta/action-types",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.get_automation_2026_09_beta_flows_revisions",
+      "method": "GET",
+      "path": "/automation/2026-09-beta/flows/{flowId}/revisions/{revisionId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.performance",
+      "name": "automation.performance.get_automation_v3_performance_workflow",
+      "method": "GET",
+      "path": "/automation/v3/performance/workflow/{workflowId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_v4_actions_functions",
+      "method": "GET",
+      "path": "/automation/v4/actions/{appId}/{definitionId}/functions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "business_units.public",
+      "name": "business_units.public.get_business_units_public_2026_03_business_units_user",
+      "method": "GET",
+      "path": "/business-units/public/2026-03/business-units/user/{userId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.get_cms_blog_settings_2026_03_settings",
+      "method": "GET",
+      "path": "/cms/blog-settings/2026-03/settings",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.get_cms_blog_settings_2026_03_settings_2",
+      "method": "GET",
+      "path": "/cms/blog-settings/2026-03/settings/{blogId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.get_cms_blog_settings_2026_03_settings_revisions",
+      "method": "GET",
+      "path": "/cms/blog-settings/2026-03/settings/{blogId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.get_cms_blog_settings_2026_03_settings_revisions_2",
+      "method": "GET",
+      "path": "/cms/blog-settings/2026-03/settings/{blogId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.get_cms_blogs_2026_03_posts_revisions",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/posts/{objectId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.get_cms_blogs_2026_03_posts_revisions_2",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/posts/{objectId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.get_cms_hubdb_2026_03_tables_draft",
+      "method": "GET",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.get_cms_hubdb_2026_03_tables_draft_export",
+      "method": "GET",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft/export",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.get_cms_hubdb_2026_03_tables_export",
+      "method": "GET",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/export",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.get_cms_hubdb_2026_03_tables_rows",
+      "method": "GET",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.get_cms_hubdb_2026_03_tables_rows_draft",
+      "method": "GET",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}/draft",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_landing_pages_revisions",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/landing-pages/{objectId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_landing_pages_revisions_2",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/landing-pages/{objectId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_landing_pages_folders",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_landing_pages_folders_revisions",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_landing_pages_folders_revisions_2",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_site_pages_revisions",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/site-pages/{objectId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.get_cms_pages_2026_03_site_pages_revisions_2",
+      "method": "GET",
+      "path": "/cms/pages/2026-03/site-pages/{objectId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.source_code",
+      "name": "cms.source_code.get_cms_source_code_2026_03_content",
+      "method": "GET",
+      "path": "/cms/source-code/2026-03/{environment}/content/{path}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.source_code",
+      "name": "cms.source_code.get_cms_source_code_2026_03_metadata",
+      "method": "GET",
+      "path": "/cms/source-code/2026-03/{environment}/metadata/{path}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.source_code",
+      "name": "cms.source_code.get_cms_source_code_2026_03_extract_async_tasks_status",
+      "method": "GET",
+      "path": "/cms/source-code/2026-03/extract/async/tasks/{taskId}/status",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "communication_preferences.status",
+      "name": "communication_preferences.status.get_communication_preferences_v3_status_email",
+      "method": "GET",
+      "path": "/communication-preferences/v3/status/email/{emailAddress}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.associations",
+      "name": "crm.associations.get_crm_associations_2026_03_definitions_configurations_all",
+      "method": "GET",
+      "path": "/crm/associations/2026-03/definitions/configurations/all",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.get_crm_extensions_calling_2026_03_settings_channel_connection",
+      "method": "GET",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings/channel-connection",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.get_crm_extensions_cards_dev_2026_03",
+      "method": "GET",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.get_crm_extensions_cards_dev_2026_03_2",
+      "method": "GET",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/{cardId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.get_crm_lists_2026_03",
+      "method": "GET",
+      "path": "/crm/lists/2026-03",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.pipelines",
+      "name": "crm.pipelines.get_crm_pipelines_2026_03_audit",
+      "method": "GET",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}/audit",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.pipelines",
+      "name": "crm.pipelines.get_crm_pipelines_2026_03_stages",
+      "method": "GET",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}/stages/{stageId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.properties",
+      "name": "crm.properties.get_crm_properties_2026_03_groups",
+      "method": "GET",
+      "path": "/crm/properties/2026-03/{objectType}/groups/{groupName}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.property_validations",
+      "name": "crm.property_validations.get_crm_property_validations_2026_03",
+      "method": "GET",
+      "path": "/crm/property-validations/2026-03/{objectTypeId}/{propertyName}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.property_validations",
+      "name": "crm.property_validations.get_crm_property_validations_2026_03_rule_type",
+      "method": "GET",
+      "path": "/crm/property-validations/2026-03/{objectTypeId}/{propertyName}/rule-type/{ruleType}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.associations",
+      "name": "crm.associations.get_crm_v3_associations_types",
+      "method": "GET",
+      "path": "/crm/v3/associations/{fromObjectType}/{toObjectType}/types",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "events.events",
+      "name": "events.events.get_events_v3_events",
+      "method": "GET",
+      "path": "/events/v3/events",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "events.events",
+      "name": "events.events.get_events_v3_events_event_types",
+      "method": "GET",
+      "path": "/events/v3/events/event-types",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "files.files",
+      "name": "files.files.get_files_v3_files_stat",
+      "method": "GET",
+      "path": "/files/v3/files/stat/{path}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "form_integrations.uploaded_files",
+      "name": "form_integrations.uploaded_files.get_form_integrations_v1_uploaded_files_signed_url_redirect",
+      "method": "GET",
+      "path": "/form-integrations/v1/uploaded-files/signed-url-redirect/{fileId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03_settings",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/{appId}/settings",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03_identifiers",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/{externalEventId}/identifiers",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/{objectId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03_associations_lists",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03_events",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_marketing_events_2026_03_participations",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/participations/{externalAccountId}/{externalEventId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_events_2026_03_participations_contacts_breakdown",
+      "method": "GET",
+      "path": "/marketing/marketing-events/2026-03/participations/contacts/{contactIdentifier}/breakdown",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_v3_emails_revisions",
+      "method": "GET",
+      "path": "/marketing/v3/emails/{emailId}/revisions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_v3_marketing_events_associations_lists",
+      "method": "GET",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_v3_marketing_events_participations_breakdown",
+      "method": "GET",
+      "path": "/marketing/v3/marketing-events/participations/{externalAccountId}/{externalEventId}/breakdown",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.get_marketing_v3_marketing_events_participations",
+      "method": "GET",
+      "path": "/marketing/v3/marketing-events/participations/{marketingEventId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.transactional",
+      "name": "marketing.transactional.get_marketing_v3_transactional_smtp_tokens",
+      "method": "GET",
+      "path": "/marketing/v3/transactional/smtp-tokens",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.transactional",
+      "name": "marketing.transactional.get_marketing_v3_transactional_smtp_tokens_2",
+      "method": "GET",
+      "path": "/marketing/v3/transactional/smtp-tokens/{tokenId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "oauth.access_tokens",
+      "name": "oauth.access_tokens.get_oauth_v1_access_tokens",
+      "method": "GET",
+      "path": "/oauth/v1/access-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "oauth.refresh_tokens",
+      "name": "oauth.refresh_tokens.get_oauth_v1_refresh_tokens",
+      "method": "GET",
+      "path": "/oauth/v1/refresh-tokens/{token}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "webhooks.subscriptions",
+      "name": "webhooks.subscriptions.get_webhooks_v3_subscriptions",
+      "method": "GET",
+      "path": "/webhooks/v3/{appId}/subscriptions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "webhooks.subscriptions",
+      "name": "webhooks.subscriptions.get_webhooks_v3_subscriptions_2",
+      "method": "GET",
+      "path": "/webhooks/v3/{appId}/subscriptions/{subscriptionId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.patch_cms_blogs_2026_03_posts",
+      "method": "PATCH",
+      "path": "/cms/blogs/2026-03/posts/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.patch_cms_hubdb_2026_03_tables_draft",
+      "method": "PATCH",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.patch_cms_hubdb_2026_03_tables_rows_draft",
+      "method": "PATCH",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}/draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.patch_cms_pages_2026_03_landing_pages",
+      "method": "PATCH",
+      "path": "/cms/pages/2026-03/landing-pages/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.patch_cms_pages_2026_03_landing_pages_folders",
+      "method": "PATCH",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.patch_cms_pages_2026_03_site_pages",
+      "method": "PATCH",
+      "path": "/cms/pages/2026-03/site-pages/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "conversations.custom_channels",
+      "name": "conversations.custom_channels.patch_ons_custom_channels_2026_03_channel_account_staging_tokens",
+      "method": "PATCH",
+      "path": "/conversations/custom-channels/2026-03/{channelId}/channel-account-staging-tokens/{accountToken}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "conversations.custom_channels",
+      "name": "conversations.custom_channels.patch_conversations_custom_channels_2026_03_channel_accounts",
+      "method": "PATCH",
+      "path": "/conversations/custom-channels/2026-03/{channelId}/channel-accounts/{channelAccountId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.patch_crm_extensions_calling_2026_03_settings",
+      "method": "PATCH",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.patch_crm_extensions_calling_2026_03_settings_channel_connection",
+      "method": "PATCH",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings/channel-connection",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.patch_crm_extensions_cards_dev_2026_03",
+      "method": "PATCH",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/{cardId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.patch_marketing_campaigns_2026_03",
+      "method": "PATCH",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.patch_marketing_marketing_events_2026_03",
+      "method": "PATCH",
+      "path": "/marketing/marketing-events/2026-03/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.patch_marketing_marketing_events_2026_03_events",
+      "method": "PATCH",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.workflow_id_mappings",
+      "name": "automation.workflow_id_mappings.post_automation_2026_09_beta_workflow_id_mappings_batch_read",
+      "method": "POST",
+      "path": "/automation/2026-09-beta/workflow-id-mappings/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.post_automation_actions_callbacks_2026_03_complete",
+      "method": "POST",
+      "path": "/automation/actions/callbacks/2026-03/{callbackId}/complete",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.post_automation_actions_callbacks_2026_03_complete_2",
+      "method": "POST",
+      "path": "/automation/actions/callbacks/2026-03/complete",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "automation.workflows",
+      "name": "automation.workflows.post_automation_v3_workflows",
+      "method": "POST",
+      "path": "/automation/v3/workflows",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.post_tings_2026_03_settings_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/blog-settings/2026-03/settings/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.post__2026_03_settings_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/blog-settings/2026-03/settings/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.post_ngs_2026_03_settings_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/blog-settings/2026-03/settings/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.post__settings_2026_03_settings_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/blog-settings/2026-03/settings/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_revisions_restore",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/{objectId}/revisions/{revisionId}/restore",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_revisions_restore_to_draft",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/{objectId}/revisions/{revisionId}/restore-to-draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_batch_archive",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_batch_create",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_batch_read",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_batch_update",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_clone",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_ms_blogs_2026_03_posts_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_ogs_2026_03_posts_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post__blogs_2026_03_posts_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.post_cms_blogs_2026_03_posts_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/posts/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_draft_clone",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_draft_import",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft/import",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_draft_publish",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft/publish",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_draft_reset",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/draft/reset",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_clone",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}/draft/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_batch_read",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_clone",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_create",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_purge",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/purge",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_read",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_replace",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/replace",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_rows_draft_batch_update",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/draft/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.post_cms_hubdb_2026_03_tables_unpublish",
+      "method": "POST",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/unpublish",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_revisions_restore",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/{objectId}/revisions/{revisionId}/restore",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_revisions_restore_to_draft",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/{objectId}/revisions/{revisionId}/restore-to-draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_ab_test_create_variation",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/ab-test/create-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_ab_test_end",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/ab-test/end",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_ab_test_rerun",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/ab-test/rerun",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_batch_archive",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_batch_create",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_batch_read",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_batch_update",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_clone",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders_revisions_restore",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders/{objectId}/revisions/{revisionId}/restore",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders_batch_archive",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders_batch_create",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders_batch_read",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_landing_pages_folders_batch_update",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/folders/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post__2026_03_landing_pages_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post__03_landing_pages_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_026_03_landing_pages_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_ages_2026_03_landing_pages_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/landing-pages/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_revisions_restore",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/{objectId}/revisions/{revisionId}/restore",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_revisions_restore_to_draft",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/{objectId}/revisions/{revisionId}/restore-to-draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_ab_test_create_variation",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/ab-test/create-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_ab_test_end",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/ab-test/end",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_ab_test_rerun",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/ab-test/rerun",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_batch_archive",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_batch_create",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_batch_read",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_batch_update",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_cms_pages_2026_03_site_pages_clone",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_ges_2026_03_site_pages_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_026_03_site_pages_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_s_2026_03_site_pages_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.post_s_pages_2026_03_site_pages_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/pages/2026-03/site-pages/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.source_code",
+      "name": "cms.source_code.post_cms_source_code_2026_03_content",
+      "method": "POST",
+      "path": "/cms/source-code/2026-03/{environment}/content/{path}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.source_code",
+      "name": "cms.source_code.post_cms_source_code_2026_03_extract_async",
+      "method": "POST",
+      "path": "/cms/source-code/2026-03/extract/async",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "communication_preferences.subscribe",
+      "name": "communication_preferences.subscribe.post_communication_preferences_v3_subscribe",
+      "method": "POST",
+      "path": "/communication-preferences/v3/subscribe",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "communication_preferences.unsubscribe",
+      "name": "communication_preferences.unsubscribe.post_communication_preferences_v3_unsubscribe",
+      "method": "POST",
+      "path": "/communication-preferences/v3/unsubscribe",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm_object_schemas.schemas",
+      "name": "crm_object_schemas.schemas.post_crm_object_schemas_2026_03_schemas_batch_read",
+      "method": "POST",
+      "path": "/crm-object-schemas/2026-03/schemas/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.associations",
+      "name": "crm.associations.post_crm_associations_2026_03_usage_high_usage_report",
+      "method": "POST",
+      "path": "/crm/associations/2026-03/usage/high-usage-report/{userId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.post_crm_extensions_calling_2026_03_settings",
+      "method": "POST",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.post_crm_extensions_calling_2026_03_settings_channel_connection",
+      "method": "POST",
+      "path": "/crm/extensions/calling/2026-03/{appId}/settings/channel-connection",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.post_crm_extensions_calling_2026_03_inbound_call",
+      "method": "POST",
+      "path": "/crm/extensions/calling/2026-03/inbound-call",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.post_crm_extensions_cards_dev_2026_03",
+      "method": "POST",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.extensions",
+      "name": "crm.extensions.post_crm_extensions_cards_dev_2026_03_views_migrate",
+      "method": "POST",
+      "path": "/crm/extensions/cards-dev/2026-03/{appId}/views/migrate",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.post_crm_lists_2026_03_idmapping",
+      "method": "POST",
+      "path": "/crm/lists/2026-03/idmapping",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.post_crm_lists_2026_03_records_memberships_batch_read",
+      "method": "POST",
+      "path": "/crm/lists/2026-03/records/memberships/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.properties",
+      "name": "crm.properties.post_crm_properties_2026_03_batch_archive",
+      "method": "POST",
+      "path": "/crm/properties/2026-03/{objectType}/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.properties",
+      "name": "crm.properties.post_crm_properties_2026_03_batch_create",
+      "method": "POST",
+      "path": "/crm/properties/2026-03/{objectType}/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.properties",
+      "name": "crm.properties.post_crm_properties_2026_03_batch_read",
+      "method": "POST",
+      "path": "/crm/properties/2026-03/{objectType}/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_batch_archive",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_batch_create",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_batch_read",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_batch_update",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_emails_2026_03_ab_test_create_variation",
+      "method": "POST",
+      "path": "/marketing/emails/2026-03/ab-test/create-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_emails_2026_03_clone",
+      "method": "POST",
+      "path": "/marketing/emails/2026-03/clone",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_settings",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/{appId}/settings",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_attendance_create",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/attendance/{externalEventId}/{subscriberState}/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_attendance_email_create",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/attendance/{externalEventId}/{subscriberState}/email-create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_batch_archive",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_batch_update",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_events_email_upsert",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}/{subscriberState}/email-upsert",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_events_upsert",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}/{subscriberState}/upsert",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_events_cancel",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}/cancel",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_marketing_events_2026_03_events_delete",
+      "method": "POST",
+      "path": "/marketing/marketing-events/2026-03/events/delete",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_v3_emails_unpublish",
+      "method": "POST",
+      "path": "/marketing/v3/emails/{emailId}/unpublish",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_v3_marketing_events_attendance_create",
+      "method": "POST",
+      "path": "/marketing/v3/marketing-events/{objectId}/attendance/{subscriberState}/create",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_v3_marketing_events_attendance_email_create",
+      "method": "POST",
+      "path": "/marketing/v3/marketing-events/{objectId}/attendance/{subscriberState}/email-create",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.post_marketing_v3_marketing_events_events_complete",
+      "method": "POST",
+      "path": "/marketing/v3/marketing-events/events/{externalEventId}/complete",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.transactional",
+      "name": "marketing.transactional.post_marketing_v3_transactional_smtp_tokens",
+      "method": "POST",
+      "path": "/marketing/v3/transactional/smtp-tokens",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.transactional",
+      "name": "marketing.transactional.post_marketing_v3_transactional_smtp_tokens_password_reset",
+      "method": "POST",
+      "path": "/marketing/v3/transactional/smtp-tokens/{tokenId}/password-reset",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.email",
+      "name": "marketing.email.post_marketing_v4_email_single_send",
+      "method": "POST",
+      "path": "/marketing/v4/email/single-send",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blog_settings",
+      "name": "cms.blog_settings.put_tings_2026_03_settings_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/blog-settings/2026-03/settings/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.blogs",
+      "name": "cms.blogs.put_ms_blogs_2026_03_posts_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/blogs/2026-03/posts/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.hubdb",
+      "name": "cms.hubdb.put_cms_hubdb_2026_03_tables_rows_draft",
+      "method": "PUT",
+      "path": "/cms/hubdb/2026-03/tables/{tableIdOrName}/rows/{rowId}/draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.put__2026_03_landing_pages_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/pages/2026-03/landing-pages/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "cms.pages",
+      "name": "cms.pages.put_ges_2026_03_site_pages_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/pages/2026-03/site-pages/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_memberships_add",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/{listId}/memberships/add",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_memberships_add_from",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/{listId}/memberships/add-from/{sourceListId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_update_list_filters",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/{listId}/update-list-filters",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.pipelines",
+      "name": "crm.pipelines.put_crm_pipelines_2026_03",
+      "method": "PUT",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.pipelines",
+      "name": "crm.pipelines.put_crm_pipelines_2026_03_stages",
+      "method": "PUT",
+      "path": "/crm/pipelines/2026-03/{objectType}/{pipelineId}/stages/{stageId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_v3_lists_memberships_remove",
+      "method": "PUT",
+      "path": "/crm/v3/lists/{listId}/memberships/remove",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.put_marketing_marketing_events_2026_03_associations_lists",
+      "method": "PUT",
+      "path": "/marketing/marketing-events/2026-03/associations/{externalAccountId}/{externalEventId}/lists/{listId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.put_marketing_marketing_events_2026_03_events",
+      "method": "PUT",
+      "path": "/marketing/marketing-events/2026-03/events/{externalEventId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "marketing.marketing_events",
+      "name": "marketing.marketing_events.put_marketing_v3_marketing_events_associations_lists",
+      "method": "PUT",
+      "path": "/marketing/v3/marketing-events/associations/{marketingEventId}/lists/{listId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
     }
   ]
 }
