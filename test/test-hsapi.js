@@ -6136,3 +6136,32 @@ test('85 Issue #66: email events typed family + currencies completion', async ()
   assert.notStrictEqual(missingPair.status, 0);
   assert.match(missingPair.stderr, /requires <created> <id>/);
 });
+
+test('86 Issue #66: tranche-2 backfill - docs-discoverable surfaces are catalog-backed', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  // page folders + revisions (new sub-surfaces, not version twins)
+  const folders = await expectShowRequest(['request', 'GET', '/cms/pages/2026-03/landing-pages/folders/77'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/cms/pages/2026-03/landing-pages/folders/77'
+  });
+  assert.match(folders.endpoint.id, /^cms\.pages\./);
+
+  // marketing-events list associations
+  const meLists = await expectShowRequest(['request', 'GET', '/marketing/marketing-events/2026-03/associations/acct-1/evt-1/lists'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/marketing-events/2026-03/associations/acct-1/evt-1/lists'
+  });
+  assert.match(meLists.endpoint.id, /^marketing\.marketing_events\./);
+
+  // typed entries still win over appended stubs
+  const typedWins = await expectShowRequest(['crm', 'get', 'contacts', '101'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/contacts/101',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(typedWins.endpoint.id, 'objects.get');
+});
