@@ -1084,6 +1084,31 @@ async function main() {
         assert.deepStrictEqual(missingArgs, [], 'every typed command must document args in the catalog');
       }
 
+      {
+        // Issue #17 (slice 2): usage is generated from the endpoint catalog.
+        const fullUsage = await run(['help'], baseEnv);
+        assert.strictEqual(fullUsage.status, 0);
+        assert.match(fullUsage.stdout, /Typed commands \(generated from the endpoint catalog/);
+        assert.match(fullUsage.stdout, /hsapi lists create\|search\|get\|get-by-name\|update-name\|delete\|restore\|memberships\|membership-update\|memberships-clear\|record-memberships \.\.\. \[--portal <name>\] \[--yes\]/);
+        assert.match(fullUsage.stdout, /hsapi account details\|usage\|subscription \.\.\. \[--portal <name>\]\n/);
+
+        const usageCatalog = writeTempCatalog((catalog) => {
+          catalog.endpoints.push({
+            family: 'zz.fake',
+            name: 'zz.fake.ping',
+            method: 'GET',
+            path: '/zz-fake/2026-03/ping',
+            risk: 'read',
+            status: 'typed',
+            command: 'hsapi zz-fake ping',
+            auth: { family: 'portal_bearer', subtype: 'private_app_or_static_app', fallback: 'none' }
+          });
+        });
+        const customUsage = await run(['help'], { ...baseEnv, HSAPI_CATALOG_FILE: usageCatalog });
+        assert.strictEqual(customUsage.status, 0);
+        assert.match(customUsage.stdout, /hsapi zz-fake ping \.\.\. \[--portal <name>\]/);
+      }
+
       const visitorTokenHelp = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
       assert.strictEqual(visitorTokenHelp.argsDocumented, true);
       assert(visitorTokenHelp.args.some((arg) => arg.name === 'yes' && arg.type === 'boolean'));

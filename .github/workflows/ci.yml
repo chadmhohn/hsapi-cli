@@ -68,10 +68,11 @@ jobs:
       - name: Package smoke test
         run: npm test
 
-      - name: Coverage dashboard drift check
+      - name: Generated docs drift check (dashboard + README scope)
         run: |
           npm run catalog:dashboard
-          git diff --exit-code -- docs/hubspot-api-updates/coverage-dashboard.md
+          npm run readme:scope
+          git diff --exit-code -- docs/hubspot-api-updates/coverage-dashboard.md README.md
 
       - name: Package dry run
         run: |

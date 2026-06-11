@@ -18,6 +18,7 @@ const {
   pathTemplateToRegex,
   summarizeCatalogCoverage
 } = require('./catalog');
+const { buildUsage } = require('./usage');
 
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const WORKSPACE_ROOT = process.env.HSAPI_WORKSPACE_ROOT
@@ -614,135 +615,8 @@ async function resolveCrmObjectTypeWithCustomFallback(portal, input, flags) {
 }
 
 function usage() {
-  return `hsapi - portal-aware HubSpot API CLI
-
-Usage:
-  hsapi profiles list [--json]
-  hsapi request <METHOD> <PATH_OR_URL> [--portal <name>] [--query k=v] [--body <json|@file>] [--yes] [--read-only] [--paginate]
-  hsapi crm object-types [--family core|commerce|activity|optional|all] [--names-only]
-  hsapi crm resolve-object <name|objectTypeId> [--custom-fallback]
-  hsapi crm list <objectType> [--portal <name>] [--properties a,b] [--limit n] [--archived] [--count-only]
-  hsapi crm get <objectType> <id> [--portal <name>] [--properties a,b] [--properties-with-history a,b] [--id-property name]
-  hsapi crm search <objectType> [--portal <name>] --filter property:OP[:value] [--filter-group "expr;expr"] [--search-body <json|@file>] [--properties a,b] [--properties-with-history a,b] [--search text] [--sort property[:ASC|DESC]] [--after token] [--limit n] [--count-only] [--paginate]
-  hsapi crm count <objectType> [--portal <name>] [--filter property:OP:value] [--search text]
-  hsapi crm exists <objectType> [--portal <name>] --filter property:OP:value
-  hsapi crm find-one <objectType> [--portal <name>] --filter property:OP:value [--properties a,b]
-  hsapi crm create <objectType> [--portal <name>] --properties <json|@file> [--associations <json|@file>] [--yes]
-  hsapi crm update <objectType> <id> [--portal <name>] --properties <json|@file> [--yes]
-  hsapi crm archive <objectType> <id> [--portal <name>] [--yes]
-  hsapi crm merge <objectType> <primaryId> <objectIdToMerge> [--portal <name>] --danger-merge [--yes]
-  hsapi crm gdpr-delete <objectType> <id> [--portal <name>] [--id-property name] --danger-gdpr-delete [--yes]
-  hsapi crm batch-read <objectType> --ids <id,id|@file> [--properties a,b] [--properties-with-history a,b] [--id-property name]
-  hsapi crm batch-create <objectType> --inputs <json|@file> [--yes]
-  hsapi crm batch-update <objectType> --inputs <json|@file> [--yes]
-  hsapi crm batch-upsert <objectType> --inputs <json|@file> [--yes]
-  hsapi crm batch-archive <objectType> --ids <id,id|@file> [--yes]
-  hsapi properties list <objectType> [--portal <name>] [--names-only]
-  hsapi properties names <objectType> [--portal <name>]
-  hsapi properties get <objectType> <propertyName> [--portal <name>]
-  hsapi properties create <objectType> [--portal <name>] --body <json|@file> [--yes]
-  hsapi properties update <objectType> <propertyName> [--portal <name>] --body <json|@file> [--yes]
-  hsapi properties archive <objectType> <propertyName> [--portal <name>] [--yes]
-  hsapi associations types <fromType> <toType> [--portal <name>]
-  hsapi associations list <fromType> <fromId> <toType> [--portal <name>] [--limit n]
-  hsapi associations create-default <fromType> <fromId> <toType> <toId> [--portal <name>] [--yes]
-  hsapi associations create <fromType> <fromId> <toType> <toId> --category <category> --type-id <id> [--yes]
-  hsapi associations delete <fromType> <fromId> <toType> <toId> [--portal <name>] [--yes]
-  hsapi associations batch-read <fromType> <toType> --ids <id,id|@file>
-  hsapi associations batch-create-default <fromType> <toType> --inputs <json|@file> [--yes]
-  hsapi associations batch-create <fromType> <toType> --inputs <json|@file> [--yes]
-  hsapi associations batch-archive <fromType> <toType> --inputs <json|@file> [--yes]
-  hsapi associations batch-labels-archive <fromType> <toType> --inputs <json|@file> [--yes]
-  hsapi owners list [--portal <name>] [--email <email>] [--limit n] [--after token] [--archived] [--paginate]
-  hsapi owners get <ownerId> [--portal <name>] [--id-property id|userId] [--archived]
-  hsapi account details [--portal <name>]
-  hsapi account usage [--portal <name>]
-  hsapi account subscription [--portal <name>]
-  hsapi tiers products
-  hsapi tiers apis [--hub <hubId>] [--tier free|starter|pro|enterprise] [--include-global]
-  hsapi tiers portal [--portal <name>]
-  hsapi property-groups list <objectType> [--portal <name>]
-  hsapi property-groups create <objectType> --name <name> --label <label> [--display-order n] [--yes]
-  hsapi property-groups update <objectType> <groupName> [--label <label>] [--display-order n] [--yes]
-  hsapi property-groups archive <objectType> <groupName> [--yes]
-  hsapi property-validations list <objectType> [--portal <name>]
-  hsapi property-validations set <objectType> <propertyName> <ruleType> --arguments <json|@file> [--normalize] [--yes]
-  hsapi schemas list|get|create|update|delete ... [--portal <name>] [--yes]
-  hsapi object-library status [--portal <name>]
-  hsapi association-labels list|create|update|delete ... [--portal <name>] [--yes]
-  hsapi association-limits list|create|update|delete ... [--portal <name>] [--yes]
-  hsapi pipelines list|get|create|update|delete|stages|stage-create|stage-update|stage-delete|stage-audit ... [--portal <name>] [--yes]
-  hsapi lists search|get|get-by-name|create|update-name|delete|restore|memberships|membership-update|memberships-clear|record-memberships ... [--portal <name>] [--yes]
-  hsapi exports start|get|status ... [--portal <name>] [--yes]
-  hsapi imports list|get|errors|cancel|start ... [--portal <name>] [--yes]
-  hsapi subscriptions definitions|status|set-status|unsubscribe-all-status|unsubscribe-all|batch-read|batch-unsubscribe-all-read|batch-unsubscribe-all|batch-write|generate-links ... [--portal <name>] [--yes]
-  hsapi files search|get|signed-url|upload|replace|update|import-url|import-status|delete|gdpr-delete|folder-search|folder-get|folder-create|folder-update|folder-update-async|folder-update-status ... [--portal <name>] [--yes]
-  hsapi mcp serve
-  hsapi events types|occurrences|definitions|definition-get|definition-create|definition-update|definition-delete|property-create|property-update|property-delete|send|send-batch ... [--portal <name>] [--yes]
-  hsapi webhooks settings|settings-update|settings-delete|subscription-create|subscription-update|subscription-batch-update ... [--portal <name>] [--yes]
-  hsapi webhook-journal journal-earliest|journal-status|journal-batch-read|local-earliest|local-latest|local-next|local-status|local-batch-earliest|local-batch-latest|local-batch-read|snapshot-crm|subscription-list|subscription-create|subscription-delete|subscription-delete-portal|filter-create|filter-list|filter-get|filter-delete ... [--portal <name>] [--yes]
-  hsapi conversations threads|thread-get|thread-update|thread-delete|assignee-update|assignee-delete|messages|message-get|message-original|message-create|actors-get|actors-batch-read|channels|channel-get|channel-accounts|channel-account-get|inboxes|inbox-get|custom-channels|custom-channel-get|custom-channel-create|custom-channel-update|custom-channel-delete|custom-channel-accounts|custom-channel-account-get|custom-channel-account-create|custom-message-create|custom-message-get|custom-message-update|visitor-token ... [--portal <name>] [--yes]
-  hsapi forms list|get|create|patch|update|archive|submissions|submit ... [--portal <name>] [--yes]
-  hsapi forms secure-submit <portalId> <formGuid> --fields <json|@file> [--portal <name>] [--yes]
-  hsapi marketing emails create|update|delete ... [--portal <name>] [--yes]
-  hsapi marketing campaigns create|get|delete ... [--portal <name>] [--yes]
-  hsapi marketing events list|create|upsert ... [--portal <name>] [--yes]
-  hsapi marketing transactional send --email-id <id> --to <email> ... [--portal <name>] [--yes]
-  hsapi automation workflows list|get|current-enrollment|enroll ... [--portal <name>] [--yes]
-  hsapi automation sequences list|get|enroll|status ... [--portal <name>] [--user-id <id>] [--yes]
-  hsapi extensions calling settings|recording-settings|channel-connection|recordings|transcripts ... [--portal <name>] [--yes]
-  hsapi extensions videoconferencing settings get|delete <appId> [--portal <name>] [--yes]
-  hsapi cms site-pages list|get|create|draft-get|draft-update|draft-reset|push-live|schedule|delete ... [--portal <name>] [--yes]
-  hsapi cms landing-pages list|get|create|draft-get|draft-update|draft-reset|push-live|schedule|delete ... [--portal <name>] [--yes]
-  hsapi cms blog-posts list|get|create|draft-get|draft-update|draft-reset|push-live|schedule|delete ... [--portal <name>] [--yes]
-  hsapi cms redirects list|get|create|update|delete ... [--portal <name>] [--yes]
-  hsapi cms hubdb tables list|get|create ... [--portal <name>] [--yes]
-  hsapi cms hubdb rows list|create <tableIdOrName> ... [--portal <name>] [--yes]
-  hsapi cms source-code upload|validate|delete <environment> <path> ... [--portal <name>] [--yes]
-  hsapi cms doctor [--portal <name>] [--content-id <id>] [--type <contentType>]
-  hsapi cms domains list|get ... [--portal <name>]
-  hsapi cms search --q <term> ... [--portal <name>]
-  hsapi cms indexed-data <contentId> [--portal <name>] [--type <contentType>]
-  hsapi project doctor --account <account>
-  hsapi project list|info|list-builds|logs|validate|lint ... --account <account>
-  hsapi project upload|deploy|delete|create|add|download|migrate|install-deps|update-deps ... --account <account> [--yes]
-  hsapi scheduler links|booking-info|availability|book|calendar-create ... [--portal <name>] [--yes]
-  hsapi auth doctor [--portal <name>] [--require-env]
-  hsapi auth authorize-url|token|refresh|introspect|revoke ... [--show-request] [--show-secrets] [--yes]
-  hsapi limits records|associations|custom-properties|calculated-properties|association-labels|pipelines|custom-object-types [--portal <name>]
-  hsapi catalog coverage
-  hsapi catalog commands
-  hsapi history [--since 24h|7d|ISO] [--portal <name>] [--limit n]
-  hsapi upgrade [--check]
-  hsapi help <command words>     e.g. hsapi help crm search   (also: any typed command + --help)
-
-Config:
-  ${DEFAULT_CONFIG}
-
-Output:
-  --select <path>              Print one projected value, e.g. data.results[].id
-  --pick <path,path>           Print a compact object keyed by selected paths
-  --raw-value                  With --select, print scalar string/number/boolean/null without JSON quotes
-  --ids-only                   Print { ok, portal, count, ids } from common result arrays
-  --names-only                 Print { ok, portal, count, names } from common result arrays
-  --id-name-map                Print { ok, portal, count, items: [{ id, name }] } from common result arrays
-  --compact, --agent           Omit routine envelope metadata such as rateLimit, requestId, method, and url
-  --max-results <n>            Trim obvious results arrays and mark output truncated
-  --max-chars <n>              Fail when serialized output exceeds n chars
-  --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
-
-Notes:
-  - hsapi upgrade fast-forwards a git-checkout install to origin/main (--check to inspect first); tarball installs get the gh release download flow printed. The repo can stay private - your existing GitHub auth is used. Restart hsapi-mcp consumers after upgrading.
-  - Executed mutations append to a local audit log (~/.local/state/hsapi/history.jsonl, 0600; override with HSAPI_HISTORY_FILE, disable with HSAPI_HISTORY=0). Payload flag values are recorded as lengths only. Read it with: hsapi history --since 24h
-  - --paginate follows page cursors (crm list query-param after; crm search body after, stopping at HubSpot's 10K search window) and applies a default 1000-result cap. Pass --max-results <n> to change it or --max-results 0 for unlimited.
-  - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.
-  - CRM search filters: property:OP:value (EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, ...), property:IN:a,b / property:NOT_IN:a,b, property:BETWEEN:low:high, property:HAS_PROPERTY / property:NOT_HAS_PROPERTY. Multiple --filter flags AND within one group; repeat --filter-group "expr;expr" for OR between groups; --search-body sends a full HubSpot search JSON body.
-  - Tokens are read from env vars declared in the portal config; secrets are not stored in config.
-  - Mutating requests require --yes. Use request/crm update without --yes to preview.
-  - Some HubSpot read endpoints use POST. Generic --read-only is allowed only for catalog-marked read-only POST endpoints.
-  - Add --show-request to inspect the exact request without sending it to HubSpot.`;
+  return buildUsage(DEFAULT_CONFIG, CATALOG_FILE);
 }
-
 function fail(message, code = 1) {
   writeStderr(message);
   exitCli(code);
