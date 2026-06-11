@@ -3232,6 +3232,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi object-library status",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/object-library/guide",
       "auth": {
         "family": "portal_bearer",
@@ -3248,6 +3249,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi association-labels list <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "auth": {
         "family": "portal_bearer",
@@ -3264,6 +3279,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi association-limits list <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "contextUrl": "docs/hubspot-api-context/association-limits.md",
       "auth": {
@@ -3298,6 +3327,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits records",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -3315,6 +3345,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits custom-properties",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -3332,6 +3363,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits calculated-properties",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "tierRequirement": "Professional or Enterprise",
@@ -3350,6 +3382,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits association-labels",
+      "args": [
+        {
+          "name": "fromObjectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "toObjectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": false
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "tierRequirement": "Professional or Enterprise",
@@ -3368,6 +3414,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits custom-object-types",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "tierRequirement": "Enterprise",
@@ -3955,6 +4002,46 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi crm merge <objectType> <primaryId> <objectIdToMerge>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "primaryId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "objectIdToMerge",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "danger-merge",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment: merges are irreversible."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Explicit merge body; overrides the positional IDs."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/custom-objects/merge-custom-objects",
       "contextUrl": "docs/hubspot-api-context/crm-records.md",
       "scopeNotes": "Requires write scope for the selected CRM object type. Merges another record into the primary record and can archive the duplicate.",
@@ -3973,6 +4060,46 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi crm gdpr-delete <objectType> <id>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "id",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "danger-gdpr-delete",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment: GDPR delete is permanent."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "description": "Treat <id> as this unique property (e.g. email)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/crm-tasks-v202509/gdpr/post-crm-objects-2025-09-objectType-gdpr-delete",
       "contextUrl": "docs/hubspot-api-context/crm-records.md",
       "scopeNotes": "Permanent GDPR delete. Confirm object type and identifier before running.",
@@ -3992,6 +4119,43 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi crm batch-read <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "string",
+          "description": "Record IDs: JSON array, CSV, or newline-separated (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "properties-with-history",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "description": "Treat --ids values as this unique property instead of record IDs."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/objects/batch/get-objects",
       "contextUrl": "docs/hubspot-api-context/batch-objects.md",
       "scopeNotes": "Requires read scope for the selected CRM object type.",
@@ -4010,6 +4174,33 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi crm batch-create <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/objects/batch/create-objects",
       "contextUrl": "docs/hubspot-api-context/batch-objects.md",
       "scopeNotes": "Requires write scope for the selected CRM object type.",
@@ -4028,6 +4219,39 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi crm batch-update <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "description": "Apply this idProperty to each input that does not set one."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/objects/batch/update-objects",
       "contextUrl": "docs/hubspot-api-context/batch-objects.md",
       "scopeNotes": "Requires write scope for the selected CRM object type.",
@@ -4046,6 +4270,39 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi crm batch-upsert <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "description": "Apply this idProperty to each input that does not set one."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/objects/batch/upsert-objects",
       "contextUrl": "docs/hubspot-api-context/batch-objects.md",
       "scopeNotes": "Requires write scope for the selected CRM object type. Upsert needs a unique property identifier on each input.",
@@ -4064,6 +4321,33 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi crm batch-archive <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "string",
+          "description": "Record IDs: JSON array, CSV, or newline-separated (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/objects/batch/delete-objects",
       "contextUrl": "docs/hubspot-api-context/batch-objects.md",
       "scopeNotes": "Requires write scope for the selected CRM object type. Archives records by ID.",
@@ -4207,6 +4491,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi associations types <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "auth": {
@@ -4224,6 +4522,38 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi associations list <fromType> <fromId> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "fromId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Page size (default 100)."
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "auth": {
@@ -4241,6 +4571,38 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi associations create-default <fromType> <fromId> <toType> <toId>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "fromId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Requires write access to the selected CRM object relationship. Default associations do not add a custom label.",
@@ -4259,6 +4621,62 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi associations create <fromType> <fromId> <toType> <toId>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "fromId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "kind": "flag",
+          "type": "string",
+          "description": "Association category, e.g. HUBSPOT_DEFINED or USER_DEFINED. Pair with --type-id."
+        },
+        {
+          "name": "type-id",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Association type ID. Pair with --category."
+        },
+        {
+          "name": "types",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of association type specs (alternative to --category/--type-id)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of association type specs, or {\"types\":[...]}."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Requires the correct directional association type ID and write access for the selected object relationship.",
@@ -4277,6 +4695,38 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi associations delete <fromType> <fromId> <toType> <toId>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "fromId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Removes all associations between the two records.",
@@ -4296,6 +4746,27 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi associations batch-read <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Record IDs: JSON array, CSV, or newline-separated (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Batch read accepts up to 1,000 source record IDs per request body.",
@@ -4314,6 +4785,38 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi associations batch-create-default <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Creates unlabeled/default associations in bulk.",
@@ -4332,6 +4835,38 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi associations batch-create <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Creates labeled associations in bulk. Use the directional associationTypeId for the from/to direction.",
@@ -4350,6 +4885,38 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi associations batch-archive <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Removes all associations between each from/to pair in the request body.",
@@ -4368,6 +4935,38 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi associations batch-labels-archive <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array, {\"inputs\":[...]} object, or JSONL one-object-per-line (@file / @- supported). Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associate-records/guide",
       "contextUrl": "docs/hubspot-api-context/associations.md",
       "scopeNotes": "Removes specific labels from associations while leaving other labels or the unlabeled association intact when present.",
@@ -4520,6 +5119,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi object-library status <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/object-library/guide",
       "auth": {
         "family": "portal_bearer",
@@ -4536,6 +5143,43 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi association-labels create <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inverse-label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "auth": {
         "family": "portal_bearer",
@@ -4552,6 +5196,43 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi association-labels update <fromType> <toType> <typeId>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "typeId",
+          "kind": "positional",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inverse-label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "auth": {
         "family": "portal_bearer",
@@ -4568,6 +5249,32 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi association-labels delete <fromType> <toType> <typeId>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "typeId",
+          "kind": "positional",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "auth": {
         "family": "portal_bearer",
@@ -4584,6 +5291,48 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi association-limits create <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "kind": "flag",
+          "type": "string",
+          "description": "Association category. Pair with --type-id and --max-to-object-ids."
+        },
+        {
+          "name": "type-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "max-to-object-ids",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"inputs\":[...]} body; overrides the per-flag form."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "contextUrl": "docs/hubspot-api-context/association-limits.md",
       "auth": {
@@ -4601,6 +5350,48 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi association-limits update <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "kind": "flag",
+          "type": "string",
+          "description": "Association category. Pair with --type-id and --max-to-object-ids."
+        },
+        {
+          "name": "type-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "max-to-object-ids",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"inputs\":[...]} body; overrides the per-flag form."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "contextUrl": "docs/hubspot-api-context/association-limits.md",
       "auth": {
@@ -4618,6 +5409,43 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi association-limits delete <fromType> <toType>",
+      "args": [
+        {
+          "name": "fromType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category",
+          "kind": "flag",
+          "type": "string",
+          "description": "Association category. Pair with --type-id."
+        },
+        {
+          "name": "type-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"inputs\":[...]} body; overrides the per-flag form."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/associations/associations-schema/guide",
       "contextUrl": "docs/hubspot-api-context/association-limits.md",
       "auth": {
@@ -4737,6 +5565,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits associations",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -4754,6 +5583,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits associations <fromObjectTypeId>",
+      "args": [
+        {
+          "name": "fromObjectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -4771,6 +5608,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits associations <fromObjectTypeId> <toObjectTypeId>",
+      "args": [
+        {
+          "name": "fromObjectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "toObjectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -4788,6 +5639,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi limits pipelines",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/limits-tracking/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -4805,6 +5657,126 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi properties create <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Property data type, e.g. string, number, date, datetime, enumeration, bool."
+        },
+        {
+          "name": "field-type",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Form control, e.g. text, textarea, number, select, checkbox, date."
+        },
+        {
+          "name": "group-name",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Property group (also --group)."
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of option objects for enumeration types."
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "calculation-formula",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "currency-property-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "data-sensitivity",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "number-display-hint",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "referenced-object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "external-options",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "form-field",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "has-unique-value",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "hidden",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "show-currency-symbol",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full property definition body (also --property)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/create-property",
       "scopeNotes": "Requires the matching CRM schema/property write scope for the object type. Scope names vary by object family and app type.",
       "contextUrl": "docs/hubspot-api-context/properties.md",
@@ -4823,6 +5795,127 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi properties update <objectType> <propertyName>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Property data type, e.g. string, number, date, datetime, enumeration, bool."
+        },
+        {
+          "name": "field-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Form control, e.g. text, textarea, number, select, checkbox, date."
+        },
+        {
+          "name": "group-name",
+          "kind": "flag",
+          "type": "string",
+          "description": "Property group (also --group)."
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of option objects for enumeration types."
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "calculation-formula",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "currency-property-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "data-sensitivity",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "number-display-hint",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "referenced-object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "external-options",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "form-field",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "has-unique-value",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "hidden",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "show-currency-symbol",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full property definition body (also --property)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/update-property",
       "scopeNotes": "Requires the matching CRM schema/property write scope for the object type. Be careful with calculated or UI-created rollup properties.",
       "contextUrl": "docs/hubspot-api-context/properties.md",
@@ -4841,6 +5934,27 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi properties archive <objectType> <propertyName>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/archive-property",
       "scopeNotes": "Requires the matching CRM schema/property write scope for the object type. Built-in properties and properties in active use may not be archivable.",
       "contextUrl": "docs/hubspot-api-context/properties.md",
