@@ -1050,6 +1050,76 @@ async function main() {
     }
 
     {
+      // hsapi upgrade: git-checkout installs fast-forward to origin/main; tarball
+      // installs get the release-download flow. Uses a local fixture origin.
+      const { spawnSync } = require('child_process');
+      const gitEnv = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', HOME: os.tmpdir() };
+      const git = (cwd, ...gitArgs) => {
+        const result = spawnSync('git', ['-C', cwd, '-c', 'user.email=test@example.com', '-c', 'user.name=Test', ...gitArgs], { encoding: 'utf8', env: gitEnv });
+        assert.strictEqual(result.status, 0, `git ${gitArgs.join(' ')}: ${result.stderr}`);
+        return String(result.stdout || '').trim();
+      };
+      const upgradeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-upgrade-'));
+      const originDir = path.join(upgradeDir, 'origin.git');
+      const seedDir = path.join(upgradeDir, 'seed');
+      const installDir = path.join(upgradeDir, 'install');
+      fs.mkdirSync(originDir);
+      fs.mkdirSync(seedDir);
+      spawnSync('git', ['init', '--bare', '-b', 'main', originDir], { env: gitEnv });
+      spawnSync('git', ['init', '-b', 'main', seedDir], { env: gitEnv });
+      fs.writeFileSync(path.join(seedDir, 'package.json'), JSON.stringify({ name: 'hsapi-cli', version: '0.0.0-local' }));
+      git(seedDir, 'add', '-A');
+      git(seedDir, 'commit', '-m', 'v1');
+      git(seedDir, 'remote', 'add', 'origin', originDir);
+      git(seedDir, 'push', 'origin', 'main');
+      spawnSync('git', ['clone', originDir, installDir], { env: gitEnv });
+
+      // Advance origin by one commit.
+      fs.writeFileSync(path.join(seedDir, 'CHANGES.md'), 'newer');
+      git(seedDir, 'add', '-A');
+      git(seedDir, 'commit', '-m', 'v2');
+      git(seedDir, 'push', 'origin', 'main');
+
+      const env = { ...baseEnv, HSAPI_UPGRADE_ROOT: installDir };
+      const check = parseJsonOutput(await run(['upgrade', '--check'], env));
+      assert.strictEqual(check.mode, 'git-checkout');
+      assert.strictEqual(check.behind, 1);
+      assert.strictEqual(check.upToDate, false);
+      assert.match(check.action, /fast-forward/i);
+
+      const upgraded = parseJsonOutput(await run(['upgrade'], env));
+      assert.strictEqual(upgraded.mode, 'git-checkout');
+      assert.strictEqual(upgraded.updatedCommitCount, 1);
+      assert.match(upgraded.note, /Restart any running hsapi-mcp consumers/);
+
+      const recheck = parseJsonOutput(await run(['upgrade', '--check'], env));
+      assert.strictEqual(recheck.upToDate, true);
+      assert.strictEqual(recheck.behind, 0);
+
+      // Dirty checkout refuses to upgrade.
+      fs.writeFileSync(path.join(seedDir, 'CHANGES.md'), 'even newer');
+      git(seedDir, 'add', '-A');
+      git(seedDir, 'commit', '-m', 'v3');
+      git(seedDir, 'push', 'origin', 'main');
+      fs.writeFileSync(path.join(installDir, 'package.json'), JSON.stringify({ name: 'hsapi-cli', version: 'dirty' }));
+      const dirty = await run(['upgrade'], env);
+      assert.notStrictEqual(dirty.status, 0);
+      assert.match(dirty.stderr, /uncommitted changes/);
+
+      // Non-checkout install: instructions instead of self-update.
+      const packageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-pkg-'));
+      fs.writeFileSync(path.join(packageDir, 'package.json'), JSON.stringify({
+        name: 'hsapi-cli',
+        version: '0.1.0',
+        repository: { type: 'git', url: 'git+https://github.com/chadmhohn/hsapi-cli.git' }
+      }));
+      const packageMode = parseJsonOutput(await run(['upgrade'], { ...baseEnv, HSAPI_UPGRADE_ROOT: packageDir }));
+      assert.strictEqual(packageMode.mode, 'installed-package');
+      assert.strictEqual(packageMode.repo, 'chadmhohn/hsapi-cli');
+      assert(packageMode.commands[0].includes('gh release download --repo chadmhohn/hsapi-cli'));
+    }
+
+    {
       // Issue #25: executed mutations append to the local history log; reads and
       // read-only POST search do not; hsapi history reads it back.
       const historyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-history-'));

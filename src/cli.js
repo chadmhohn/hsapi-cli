@@ -712,6 +712,7 @@ Usage:
   hsapi catalog coverage
   hsapi catalog commands
   hsapi history [--since 24h|7d|ISO] [--portal <name>] [--limit n]
+  hsapi upgrade [--check]
 
 Config:
   ${DEFAULT_CONFIG}
@@ -729,6 +730,7 @@ Output:
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
 
 Notes:
+  - hsapi upgrade fast-forwards a git-checkout install to origin/main (--check to inspect first); tarball installs get the gh release download flow printed. The repo can stay private - your existing GitHub auth is used. Restart hsapi-mcp consumers after upgrading.
   - Executed mutations append to a local audit log (~/.local/state/hsapi/history.jsonl, 0600; override with HSAPI_HISTORY_FILE, disable with HSAPI_HISTORY=0). Payload flag values are recorded as lengths only. Read it with: hsapi history --since 24h
   - --paginate follows page cursors (crm list query-param after; crm search body after, stopping at HubSpot's 10K search window) and applies a default 1000-result cap. Pass --max-results <n> to change it or --max-results 0 for unlimited.
   - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.
@@ -3235,6 +3237,94 @@ function parseHistorySince(raw) {
   fail(`Invalid --since "${raw}". Use forms like 24h, 7d, 30m, or an ISO date.`);
 }
 
+function upgradeRootPath() {
+  const explicit = configString(process.env.HSAPI_UPGRADE_ROOT);
+  return explicit ? path.resolve(explicit) : PACKAGE_ROOT;
+}
+
+function runUpgradeGit(root, args) {
+  const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' });
+  return {
+    status: result.status === null ? 1 : result.status,
+    stdout: String(result.stdout || '').trim(),
+    stderr: String(result.stderr || '').trim(),
+    error: result.error ? result.error.message : null
+  };
+}
+
+function repoSlugFromPackage(pkg) {
+  return String(pkg && pkg.repository && pkg.repository.url || '')
+    .replace(/^git\+/, '')
+    .replace(/\.git$/, '')
+    .replace(/^https:\/\/github\.com\//, '')
+    .replace(/^git@github\.com:/, '');
+}
+
+async function runUpgrade(flags) {
+  const root = upgradeRootPath();
+  const checkOnly = boolFlag(flags, 'check');
+  const restartNote = 'Restart any running hsapi-mcp consumers (for example: hermes gateway restart from a terminal, or restart the desktop MCP client) so they load the new build.';
+
+  if (fs.existsSync(path.join(root, '.git'))) {
+    const fetched = runUpgradeGit(root, ['fetch', 'origin', 'main']);
+    if (fetched.status !== 0) {
+      fail(`hsapi upgrade: git fetch failed: ${fetched.stderr || fetched.error || 'unknown error'}`);
+    }
+    const local = runUpgradeGit(root, ['rev-parse', '--short', 'HEAD']).stdout;
+    const remote = runUpgradeGit(root, ['rev-parse', '--short', 'origin/main']).stdout;
+    const behind = Number(runUpgradeGit(root, ['rev-list', '--count', 'HEAD..origin/main']).stdout || '0');
+    const dirty = runUpgradeGit(root, ['status', '--porcelain']).stdout !== '';
+
+    if (checkOnly || behind === 0) {
+      printJson({
+        ok: true,
+        mode: 'git-checkout',
+        root,
+        local,
+        remote,
+        behind,
+        upToDate: behind === 0,
+        dirty,
+        action: behind === 0 ? null : `Run hsapi upgrade (without --check) to fast-forward. ${restartNote}`
+      });
+      return;
+    }
+
+    if (dirty) {
+      fail('hsapi upgrade: checkout has uncommitted changes. Commit or stash them, then re-run hsapi upgrade.');
+    }
+    const merged = runUpgradeGit(root, ['merge', '--ff-only', 'origin/main']);
+    if (merged.status !== 0) {
+      fail(`hsapi upgrade: fast-forward to origin/main failed: ${merged.stderr || merged.error || 'unknown error'}`);
+    }
+    printJson({
+      ok: true,
+      mode: 'git-checkout',
+      root,
+      from: local,
+      to: remote,
+      updatedCommitCount: behind,
+      note: restartNote
+    });
+    return;
+  }
+
+  const pkg = readJsonFile(path.join(root, 'package.json'));
+  const repoSlug = repoSlugFromPackage(pkg) || 'chadmhohn/hsapi-cli';
+  printJson({
+    ok: true,
+    mode: 'installed-package',
+    root,
+    version: pkg.version || null,
+    repo: repoSlug,
+    note: 'This install is not a git checkout, so hsapi cannot fast-forward it. Update from the latest GitHub Release tarball (works on the private repo with your gh auth), then restart MCP consumers.',
+    commands: [
+      `gh release download --repo ${repoSlug} --pattern "hsapi-cli-*.tgz" --dir .`,
+      'npm install -g ./hsapi-cli-<version>.tgz'
+    ]
+  });
+}
+
 function runHistory(flags) {
   const filePath = historyFilePath();
   const sinceMs = parseHistorySince(flags.since);
@@ -5674,6 +5764,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (area === 'history') {
     runHistory(flags);
+    return;
+  }
+
+  if (area === 'upgrade') {
+    await runUpgrade(flags);
     return;
   }
 
