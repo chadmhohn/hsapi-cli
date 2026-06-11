@@ -1153,7 +1153,7 @@ test('11 Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help
       assert.strictEqual(fullUsage.status, 0);
       assert.match(fullUsage.stdout, /Typed commands \(generated from the endpoint catalog/);
       assert.match(fullUsage.stdout, /hsapi lists create\|search\|get\|get-by-name\|update-name\|delete\|restore\|memberships\|membership-update\|memberships-clear\|record-memberships \.\.\. \[--portal <name>\] \[--yes\]/);
-      assert.match(fullUsage.stdout, /hsapi account details\|usage\|subscription \.\.\. \[--portal <name>\]\n/);
+      assert.match(fullUsage.stdout, /hsapi account details\|usage\|subscription\|audit-logs\|login-activity\|security-activity \.\.\. \[--portal <name>\]\n/);
 
       const usageCatalog = writeTempCatalog((catalog) => {
         catalog.endpoints.push({
@@ -5828,4 +5828,57 @@ test('78 Issue #24: settings users/teams/roles provisioning', async () => {
   // generic path resolution: literal segments win over the {userId} template
   const teamsResolved = parseJsonOutput(await run(['help', 'users', 'teams'], env));
   assert.strictEqual(teamsResolved.endpointId, 'settings.users.teams');
+});
+
+test('79 Issue #24: account activity, currencies, business units', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  await expectShowRequest(['account', 'audit-logs', '--limit', '10'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/account-info/2026-03/activity/audit-logs',
+    endpointId: 'account.activity.audit_logs'
+  });
+
+  await expectShowRequest(['account', 'login-activity'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/account-info/2026-03/activity/login',
+    endpointId: 'account.activity.login'
+  });
+
+  await expectShowRequest(['account', 'security-activity'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/account-info/2026-03/activity/security',
+    endpointId: 'account.activity.security'
+  });
+
+  await expectShowRequest(['currencies', 'codes'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/currencies/codes',
+    endpointId: 'settings.currencies.codes'
+  });
+
+  await expectShowRequest(['currencies', 'exchange-rates', '--limit', '50'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/currencies/exchange-rates',
+    endpointId: 'settings.currencies.exchange_rates'
+  });
+
+  await expectShowRequest(['business-units', 'user', '43877071'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/business-units/v3/business-units/user/43877071',
+    endpointId: 'business_units.for_user'
+  });
+
+  const missingUser = await run(['business-units', 'user'], env);
+  assert.notStrictEqual(missingUser.status, 0);
+  assert.match(missingUser.stderr, /requires <userId>/);
+
+  const auditHelp = parseJsonOutput(await run(['help', 'account', 'audit-logs'], env));
+  assert.strictEqual(auditHelp.risk, 'sensitive-read');
 });
