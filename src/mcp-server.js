@@ -1,6 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const { runCli } = require('./cli');
 const { endpointDefinitions, findEndpointDefinition } = require('./catalog');
 const packageJson = require('../package.json');
+
+const CONTEXT_DOCS_DIR = path.resolve(__dirname, '..', 'docs', 'hubspot-api-context');
+const DEFAULT_CONTEXT_DOC_MAX_CHARS = 20000;
+const MAX_CONTEXT_DOC_MAX_CHARS = 60000;
 
 const MCP_PROTOCOL_VERSION = '2024-11-05';
 const SUPPORTED_PROTOCOL_VERSIONS = Object.freeze(['2024-11-05', '2025-03-26', '2025-06-18']);
@@ -91,6 +97,19 @@ const TOOLS = [
       properties: {
         portal: { type: 'string', description: 'Optional portal profile name.' },
         requireEnv: { type: 'boolean', description: 'Whether configured credential env vars must be present.' }
+      },
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_context_doc',
+    description: 'Read a packaged HubSpot API context doc (endpoint gotchas, auth boundaries, request shapes). Call with no name to list available docs; pass name as a doc basename like "crm-records" or a catalog contextUrl like "docs/hubspot-api-context/associations.md".',
+    annotations: { title: 'HubSpot API context docs', readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Context doc basename or catalog contextUrl. Omit to list available docs.' },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 60000, description: 'Maximum markdown chars to return. Defaults to 20000.' }
       },
       additionalProperties: false
     }
@@ -668,7 +687,69 @@ function normalizeLimit(raw) {
   return value;
 }
 
+function listContextDocs() {
+  let entries = [];
+  try {
+    entries = fs.readdirSync(CONTEXT_DOCS_DIR, { withFileTypes: true });
+  } catch (_error) {
+    return [];
+  }
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+    .map((entry) => {
+      const filePath = path.join(CONTEXT_DOCS_DIR, entry.name);
+      return {
+        name: entry.name.slice(0, -3),
+        path: 'docs/hubspot-api-context/' + entry.name,
+        chars: fs.statSync(filePath).size
+      };
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function normalizeContextDocName(raw) {
+  let value = String(raw || '').trim();
+  if (!value) return null;
+  value = value.replace(/^docs\/hubspot-api-context\//, '');
+  if (value.endsWith('.md')) value = value.slice(0, -3);
+  if (!/^[a-z0-9][a-z0-9._-]*$/i.test(value)) return null;
+  return value;
+}
+
+function readContextDoc(args) {
+  const docs = listContextDocs();
+  if (args.name === undefined || args.name === null || String(args.name).trim() === '') {
+    return { ok: true, docs };
+  }
+  const name = normalizeContextDocName(args.name);
+  const match = name ? docs.find((doc) => doc.name === name) : null;
+  if (!match) {
+    return {
+      ok: false,
+      error: {
+        code: 'unknown_context_doc',
+        message: 'Unknown context doc "' + String(args.name) + '". Available: ' + docs.map((doc) => doc.name).join(', ')
+      }
+    };
+  }
+  const maxChars = integerArg(args, 'maxChars', DEFAULT_CONTEXT_DOC_MAX_CHARS, 1000, MAX_CONTEXT_DOC_MAX_CHARS);
+  const markdown = fs.readFileSync(path.join(CONTEXT_DOCS_DIR, match.name + '.md'), 'utf8');
+  const truncated = markdown.length > maxChars;
+  return {
+    ok: true,
+    name: match.name,
+    path: match.path,
+    chars: markdown.length,
+    truncated,
+    markdown: truncated ? markdown.slice(0, maxChars) + '\n...<truncated>' : markdown
+  };
+}
+
 async function callTool(name, args = {}) {
+  if (name === 'hsapi_context_doc') {
+    return readContextDoc(args);
+  }
+
   if (name === 'hsapi_profiles_list') {
     return runHsapiJson(['profiles', 'list']);
   }
