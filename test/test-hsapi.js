@@ -117,6 +117,24 @@ function startServer() {
         }));
         return;
       }
+      if (req.method === 'POST' && url.pathname === '/crm/objects/2026-03/paged_targets/search') {
+        const parsedBody = body ? JSON.parse(body) : {};
+        res.writeHead(200, headers);
+        if (parsedBody.after === '2') {
+          res.end(JSON.stringify({ total: 3, results: [{ id: '3' }] }));
+        } else {
+          res.end(JSON.stringify({ total: 3, results: [{ id: '1' }, { id: '2' }], paging: { next: { after: '2' } } }));
+        }
+        return;
+      }
+      if (url.pathname === '/crm/v3/bigpage') {
+        res.writeHead(200, headers);
+        res.end(JSON.stringify({
+          results: Array.from({ length: 600 }, (_, index) => ({ id: String(index) })),
+          paging: { next: { after: 'more' } }
+        }));
+        return;
+      }
       if (url.pathname === '/crm/v3/paged') {
         res.writeHead(200, headers);
         if (url.searchParams.get('after') === 'page-2') {
@@ -1027,6 +1045,36 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #21: crm search pagination via body.after, default 1000-result cap
+      // on --paginate, and --max-results 0 as explicit unlimited.
+      const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+      const searchPaged = parseJsonOutput(await run(['crm', 'search', 'paged_targets', '--filter', 'email:HAS_PROPERTY', '--paginate'], env));
+      assert.strictEqual(searchPaged.ok, true);
+      assert.strictEqual(searchPaged.pageCount, 2);
+      assert.strictEqual(searchPaged.resultCount, 3);
+      assert.deepStrictEqual(searchPaged.results.map((record) => record.id), ['1', '2', '3']);
+      assert.strictEqual(searchPaged.truncated, undefined);
+
+      const searchCapped = parseJsonOutput(await run(['crm', 'search', 'paged_targets', '--filter', 'email:HAS_PROPERTY', '--paginate', '--max-results', '2'], env));
+      assert.strictEqual(searchCapped.resultCount, 2);
+      assert.strictEqual(searchCapped.truncated, true);
+      assert.strictEqual(searchCapped.truncation.nextAfter, '2');
+
+      const defaultCapped = parseJsonOutput(await run(['request', 'GET', '/crm/v3/bigpage', '--paginate'], env));
+      assert.strictEqual(defaultCapped.resultCount, 1000);
+      assert.strictEqual(defaultCapped.truncated, true);
+      assert.strictEqual(defaultCapped.truncation.maxResults, 1000);
+      assert.strictEqual(defaultCapped.truncation.defaultCap, true);
+      assert.match(defaultCapped.truncation.note, /--max-results 0 for unlimited/);
+
+      const unlimited = parseJsonOutput(await run(['request', 'GET', '/crm/v3/paged', '--paginate', '--max-results', '0'], env));
+      assert.strictEqual(unlimited.resultCount, 2);
+      assert.strictEqual(unlimited.pageCount, 2);
+      assert.strictEqual(unlimited.truncated, undefined);
     }
 
     {
