@@ -8,14 +8,25 @@ const {
 } = require('./runtime');
 const {
   assertConfigObject,
+  readJsonFile,
   configString,
   expandUserPath,
 } = require('./flags');
+const { DEFAULT_CONFIG } = require('./config-paths');
 const {
   AUTH_FAMILIES,
   DEVELOPER_AUTH_SUBTYPES,
   endpointAuthRequirement,
 } = require('./auth');
+
+function loadConfig() {
+  const configPath = process.env.HSAPI_PORTALS_CONFIG || DEFAULT_CONFIG;
+  const config = readJsonFile(configPath);
+  if (!config.portals || typeof config.portals !== 'object') {
+    fail(`Portal config missing "portals" object: ${configPath}`);
+  }
+  return { configPath, config };
+}
 
 const OAUTH_TOKEN_CACHE_SCHEMA = 'hsapi.oauthTokenCache.v1';
 const DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA = 'hsapi.developerClientCredentialsTokenCache.v1';
@@ -949,6 +960,7 @@ function resolvePortalBearerCredential(portal, auth) {
 }
 
 module.exports = {
+  loadConfig,
   DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA,
   OAUTH_TOKEN_CACHE_SCHEMA,
   OAUTH_TOKEN_REFRESH_SKEW_MS,
