@@ -5962,3 +5962,60 @@ test('81 Issue #24: catalog-only stubs back generic requests (timeline, analytic
   const blocked = await run(['request', 'POST', '/engagements/v1/engagements', '--body', '{"engagement":{"type":"NOTE"}}'], env);
   assert.strictEqual(blocked.status, 2, 'stub-backed mutation without --yes must be a blocked preview');
 });
+
+test('82 Issue #66: cms audit logs, campaign reports, emails list/get, vc settings update', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  await expectShowRequest(['cms', 'audit-logs', '--limit', '5', '--event-type', 'UPDATED'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/cms/audit-logs/2026-03',
+    endpointId: 'cms.audit_logs.list'
+  });
+
+  const blockedExport = await run(['cms', 'audit-logs-export'], env);
+  assert.strictEqual(blockedExport.status, 2, 'audit-logs export without --yes must be a blocked preview');
+
+  await expectShowRequest(['marketing', 'campaigns', 'list', '--limit', '3'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/campaigns/2026-03',
+    endpointId: 'marketing.campaigns.list'
+  });
+
+  await expectShowRequest(['marketing', 'campaigns', 'report-metrics', 'guid-1', '--start-date', '2026-01-01'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/campaigns/2026-03/guid-1/reports/metrics',
+    endpointId: 'marketing.campaigns.report_metrics'
+  });
+
+  await expectShowRequest(['marketing', 'campaigns', 'report-contacts', 'guid-1', 'contactFirstTouch'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/campaigns/2026-03/guid-1/reports/contacts/contactFirstTouch',
+    endpointId: 'marketing.campaigns.report_contacts'
+  });
+
+  await expectShowRequest(['marketing', 'emails', 'list'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/emails/2026-03',
+    endpointId: 'marketing.emails.list'
+  });
+
+  await expectShowRequest(['marketing', 'emails', 'get', '555', '--include-stats'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/emails/2026-03/555',
+    endpointId: 'marketing.emails.get'
+  });
+
+  await expectShowRequest(['extensions', 'videoconferencing', 'settings', 'update', '--app-id', '777', '--create-meeting-url', 'https://example.com/create'], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/crm/extensions/videoconferencing/2026-03/settings/777',
+    endpointId: 'crm.extensions.videoconferencing.settings.update',
+    body: { createMeetingUrl: 'https://example.com/create' }
+  });
+});

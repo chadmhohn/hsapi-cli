@@ -12,6 +12,7 @@ const {
   callingRecordingReadyBodyFromFlags,
   callingRecordingSettingsBodyFromFlags,
   callingTranscriptCreateBodyFromFlags,
+  mappedBodyFromFlags,
 } = require('../command-inputs');
 const {
   guardedFetch,
@@ -45,6 +46,18 @@ async function runVideoConferencingExtensions(portal, rest, flags) {
       printJson(await hubspotFetch(portal, 'GET', base, flags));
       return;
     }
+    if (action === 'update' || action === 'create' || action === 'put') {
+      const body = mappedBodyFromFlags(flags, 'extensions videoconferencing settings update', {
+        'create-meeting-url': 'createMeetingUrl',
+        'update-meeting-url': 'updateMeetingUrl',
+        'delete-meeting-url': 'deleteMeetingUrl',
+        'user-verify-url': 'userVerifyUrl',
+        'fetch-accounts-url': 'fetchAccountsUri'
+      });
+      printJson(await guardedFetch(portal, 'PUT', base, flags, body));
+      return;
+    }
+
     if (action === 'delete') {
       printJson(await guardedFetch(portal, 'DELETE', base, flags));
       return;

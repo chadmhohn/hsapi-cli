@@ -3,30 +3,30 @@
 Generated: 2026-05-10
 
 ## Snapshot
-- Typed commands: 299
+- Typed commands: 308
 - Catalog-only endpoints: 21
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 320
+- Endpoint count: 329
 - Non-HTTP surface count: 3
-- Total catalog items: 323
+- Total catalog items: 332
 
 ## Coverage by implementation status
-- typed: 299
+- typed: 308
 - catalog-only: 21
 
 ## Coverage by risk
-- mutation: 115
-- read: 105
-- sensitive-read: 55
+- mutation: 117
+- read: 111
+- sensitive-read: 56
 - destructive: 45
 
 ## Coverage by auth family
-- portal_bearer: 283
+- portal_bearer: 292
 - developer: 32
 - oauth: 4
 
 ## Coverage by tier requirement
-- none: 304
+- none: 313
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
@@ -53,6 +53,7 @@ Generated: 2026-05-10
 - events.definitions: 8
 - automation.flows: 7
 - engagements.v1: 7
+- marketing.campaigns: 7
 - account: 6
 - files.folders: 6
 - marketing.forms: 6
@@ -62,6 +63,7 @@ Generated: 2026-05-10
 - crm.imports: 5
 - crm.properties: 5
 - crm.schemas: 5
+- marketing.emails: 5
 - settings.users: 5
 - auth.oauth: 4
 - automation.sequences: 4
@@ -70,15 +72,14 @@ Generated: 2026-05-10
 - scheduler.meetings: 4
 - cms.source_code: 3
 - crm.exports: 3
+- crm.extensions.videoconferencing: 3
 - crm.quotes: 3
-- marketing.campaigns: 3
-- marketing.emails: 3
 - marketing.forms.submissions: 3
 - marketing.marketing_events: 3
 - analytics: 2
+- cms.audit_logs: 2
 - cms.domains: 2
 - cms.site_search: 2
-- crm.extensions.videoconferencing: 2
 - crm.object_library: 2
 - crm.owners: 2
 - crm.property_validations: 2

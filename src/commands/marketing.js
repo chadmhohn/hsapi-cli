@@ -10,6 +10,7 @@ const {
   printJson,
 } = require('../output');
 const {
+  appendMappedSearchQuery,
   campaignBodyFromFlags,
   genericListQueryFlags,
   marketingEmailBodyFromFlags,
@@ -51,6 +52,23 @@ async function runMarketingEmails(portal, rest, flags) {
   const actionRest = rest.slice(1);
   const base = '/marketing/emails/2026-03';
 
+  if (action === 'list') {
+    const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after', sort: 'sort', 'created-after': 'createdAfter', 'created-before': 'createdBefore', 'updated-after': 'updatedAfter', 'updated-before': 'updatedBefore' });
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', base, queryFlags)
+      : await hubspotFetch(portal, 'GET', base, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  if (action === 'get') {
+    const emailId = actionRest[0] || flags['email-id'];
+    if (!emailId) fail('marketing emails get requires <emailId>.');
+    const queryFlags = appendMappedSearchQuery(flags, { 'include-stats': 'includeStats' });
+    printJson(await hubspotFetch(portal, 'GET', `${base}/${pathPart(emailId)}`, queryFlags));
+    return;
+  }
+
   if (action === 'create') {
     printJson(await guardedFetch(portal, 'POST', base, flags, marketingEmailBodyFromFlags(flags, 'marketing emails create')));
     return;
@@ -77,6 +95,42 @@ async function runMarketingCampaigns(portal, rest, flags) {
   const action = rest[0];
   const actionRest = rest.slice(1);
   const base = '/marketing/campaigns/2026-03';
+
+  if (action === 'list') {
+    const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after', name: 'name', sort: 'sort' });
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', base, queryFlags)
+      : await hubspotFetch(portal, 'GET', base, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  if (action === 'report-metrics' || action === 'report-revenue') {
+    const campaignGuid = actionRest[0] || flags['campaign-guid'] || flags['campaign-id'];
+    if (!campaignGuid) fail(`marketing campaigns ${action} requires <campaignGuid>.`);
+    const route = action === 'report-metrics' ? 'metrics' : 'revenue';
+    const queryFlags = appendMappedSearchQuery(flags, {
+      'start-date': 'startDate',
+      'end-date': 'endDate',
+      'attribution-model': 'attributionModel'
+    });
+    printJson(await hubspotFetch(portal, 'GET', `${base}/${pathPart(campaignGuid)}/reports/${route}`, queryFlags));
+    return;
+  }
+
+  if (action === 'report-contacts') {
+    const campaignGuid = actionRest[0] || flags['campaign-guid'] || flags['campaign-id'];
+    const contactType = actionRest[1] || flags['contact-type'];
+    if (!campaignGuid || !contactType) fail('marketing campaigns report-contacts requires <campaignGuid> <contactType> (e.g. contactFirstTouch, contactLastTouch, sessions, influenced).');
+    const queryFlags = appendMappedSearchQuery(flags, {
+      'start-date': 'startDate',
+      'end-date': 'endDate',
+      limit: 'limit',
+      after: 'after'
+    });
+    printJson(await hubspotFetch(portal, 'GET', `${base}/${pathPart(campaignGuid)}/reports/contacts/${pathPart(contactType)}`, queryFlags));
+    return;
+  }
 
   if (action === 'create') {
     printJson(await guardedFetch(portal, 'POST', base, flags, campaignBodyFromFlags(flags, 'marketing campaigns create')));
