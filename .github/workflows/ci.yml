@@ -39,10 +39,7 @@ jobs:
 
       - name: Syntax check
         run: |
-          node --check src/cli.js
-          node --check bin/hsapi.js
-          node --check bin/hsapi-cli.js
-          for file in scripts/*.js test/*.js; do
+          for file in src/*.js bin/*.js scripts/*.js test/*.js; do
             node --check "$file"
           done
 
