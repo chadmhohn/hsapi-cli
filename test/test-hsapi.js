@@ -5882,3 +5882,47 @@ test('79 Issue #24: account activity, currencies, business units', async () => {
   const auditHelp = parseJsonOutput(await run(['help', 'account', 'audit-logs'], env));
   assert.strictEqual(auditHelp.risk, 'sensitive-read');
 });
+
+test('80 Issue #24: quotes publish/recall/status lifecycle helpers', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const status = await expectShowRequest(['quotes', 'status', '777'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/quotes/777',
+    endpointId: 'quotes.status'
+  });
+  assert(String(status.request.url).includes('properties=hs_status'));
+  assert(String(status.request.url).includes('properties=hs_quote_link'));
+
+  await expectShowRequest(['quotes', 'publish', '777'], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/quotes/777',
+    endpointId: 'quotes.publish',
+    body: { properties: { hs_status: 'APPROVAL_NOT_NEEDED' } }
+  });
+
+  await expectShowRequest(['quotes', 'publish', '777', '--request-approval'], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/quotes/777',
+    endpointId: 'quotes.publish',
+    body: { properties: { hs_status: 'PENDING_APPROVAL' } }
+  });
+
+  await expectShowRequest(['quotes', 'recall', '777'], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/quotes/777',
+    endpointId: 'quotes.recall',
+    body: { properties: { hs_status: 'DRAFT' } }
+  });
+
+  const blocked = await run(['quotes', 'publish', '777'], env);
+  assert.strictEqual(blocked.status, 2, 'quotes publish without --yes must be a blocked preview');
+
+  const missing = await run(['quotes', 'publish'], env);
+  assert.notStrictEqual(missing.status, 0);
+  assert.match(missing.stderr, /requires <quoteId>/);
+});
