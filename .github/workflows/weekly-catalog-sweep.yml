@@ -1,0 +1,98 @@
+name: Weekly catalog sweep
+
+# Runs the docs updater against the official HubSpot sources every Monday.
+# When genuinely new endpoints appear (version twins of cataloged surfaces
+# self-triage out since #71), the dated report + proposals are committed to a
+# branch and a PR is opened as the notification + triage artifact.
+on:
+  schedule:
+    - cron: '0 12 * * 1' # Mondays 12:00 UTC (~6am MT)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: weekly-catalog-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run docs sweep
+        run: |
+          node scripts/update-hubspot-api-catalog.js \
+            --propose-diff \
+            --write-report \
+            --write-proposals \
+            --max-proposals 0
+
+      - name: Evaluate proposals
+        id: evaluate
+        run: |
+          PROPOSALS_FILE="$(ls -t docs/hubspot-api-updates/*.proposals.json | head -1)"
+          NOVEL_COUNT="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$PROPOSALS_FILE','utf8')).totalEndpointProposalCount || 0)")"
+          DUP_COUNT="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$PROPOSALS_FILE','utf8')).versionDuplicateCount || 0)")"
+          echo "proposals_file=$PROPOSALS_FILE" >> "$GITHUB_OUTPUT"
+          echo "novel_count=$NOVEL_COUNT" >> "$GITHUB_OUTPUT"
+          echo "dup_count=$DUP_COUNT" >> "$GITHUB_OUTPUT"
+          echo "Sweep found $NOVEL_COUNT novel endpoint reference(s); $DUP_COUNT version duplicate(s) self-triaged."
+
+      - name: Open sweep PR when novelties exist
+        if: steps.evaluate.outputs.novel_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOVEL_COUNT: ${{ steps.evaluate.outputs.novel_count }}
+          DUP_COUNT: ${{ steps.evaluate.outputs.dup_count }}
+          PROPOSALS_FILE: ${{ steps.evaluate.outputs.proposals_file }}
+        run: |
+          SWEEP_DATE="$(date -u +%Y-%m-%d)"
+          BRANCH="catalog-sweep/latest"
+          git config user.name "catalog-sweep[bot]"
+          git config user.email "catalog-sweep@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add docs/hubspot-api-updates/
+          git commit -m "Weekly catalog sweep $SWEEP_DATE: $NOVEL_COUNT novel endpoint reference(s)"
+          git push -f origin "$BRANCH"
+          EXISTING="$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')"
+          if [ "$EXISTING" = "0" ]; then
+            node -e "
+              const fs = require('fs');
+              const data = JSON.parse(fs.readFileSync(process.env.PROPOSALS_FILE, 'utf8'));
+              const VERSION_SEGMENT = /^(v\d+|\d{4}-\d{2}(-beta)?)$/;
+              const byFamily = {};
+              for (const item of data.catalogAdditions || []) {
+                const segments = item.path.split('/').filter(Boolean)
+                  .filter((segment) => !VERSION_SEGMENT.test(segment) && !segment.startsWith('{'));
+                const family = segments.slice(0, 2).join('.') || 'other';
+                byFamily[family] = (byFamily[family] || 0) + 1;
+              }
+              const rows = Object.entries(byFamily).sort((a, b) => b[1] - a[1])
+                .map(([family, count]) => '- **' + family + '** x' + count).join('\n');
+              const sample = (data.catalogAdditions || []).slice(0, 15)
+                .map((item) => '- \`' + item.method + ' ' + item.path + '\`').join('\n');
+              const body = [
+                'Automated weekly docs sweep found **' + process.env.NOVEL_COUNT + ' novel endpoint reference(s)** (version twins of cataloged surfaces self-triaged: ' + process.env.DUP_COUNT + ').',
+                '', '### By family', rows, '', '### Sample', sample, '',
+                'Triage: stub the coherent clusters (catalog-only, generate from this proposals file) or promote to typed where there is demand. Process notes: vault hsapi-cli/REMAINING-WORK.md.'
+              ].join('\n');
+              fs.writeFileSync('/tmp/sweep-pr-body.md', body);
+            "
+            gh pr create \
+              --title "Weekly catalog sweep $SWEEP_DATE: $NOVEL_COUNT novel endpoint reference(s)" \
+              --body-file /tmp/sweep-pr-body.md
+          else
+            echo "Open sweep PR already exists for $BRANCH; branch updated."
+          fi
