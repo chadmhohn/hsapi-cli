@@ -1210,7 +1210,7 @@ test('11 Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help
 
     {
       // Issue #27 (phase 1): extracted modules load standalone without require cycles.
-      for (const moduleName of ['runtime', 'flags', 'output', 'history', 'command-inputs', 'usage', 'catalog', 'auth']) {
+      for (const moduleName of ['runtime', 'flags', 'output', 'history', 'command-inputs', 'usage', 'catalog', 'auth', 'config-paths', 'tiers', 'auth-resolvers', 'request']) {
         const exported = require(path.join(WORKSPACE_ROOT, 'src', `${moduleName}.js`));
         assert(exported && typeof exported === 'object' && Object.keys(exported).length > 0,
           `src/${moduleName}.js must export a non-empty object`);

@@ -189,7 +189,23 @@ function expandUserPath(rawPath) {
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+function readJsonFile(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    fail(`Failed to read JSON from ${filePath}: ${error.message}`);
+  }
+}
+function assertConfigObject(value, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail(`${label} must be an object.`);
+  }
+  return value;
+}
+
 module.exports = {
+  assertConfigObject,
+  readJsonFile,
   SAFE_METHODS,
   expandUserPath,
   resolveHomeDirectory,
