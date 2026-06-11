@@ -3,33 +3,34 @@
 Generated: 2026-05-10
 
 ## Snapshot
-- Typed commands: 290
+- Typed commands: 296
 - Catalog-only endpoints: 0
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 290
+- Endpoint count: 296
 - Non-HTTP surface count: 3
-- Total catalog items: 293
+- Total catalog items: 299
 
 ## Coverage by implementation status
-- typed: 290
+- typed: 296
 
 ## Coverage by risk
 - mutation: 106
-- read: 90
-- sensitive-read: 52
+- read: 93
+- sensitive-read: 55
 - destructive: 42
 
 ## Coverage by auth family
-- portal_bearer: 260
+- portal_bearer: 266
 - developer: 25
 - oauth: 4
 
 ## Coverage by tier requirement
-- none: 275
+- none: 280
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
 - Professional or Enterprise: 2
+- Business Units add-on: 1
 
 ## Coverage by family
 - webhooks.journal: 19
@@ -49,6 +50,7 @@ Generated: 2026-05-10
 - crm.associations.schema: 8
 - events.definitions: 8
 - automation.flows: 7
+- account: 6
 - files.folders: 6
 - marketing.forms: 6
 - webhooks: 6
@@ -63,7 +65,6 @@ Generated: 2026-05-10
 - automation.workflows: 4
 - crm.property_groups: 4
 - scheduler.meetings: 4
-- account: 3
 - cms.source_code: 3
 - crm.exports: 3
 - marketing.campaigns: 3
@@ -78,6 +79,8 @@ Generated: 2026-05-10
 - crm.property_validations: 2
 - events: 2
 - events.send: 2
+- settings.currencies: 2
+- business_units: 1
 - conversations.visitor_identification: 1
 - marketing.transactional_emails: 1
 - scheduler.calendar: 1

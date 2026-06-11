@@ -258,9 +258,9 @@ This matters most for custom objects, schema configuration, association labels/l
 
 <!-- BEGIN GENERATED: current-scope (npm run readme:scope) -->
 
-The catalog covers **290 typed commands** across **51 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
+The catalog covers **296 typed commands** across **53 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
 
-- `hsapi account` — 3 commands
+- `hsapi account` — 6 commands
 - `hsapi association-labels` — 4 commands
 - `hsapi association-limits` — 4 commands
 - `hsapi associations` — 10 commands
@@ -268,6 +268,7 @@ The catalog covers **290 typed commands** across **51 endpoint families**, every
 - `hsapi automation flows` — 7 commands
 - `hsapi automation sequences` — 4 commands
 - `hsapi automation workflows` — 4 commands
+- `hsapi business-units` — 1 command
 - `hsapi cms` — 2 commands
 - `hsapi cms blog-posts` — 9 commands
 - `hsapi cms domains` — 2 commands
@@ -279,6 +280,7 @@ The catalog covers **290 typed commands** across **51 endpoint families**, every
 - `hsapi cms source-code` — 3 commands
 - `hsapi conversations` — 30 commands
 - `hsapi crm` — 13 commands
+- `hsapi currencies` — 2 commands
 - `hsapi events` — 12 commands
 - `hsapi exports` — 3 commands
 - `hsapi extensions calling channel-connection` — 1 command
@@ -309,7 +311,7 @@ The catalog covers **290 typed commands** across **51 endpoint families**, every
 - `hsapi webhook-journal` — 19 commands
 - `hsapi webhooks` — 6 commands
 
-Argspec coverage: 290/290 typed commands documented.
+Argspec coverage: 296/296 typed commands documented.
 
 <!-- END GENERATED: current-scope -->
 

@@ -3849,6 +3849,16 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (area === 'currencies' || area === 'currency') {
+    await runCurrencies(portal, action, flags);
+    return;
+  }
+
+  if (area === 'business-units' || area === 'business-unit') {
+    await runBusinessUnits(portal, action, rest, flags);
+    return;
+  }
+
   if (area === 'tiers') {
     await runTiers(portal, action, flags);
     return;
@@ -4518,6 +4528,17 @@ async function runAccount(portal, action, flags) {
     return;
   }
 
+  if (action === 'audit-logs' || action === 'login-activity' || action === 'security-activity') {
+    const route = action === 'audit-logs' ? 'audit-logs' : action === 'login-activity' ? 'login' : 'security';
+    const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after' });
+    const target = `/account-info/2026-03/activity/${route}`;
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', target, queryFlags)
+      : await hubspotFetch(portal, 'GET', target, queryFlags);
+    printJson(result);
+    return;
+  }
+
   if (action === 'subscription') {
     const account = await hubspotFetch(portal, 'GET', '/account-info/2026-03/details', flags);
     printJson({
@@ -4535,6 +4556,40 @@ async function runAccount(portal, action, flags) {
   }
 
   fail(`Unknown account action: ${action}`);
+}
+
+// Multi-currency reads (issue #24): supported codes + portal exchange rates.
+// HubSpot exposes no company-currency endpoint (404 verified live); the home
+// currency rides in the exchange-rates payload on multi-currency portals.
+async function runCurrencies(portal, action, flags) {
+  if (action === 'codes') {
+    printJson(await hubspotFetch(portal, 'GET', '/settings/v3/currencies/codes', flags));
+    return;
+  }
+
+  if (action === 'exchange-rates' || action === 'rates') {
+    const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after' });
+    const target = '/settings/v3/currencies/exchange-rates';
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', target, queryFlags)
+      : await hubspotFetch(portal, 'GET', target, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  fail(`Unknown currencies action: ${action}`);
+}
+
+// Business units (issue #24): the public surface is per-user visibility.
+async function runBusinessUnits(portal, action, rest, flags) {
+  if (action === 'user') {
+    const userId = rest[0] || flags['user-id'];
+    if (!userId) fail('business-units user requires <userId> or --user-id (hsapi users list).');
+    printJson(await hubspotFetch(portal, 'GET', `/business-units/v3/business-units/user/${pathPart(userId)}`, flags));
+    return;
+  }
+
+  fail(`Unknown business-units action: ${action}`);
 }
 
 async function runTiers(portal, action, flags) {

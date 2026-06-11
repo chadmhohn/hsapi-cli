@@ -10576,6 +10576,117 @@
       }
     },
     {
+      "family": "account",
+      "name": "account.activity.audit_logs",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/audit-logs",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "typed",
+      "command": "hsapi account audit-logs",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-activity",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "account-info.security.read"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "account",
+      "name": "account.activity.login",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/login",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "typed",
+      "command": "hsapi account login-activity",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-activity",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "account-info.security.read"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "account",
+      "name": "account.activity.security",
+      "method": "GET",
+      "path": "/account-info/2026-03/activity/security",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "typed",
+      "command": "hsapi account security-activity",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-activity",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "account-info.security.read"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
       "family": "crm.objects",
       "name": "objects.list",
       "method": "GET",
@@ -13632,6 +13743,97 @@
           "kind": "flag",
           "type": "boolean",
           "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.codes",
+      "method": "GET",
+      "path": "/settings/v3/currencies/codes",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi currencies codes",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.currencies.read"
+      ],
+      "scopeNotes": "No company-currency endpoint exists (v2/v3 both 404, verified 2026-06-11); the home currency appears in exchange-rates output on multi-currency portals.",
+      "args": []
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates",
+      "method": "GET",
+      "path": "/settings/v3/currencies/exchange-rates",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi currencies exchange-rates",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.currencies.read"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "business_units",
+      "name": "business_units.for_user",
+      "method": "GET",
+      "path": "/business-units/v3/business-units/user/{userId}",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi business-units user <userId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/business-units",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "business_units_view.read"
+      ],
+      "tierRequirement": "Business Units add-on",
+      "scopeNotes": "Path verified live (403 without the BU scope on a portal without the add-on). Returns the business units visible to the given user.",
+      "args": [
+        {
+          "name": "userId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "user-id"
+          ],
+          "description": "User ID (hsapi users list)."
         }
       ]
     },
