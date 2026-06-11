@@ -4,29 +4,29 @@ Generated: 2026-05-10
 
 ## Snapshot
 - Typed commands: 308
-- Catalog-only endpoints: 21
+- Catalog-only endpoints: 95
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 329
+- Endpoint count: 403
 - Non-HTTP surface count: 3
-- Total catalog items: 332
+- Total catalog items: 406
 
 ## Coverage by implementation status
 - typed: 308
-- catalog-only: 21
+- catalog-only: 95
 
 ## Coverage by risk
-- mutation: 117
-- read: 111
+- mutation: 155
+- read: 135
+- destructive: 57
 - sensitive-read: 56
-- destructive: 45
 
 ## Coverage by auth family
-- portal_bearer: 292
-- developer: 32
+- portal_bearer: 352
+- developer: 46
 - oauth: 4
 
 ## Coverage by tier requirement
-- none: 313
+- none: 387
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
@@ -34,12 +34,16 @@ Generated: 2026-05-10
 - Business Units add-on: 1
 
 ## Coverage by family
+- cms.blogs.meta: 28
+- crm.lists: 20
+- marketing.campaigns: 19
 - webhooks.journal: 19
 - conversations: 18
+- automation.actions: 14
+- marketing.emails: 14
 - crm.objects: 13
 - crm.timeline: 12
 - conversations.custom_channels: 11
-- crm.lists: 11
 - communication_preferences: 10
 - crm.associations.records: 10
 - crm.pipelines: 10
@@ -53,7 +57,6 @@ Generated: 2026-05-10
 - events.definitions: 8
 - automation.flows: 7
 - engagements.v1: 7
-- marketing.campaigns: 7
 - account: 6
 - files.folders: 6
 - marketing.forms: 6
@@ -63,7 +66,6 @@ Generated: 2026-05-10
 - crm.imports: 5
 - crm.properties: 5
 - crm.schemas: 5
-- marketing.emails: 5
 - settings.users: 5
 - auth.oauth: 4
 - automation.sequences: 4
@@ -80,6 +82,7 @@ Generated: 2026-05-10
 - cms.audit_logs: 2
 - cms.domains: 2
 - cms.site_search: 2
+- crm.deal_splits: 2
 - crm.object_library: 2
 - crm.owners: 2
 - crm.property_validations: 2
