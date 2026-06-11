@@ -256,37 +256,60 @@ This matters most for custom objects, schema configuration, association labels/l
 
 ## Current Scope
 
-The CLI currently supports:
+<!-- BEGIN GENERATED: current-scope (npm run readme:scope) -->
 
-- multi-portal profiles;
-- generic HubSpot API requests;
-- request previews;
-- catalog coverage reporting;
-- account details and usage;
-- CRM record list/get/search/update and batch read/create/update/upsert/archive helpers;
-- CRM property read/write helpers;
-- property groups, property group archive, and property validations;
-- custom object schema helpers;
-- object library status;
-- association record reads/writes, association labels, and association limits;
-- pipelines and pipeline stages;
-- lists, exports, and import management;
-- communication preferences and subscription status helpers;
-- files and folders, including upload, replace, URL import, signed URL, folder update, and GDPR-delete safeguards;
-- events, including occurrence reads, definition/property management, and event sends;
-- OAuth/app auth helpers for authorization URLs, token exchange, refresh, introspection, and guarded revocation;
-- classic app webhooks and Webhooks Journal reads, snapshots, subscriptions, and filters;
-- Conversations beta reads/writes, custom channels, and visitor identification tokens;
-- marketing emails, campaigns, marketing events, and transactional single-send helpers;
-- forms, including definition management, submission reads, unauthenticated submission writes, and authenticated secure submissions;
-- CMS content, including site pages, landing pages, blog posts, URL redirects, domains, and site search;
-- CMS storage, including HubDB tables and source code files;
-- scheduler meetings and calendar-event helpers for links, availability, booking, and calendar creation;
-- automation surfaces, including workflows, sequences, call recordings and transcripts, calling extension settings, and video conferencing;
-- CRM limits tracking;
-- a catalog updater/checker that compares the local endpoint catalog to official HubSpot docs sources and can write dated triage reports plus non-mutating catalog diff proposals.
+The catalog covers **276 typed commands** across **47 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
 
-The long-term goal is full HubSpot API catalog coverage with a weekly updater that checks official docs/changelog changes and refreshes the endpoint catalog.
+- `hsapi account` — 3 commands
+- `hsapi association-labels` — 4 commands
+- `hsapi association-limits` — 4 commands
+- `hsapi associations` — 10 commands
+- `hsapi auth` — 4 commands
+- `hsapi automation sequences` — 4 commands
+- `hsapi automation workflows` — 4 commands
+- `hsapi cms` — 2 commands
+- `hsapi cms blog-posts` — 9 commands
+- `hsapi cms domains` — 2 commands
+- `hsapi cms hubdb rows` — 2 commands
+- `hsapi cms hubdb tables` — 3 commands
+- `hsapi cms landing-pages` — 9 commands
+- `hsapi cms redirects` — 5 commands
+- `hsapi cms site-pages` — 9 commands
+- `hsapi cms source-code` — 3 commands
+- `hsapi conversations` — 30 commands
+- `hsapi crm` — 13 commands
+- `hsapi events` — 12 commands
+- `hsapi exports` — 3 commands
+- `hsapi extensions calling channel-connection` — 1 command
+- `hsapi extensions calling recording-settings` — 3 commands
+- `hsapi extensions calling recordings` — 1 command
+- `hsapi extensions calling settings` — 2 commands
+- `hsapi extensions calling transcripts` — 2 commands
+- `hsapi extensions videoconferencing settings` — 2 commands
+- `hsapi files` — 16 commands
+- `hsapi forms` — 9 commands
+- `hsapi imports` — 5 commands
+- `hsapi limits` — 7 commands
+- `hsapi lists` — 11 commands
+- `hsapi marketing campaigns` — 3 commands
+- `hsapi marketing emails` — 3 commands
+- `hsapi marketing events` — 3 commands
+- `hsapi marketing transactional` — 1 command
+- `hsapi object-library` — 1 command
+- `hsapi owners` — 2 commands
+- `hsapi pipelines` — 10 commands
+- `hsapi properties` — 5 commands
+- `hsapi property-groups` — 4 commands
+- `hsapi property-validations` — 2 commands
+- `hsapi scheduler` — 5 commands
+- `hsapi schemas` — 5 commands
+- `hsapi subscriptions` — 10 commands
+- `hsapi webhook-journal` — 19 commands
+- `hsapi webhooks` — 6 commands
+
+Argspec coverage: 276/276 typed commands documented.
+
+<!-- END GENERATED: current-scope -->
 
 ## Catalog Updater
 
