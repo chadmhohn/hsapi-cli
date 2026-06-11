@@ -1064,9 +1064,13 @@ async function main() {
       assert.strictEqual(filterArg.repeatable, true);
       assert(searchHelpViaFlag.args.some((arg) => arg.name === 'objectType' && arg.kind === 'positional' && arg.required === true));
 
-      const undocumented = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
+      const undocumented = parseJsonOutput(await run(['help', 'cms', 'indexed-data'], baseEnv));
       assert.strictEqual(undocumented.argsDocumented, false);
       assert.match(undocumented.note, /No argspec documented/);
+
+      const visitorTokenHelp = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
+      assert.strictEqual(visitorTokenHelp.argsDocumented, true);
+      assert(visitorTokenHelp.args.some((arg) => arg.name === 'yes' && arg.type === 'boolean'));
 
       const unknown = await run(['help', 'definitely', 'not-a-command'], baseEnv);
       assert.notStrictEqual(unknown.status, 0);

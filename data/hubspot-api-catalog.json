@@ -406,6 +406,62 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi forms secure-submit <portalId> <formGuid>",
+      "args": [
+        {
+          "name": "portalId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Portal ID (also --portal-id; defaults to the active portal)."
+        },
+        {
+          "name": "formGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form GUID (also --form-guid)."
+        },
+        {
+          "name": "fields",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "JSON array of {name,value} field objects."
+        },
+        {
+          "name": "submitted-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "context",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"hutk\":...,\"pageUri\":...,\"pageName\":...}."
+        },
+        {
+          "name": "legal-consent-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "skip-validation",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/v3-legacy/submit-data-authenticated",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -3692,6 +3748,89 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations threads",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3712,6 +3851,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations thread-get <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3732,6 +3879,41 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations thread-update <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "CLOSED"
+          ],
+          "description": "Thread status."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3752,6 +3934,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi conversations thread-delete <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3772,6 +3968,32 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations assignee-update <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "actor-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "New assignee actor ID, e.g. A-123."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3792,6 +4014,20 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations assignee-delete <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3812,6 +4048,89 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations messages <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3832,6 +4151,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations message-get <threadId> <messageId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3852,6 +4185,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations message-original <threadId> <messageId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3872,6 +4219,62 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations message-create <threadId>",
+      "args": [
+        {
+          "name": "threadId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "text",
+          "kind": "flag",
+          "type": "string",
+          "description": "Message text."
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3892,6 +4295,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations actors-get <actorId>",
+      "args": [
+        {
+          "name": "actorId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Actor ID, e.g. A-123."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3913,6 +4325,21 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi conversations actors-batch-read",
+      "args": [
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Actor IDs (CSV/JSON/@file)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3933,6 +4360,83 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations channels",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3953,6 +4457,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations channel-get <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3973,6 +4485,83 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations channel-accounts",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -3993,6 +4582,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations channel-account-get <channelAccountId>",
+      "args": [
+        {
+          "name": "channelAccountId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4013,6 +4610,83 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations inboxes",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4033,6 +4707,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations inbox-get <inboxId>",
+      "args": [
+        {
+          "name": "inboxId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4053,6 +4735,83 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations custom-channels",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4073,6 +4832,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations custom-channel-get <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4093,6 +4860,35 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations custom-channel-create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4113,6 +4909,41 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations custom-channel-update <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4133,6 +4964,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi conversations custom-channel-delete <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4153,6 +4998,89 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations custom-channel-accounts <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "thread-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "associated-contact-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4173,6 +5101,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations custom-channel-account-get <channelId> <channelAccountId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "channelAccountId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4193,6 +5135,46 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations custom-channel-account-create <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "inbox-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4213,6 +5195,61 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations custom-message-create <channelId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "text",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel-account-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "recipients",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "senders",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4233,6 +5270,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations custom-message-get <channelId> <messageId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4253,6 +5304,42 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi conversations custom-message-update <channelId> <messageId>",
+      "args": [
+        {
+          "name": "channelId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/custom-channels/guide",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4273,6 +5360,36 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi conversations visitor-token",
+      "args": [
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string",
+          "description": "Visitor email to identify."
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw JSON body; per-flag values are an alternative."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
       "contextUrl": "docs/hubspot-api-context/conversations.md",
       "requiredScopes": [
@@ -4294,6 +5411,40 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi forms list",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "form-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Filter by form type (also repeatable --form-types)."
+        },
+        {
+          "name": "form-types",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/get-forms",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4314,6 +5465,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi forms get <formId>",
+      "args": [
+        {
+          "name": "formId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form ID (also --form-id)."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/get-form",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4334,6 +5499,56 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi forms create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "form-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Defaults to hubspot on create/update."
+        },
+        {
+          "name": "field-groups",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "configuration",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "display-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "legal-consent-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/create-form",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4354,6 +5569,63 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi forms patch <formId>",
+      "args": [
+        {
+          "name": "formId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form ID (also --form-id)."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "form-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Defaults to hubspot on create/update."
+        },
+        {
+          "name": "field-groups",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "configuration",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "display-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "legal-consent-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/marketing-forms-v3/forms/patch-marketing-v3-forms-formId",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4374,6 +5646,63 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi forms update <formId>",
+      "args": [
+        {
+          "name": "formId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form ID (also --form-id)."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "form-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Defaults to hubspot on create/update."
+        },
+        {
+          "name": "field-groups",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "configuration",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "display-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "legal-consent-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/marketing-forms-v3/forms/put-marketing-v3-forms-formId",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4394,6 +5723,21 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi forms archive <formId>",
+      "args": [
+        {
+          "name": "formId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form ID (also --form-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/marketing-forms-v3/forms/delete-marketing-v3-forms-formId",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4415,6 +5759,25 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi forms submissions <formGuid>",
+      "args": [
+        {
+          "name": "formGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form GUID (also --form-guid)."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/v1/get-form-integrations-v1-submissions-forms-form_guid",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "requiredScopes": [
@@ -4436,6 +5799,62 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi forms submit <portalId> <formGuid>",
+      "args": [
+        {
+          "name": "portalId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Portal ID (also --portal-id; defaults to the active portal)."
+        },
+        {
+          "name": "formGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Form GUID (also --form-guid)."
+        },
+        {
+          "name": "fields",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "JSON array of {name,value} field objects."
+        },
+        {
+          "name": "submitted-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "context",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"hutk\":...,\"pageUri\":...,\"pageName\":...}."
+        },
+        {
+          "name": "legal-consent-options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "skip-validation",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/marketing/forms/v3-legacy/submit-data-unauthenticated",
       "contextUrl": "docs/hubspot-api-context/forms.md",
       "scopeNotes": "Unauthenticated api.hsforms.com endpoint. The CLI sends no bearer token for this command.",
@@ -4460,6 +5879,112 @@
       ],
       "scopeNotes": "Marketing emails are separate from CRM sales emails and content-impacting writes should be previewed before execution.",
       "command": "hsapi marketing emails create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subcategory",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "campaign",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "from",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"fromName\":...,\"replyTo\":...}."
+        },
+        {
+          "name": "to",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json",
+          "description": "Email content object (templatePath, widgets...)."
+        },
+        {
+          "name": "language",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "publish-date",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "send-on-publish",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "active-domain",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "feedback-survey-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "folder-id-v2",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "subscription-details",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "webversion",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4480,6 +6005,119 @@
         "content"
       ],
       "command": "hsapi marketing emails update",
+      "args": [
+        {
+          "name": "emailId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Marketing email ID (also --email-id)."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subject",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subcategory",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "campaign",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "from",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"fromName\":...,\"replyTo\":...}."
+        },
+        {
+          "name": "to",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "content",
+          "kind": "flag",
+          "type": "json",
+          "description": "Email content object (templatePath, widgets...)."
+        },
+        {
+          "name": "language",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "publish-date",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "send-on-publish",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "active-domain",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "feedback-survey-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "folder-id-v2",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "subscription-details",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "webversion",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4500,6 +6138,21 @@
         "content"
       ],
       "command": "hsapi marketing emails delete",
+      "args": [
+        {
+          "name": "emailId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Marketing email ID (also --email-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4521,6 +6174,27 @@
       ],
       "tierRequirement": "Marketing Hub Professional",
       "command": "hsapi marketing campaigns create",
+      "args": [
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "{\"hs_name\":...,...} campaign properties."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full campaign body (also --campaign)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4542,6 +6216,15 @@
       ],
       "tierRequirement": "Marketing Hub Professional",
       "command": "hsapi marketing campaigns get",
+      "args": [
+        {
+          "name": "campaignGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Campaign GUID (also --campaign-guid / --campaign-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4563,6 +6246,21 @@
       ],
       "tierRequirement": "Marketing Hub Professional",
       "command": "hsapi marketing campaigns delete",
+      "args": [
+        {
+          "name": "campaignGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Campaign GUID (also --campaign-guid / --campaign-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4583,6 +6281,24 @@
         "crm.objects.marketing_events.read"
       ],
       "command": "hsapi marketing events list",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4603,6 +6319,79 @@
         "crm.objects.marketing_events.write"
       ],
       "command": "hsapi marketing events create",
+      "args": [
+        {
+          "name": "external-account-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "external-event-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-organizer",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-cancelled",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "event-completed",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "start-date-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "end-date-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "custom-properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full event body (also --event)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4623,6 +6412,85 @@
         "crm.objects.marketing_events.write"
       ],
       "command": "hsapi marketing events upsert",
+      "args": [
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of event objects (alternative to the per-flag form)."
+        },
+        {
+          "name": "external-account-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "external-event-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-organizer",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-cancelled",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "event-completed",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "start-date-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "end-date-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "custom-properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full event body (also --event)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4645,6 +6513,68 @@
       "tierRequirement": "Marketing Hub Professional",
       "scopeNotes": "Transactional email is separate from marketing email and requires the dedicated transactional-email capability.",
       "command": "hsapi marketing transactional send",
+      "args": [
+        {
+          "name": "email-id",
+          "kind": "flag",
+          "type": "integer",
+          "required": true,
+          "description": "Transactional email content ID."
+        },
+        {
+          "name": "to",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "from",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "send-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "reply-to",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "cc",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "bcc",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "contact-properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "custom-properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full send request (also --email)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4830,6 +6760,7 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Legacy v3 metadata-only workflow list surface. Workflow API access can depend on the portal's automation capabilities.",
       "command": "hsapi automation workflows list",
+      "args": [],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4848,6 +6779,27 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Can include validation errors or workflow statistics when requested with query parameters.",
       "command": "hsapi automation workflows get",
+      "args": [
+        {
+          "name": "workflowId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Workflow ID (also --workflow-id)."
+        },
+        {
+          "name": "errors",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Include error stats."
+        },
+        {
+          "name": "stats",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Include enrollment stats."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4866,6 +6818,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Lists workflows a contact is currently enrolled in and can expose contact-specific automation state.",
       "command": "hsapi automation workflows current-enrollment",
+      "args": [
+        {
+          "name": "vid",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Contact vid (also --vid / --contact-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4884,6 +6845,28 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Legacy workflow enrollment path with no request body. Confirm the contact email and workflow ID before using --yes.",
       "command": "hsapi automation workflows enroll",
+      "args": [
+        {
+          "name": "workflowId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Workflow ID (also --workflow-id)."
+        },
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Contact email (also --email)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4902,6 +6885,36 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Sequences require an appropriate Sales or Service seat. Treat the result as sequence metadata rather than CRM data.",
       "command": "hsapi automation sequences list",
+      "args": [
+        {
+          "name": "user-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Sequences are user-scoped; userId is required."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4920,6 +6933,21 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Requires the acting userId query parameter and an appropriate Sales or Service seat.",
       "command": "hsapi automation sequences get",
+      "args": [
+        {
+          "name": "sequenceId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Sequence ID (also --sequence-id)."
+        },
+        {
+          "name": "user-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4938,6 +6966,50 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Enrollments need `userId` plus contact, sequence, and sender details. Treat the request as live sales sequencing.",
       "command": "hsapi automation sequences enroll",
+      "args": [
+        {
+          "name": "user-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Sender user ID (query param)."
+        },
+        {
+          "name": "contact-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "sequence-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "sender-email",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "sender-alias-address",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full enrollment body (also --enrollment)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4956,6 +7028,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Reads whether a contact is currently enrolled in a sequence; the status can expose sales follow-up context.",
       "command": "hsapi automation sequences status",
+      "args": [
+        {
+          "name": "contactId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Contact ID (also --contact-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4974,6 +7055,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Reads app-level calling extension settings such as app URL, dimensions, readiness, and inbound/custom object support.",
       "command": "hsapi extensions calling settings get",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -4992,6 +7082,21 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Deletes app-level calling extension settings and cannot be undone. CLI requires --yes for live deletes.",
       "command": "hsapi extensions calling settings delete",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5010,6 +7115,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Returns the authenticated-recording callback URL HubSpot will use for call recording retrieval.",
       "command": "hsapi extensions calling recording-settings get",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5028,6 +7142,33 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Registers the endpoint HubSpot will call to retrieve authenticated call recordings. The endpoint URL must include `%s` for the externalId placeholder.",
       "command": "hsapi extensions calling recording-settings create",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string",
+          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full settings body (also --settings)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5046,6 +7187,33 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Updates the recording callback URL HubSpot will use for authenticated recording retrieval.",
       "command": "hsapi extensions calling recording-settings update",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string",
+          "description": "URL HubSpot calls to fetch the authed recording (also --recording-url)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full settings body (also --settings)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5064,6 +7232,21 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Deleting the channel connection disconnects the calling app from the connected device setup. CLI requires --yes for live deletes.",
       "command": "hsapi extensions calling channel-connection delete",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5082,6 +7265,26 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Notifies HubSpot that an external recording is ready for transcription.",
       "command": "hsapi extensions calling recordings ready",
+      "args": [
+        {
+          "name": "engagement-id",
+          "kind": "flag",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full body (also --ready)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5100,6 +7303,33 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Creates an integrator-provided transcript for a call engagement using transcript utterances.",
       "command": "hsapi extensions calling transcripts create",
+      "args": [
+        {
+          "name": "engagement-id",
+          "kind": "flag",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "utterances",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "JSON array of utterance objects."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full body (also --transcript)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5118,6 +7348,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Reads HubSpot-generated or integrator-generated transcript text, timing, and speaker metadata for a call engagement.",
       "command": "hsapi extensions calling transcripts get",
+      "args": [
+        {
+          "name": "transcriptId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Transcript/engagement ID (also --transcript-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5136,6 +7375,15 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Reads app-level video conferencing extension settings for the configured app integration.",
       "command": "hsapi extensions videoconferencing settings get",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
@@ -5154,6 +7402,21 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Deletes app-level video conferencing extension settings and cannot be undone. CLI requires --yes for live deletes.",
       "command": "hsapi extensions videoconferencing settings delete",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
