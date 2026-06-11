@@ -3839,6 +3839,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (area === 'users' || area === 'user') {
+    await runUsers(portal, action, rest, flags);
+    return;
+  }
+
   if (area === 'account') {
     await runAccount(portal, action, flags);
     return;
@@ -4393,6 +4398,84 @@ async function runAssociations(portal, action, rest, flags) {
   }
 
   fail(`Unknown associations action: ${action}`);
+}
+
+// Settings v3 user provisioning (issue #24): list/get/create/update/delete
+// plus the teams and roles reference reads. Get/update/delete accept
+// --id-property EMAIL to address users by email instead of user ID.
+async function runUsers(portal, action, rest, flags) {
+  const base = '/settings/v3/users';
+
+  const idPropertyQueryFlags = () => {
+    const queryFlags = { ...flags, query: values(flags.query) };
+    if (flags['id-property'] !== undefined) queryFlags.query.push(`idProperty=${String(flags['id-property']).toUpperCase()}`);
+    return queryFlags;
+  };
+
+  if (action === 'list') {
+    const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after' });
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', base, queryFlags)
+      : await hubspotFetch(portal, 'GET', base, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  if (action === 'get') {
+    const userId = rest[0] || flags['user-id'];
+    if (!userId) fail('users get requires <userId> or --user-id (use --id-property EMAIL to pass an email).');
+    printJson(await hubspotFetch(portal, 'GET', `${base}/${pathPart(userId)}`, idPropertyQueryFlags()));
+    return;
+  }
+
+  if (action === 'teams') {
+    printJson(await hubspotFetch(portal, 'GET', `${base}/teams`, flags));
+    return;
+  }
+
+  if (action === 'roles') {
+    printJson(await hubspotFetch(portal, 'GET', `${base}/roles`, flags));
+    return;
+  }
+
+  if (action === 'create') {
+    const body = mappedBodyFromFlags(flags, 'users create', {
+      email: 'email',
+      'first-name': 'firstName',
+      'last-name': 'lastName',
+      'role-id': 'roleId',
+      'role-ids': { name: 'roleIds', type: 'string-list' },
+      'primary-team-id': 'primaryTeamId',
+      'secondary-team-ids': { name: 'secondaryTeamIds', type: 'string-list' },
+      'send-welcome-email': { name: 'sendWelcomeEmail', type: 'boolean' }
+    }, { requiredFlags: ['email'] });
+    printJson(await guardedFetch(portal, 'POST', base, flags, body));
+    return;
+  }
+
+  if (action === 'update') {
+    const userId = rest[0] || flags['user-id'];
+    if (!userId) fail('users update requires <userId> or --user-id.');
+    const body = mappedBodyFromFlags(flags, 'users update', {
+      'first-name': 'firstName',
+      'last-name': 'lastName',
+      'role-id': 'roleId',
+      'role-ids': { name: 'roleIds', type: 'string-list' },
+      'primary-team-id': 'primaryTeamId',
+      'secondary-team-ids': { name: 'secondaryTeamIds', type: 'string-list' }
+    });
+    printJson(await guardedFetch(portal, 'PUT', `${base}/${pathPart(userId)}`, idPropertyQueryFlags(), body));
+    return;
+  }
+
+  if (action === 'delete' || action === 'remove') {
+    const userId = rest[0] || flags['user-id'];
+    if (!userId) fail(`users ${action} requires <userId> or --user-id.`);
+    printJson(await guardedFetch(portal, 'DELETE', `${base}/${pathPart(userId)}`, idPropertyQueryFlags()));
+    return;
+  }
+
+  fail(`Unknown users action: ${action}`);
 }
 
 async function runOwners(portal, action, rest, flags) {
