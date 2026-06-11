@@ -54,6 +54,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi account details",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/guide",
       "auth": {
         "family": "portal_bearer",
@@ -70,6 +71,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi account usage",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/guide",
       "auth": {
         "family": "portal_bearer",
@@ -86,6 +88,62 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi auth token",
+      "args": [
+        {
+          "name": "client-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client ID (or --client-id-env / HUBSPOT_CLIENT_ID)."
+        },
+        {
+          "name": "client-id-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client ID."
+        },
+        {
+          "name": "client-secret",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client secret (or --client-secret-env / HUBSPOT_CLIENT_SECRET)."
+        },
+        {
+          "name": "client-secret-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client secret."
+        },
+        {
+          "name": "code",
+          "kind": "flag",
+          "type": "string",
+          "description": "Authorization code (or --code-env / HUBSPOT_OAUTH_CODE)."
+        },
+        {
+          "name": "code-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the authorization code."
+        },
+        {
+          "name": "redirect-uri",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "base-url",
+          "kind": "flag",
+          "type": "string",
+          "description": "Override https://api.hubapi.com."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/authentication/manage-oauth-tokens",
       "contextUrl": "docs/hubspot-api-context/oauth.md",
       "scopeNotes": "OAuth authorization-code exchange. Sends client_id, client_secret, code, grant_type, and redirect_uri as form URL-encoded body fields. Response token values are redacted unless --show-secrets is used.",
@@ -104,6 +162,56 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi auth refresh",
+      "args": [
+        {
+          "name": "client-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client ID (or --client-id-env / HUBSPOT_CLIENT_ID)."
+        },
+        {
+          "name": "client-id-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client ID."
+        },
+        {
+          "name": "client-secret",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client secret (or --client-secret-env / HUBSPOT_CLIENT_SECRET)."
+        },
+        {
+          "name": "client-secret-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client secret."
+        },
+        {
+          "name": "refresh-token",
+          "kind": "flag",
+          "type": "string",
+          "description": "Refresh token (or --refresh-token-env / HUBSPOT_REFRESH_TOKEN)."
+        },
+        {
+          "name": "refresh-token-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the refresh token."
+        },
+        {
+          "name": "base-url",
+          "kind": "flag",
+          "type": "string",
+          "description": "Override https://api.hubapi.com."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/authentication/manage-oauth-tokens",
       "contextUrl": "docs/hubspot-api-context/oauth.md",
       "scopeNotes": "OAuth refresh-token exchange. Response token values are redacted unless --show-secrets is used.",
@@ -123,6 +231,69 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi auth introspect",
+      "args": [
+        {
+          "name": "client-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client ID (or --client-id-env / HUBSPOT_CLIENT_ID)."
+        },
+        {
+          "name": "client-id-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client ID."
+        },
+        {
+          "name": "client-secret",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client secret (or --client-secret-env / HUBSPOT_CLIENT_SECRET)."
+        },
+        {
+          "name": "client-secret-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client secret."
+        },
+        {
+          "name": "token",
+          "kind": "flag",
+          "type": "string",
+          "description": "Token value (prefer --token-env to keep secrets out of argv)."
+        },
+        {
+          "name": "access-token",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "refresh-token",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "token-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the token."
+        },
+        {
+          "name": "token-type-hint",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "access_token",
+            "refresh_token"
+          ]
+        },
+        {
+          "name": "base-url",
+          "kind": "flag",
+          "type": "string",
+          "description": "Override https://api.hubapi.com."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/authentication/manage-oauth-tokens",
       "contextUrl": "docs/hubspot-api-context/oauth.md",
       "scopeNotes": "Returns token metadata, user, hub, scopes, and app identifiers. Token-like values are redacted unless --show-secrets is used.",
@@ -141,6 +312,82 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi auth revoke",
+      "args": [
+        {
+          "name": "client-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client ID (or --client-id-env / HUBSPOT_CLIENT_ID)."
+        },
+        {
+          "name": "client-id-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client ID."
+        },
+        {
+          "name": "client-secret",
+          "kind": "flag",
+          "type": "string",
+          "description": "OAuth app client secret (or --client-secret-env / HUBSPOT_CLIENT_SECRET)."
+        },
+        {
+          "name": "client-secret-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the client secret."
+        },
+        {
+          "name": "token",
+          "kind": "flag",
+          "type": "string",
+          "description": "Token value (prefer --token-env to keep secrets out of argv)."
+        },
+        {
+          "name": "access-token",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "refresh-token",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "token-env",
+          "kind": "flag",
+          "type": "string",
+          "description": "Env var name holding the token."
+        },
+        {
+          "name": "token-type-hint",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "access_token",
+            "refresh_token"
+          ]
+        },
+        {
+          "name": "danger-revoke-token",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment: revocation kills the token."
+        },
+        {
+          "name": "base-url",
+          "kind": "flag",
+          "type": "string",
+          "description": "Override https://api.hubapi.com."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/authentication/oauth-tokens/revoke-token",
       "contextUrl": "docs/hubspot-api-context/oauth.md",
       "scopeNotes": "Revokes an OAuth token. Requires --danger-revoke-token and --yes.",
@@ -3183,6 +3430,15 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi property-groups list <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/guide",
       "auth": {
         "family": "portal_bearer",
@@ -3199,6 +3455,15 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi property-validations list <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/property-validations/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -3216,6 +3481,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi schemas list",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
       "auth": {
         "family": "portal_bearer",
@@ -3310,6 +3576,15 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi pipelines list <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -3433,6 +3708,29 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi imports start",
+      "args": [
+        {
+          "name": "import-request",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "Import request JSON (also --body; @file supported)."
+        },
+        {
+          "name": "file",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "repeatable": true,
+          "description": "CSV/spreadsheet file path; repeat for multi-file imports."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/guide",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "scopeNotes": "Multipart upload. Import files can create/update many records, create lists, and affect marketing contact status.",
@@ -3451,6 +3749,18 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi imports list",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/guide",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3468,6 +3778,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi imports get <importId>",
+      "args": [
+        {
+          "name": "importId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/get-import",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3485,6 +3803,34 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi imports errors <importId>",
+      "args": [
+        {
+          "name": "importId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "include-error-message",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-row-data",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/get-import-errors",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "scopeNotes": "May include row values from the imported file when includeRowData is requested.",
@@ -3503,6 +3849,20 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi imports cancel <importId>",
+      "args": [
+        {
+          "name": "importId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/imports/cancel-import",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3520,6 +3880,87 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi exports start",
+      "args": [
+        {
+          "name": "export-name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list",
+          "required": true,
+          "description": "Properties to include as columns."
+        },
+        {
+          "name": "export-type",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "VIEW",
+            "LIST"
+          ],
+          "description": "Default VIEW."
+        },
+        {
+          "name": "format",
+          "kind": "flag",
+          "type": "string",
+          "description": "CSV (default), XLSX, or XLS."
+        },
+        {
+          "name": "language",
+          "kind": "flag",
+          "type": "string",
+          "description": "Default EN."
+        },
+        {
+          "name": "associated-object-type",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "export-internal-values-options",
+          "kind": "flag",
+          "type": "list",
+          "description": "NAMES and/or VALUES (default NAMES)."
+        },
+        {
+          "name": "include-labeled-associations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-primary-display-property-for-associated-objects",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "override-associated-objects-per-definition-per-row-limit",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full export request (also --export)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/exports/create-export",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "scopeNotes": "Exports can expose bulk CRM data and generate temporary unauthenticated download URLs.",
@@ -3538,6 +3979,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi exports get <exportId>",
+      "args": [
+        {
+          "name": "exportId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/exports/get-export",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3555,6 +4004,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi exports status <taskId>",
+      "args": [
+        {
+          "name": "taskId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/exports/get-export-status",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "scopeNotes": "Completed export status can include a temporary download URL that should be treated as sensitive.",
@@ -3573,6 +4030,65 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi lists create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "object-type-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "e.g. 0-1 for contacts."
+        },
+        {
+          "name": "processing-type",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "MANUAL, DYNAMIC, or SNAPSHOT."
+        },
+        {
+          "name": "list-folder-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "filter-branch",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "custom-properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "list-permissions",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "membership-settings",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full list definition (also --list)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/create-list",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3591,6 +4107,63 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi lists search",
+      "args": [
+        {
+          "name": "search",
+          "kind": "flag",
+          "type": "string",
+          "description": "Free-text query against list names."
+        },
+        {
+          "name": "processing-types",
+          "kind": "flag",
+          "type": "list",
+          "description": "e.g. MANUAL,DYNAMIC,SNAPSHOT."
+        },
+        {
+          "name": "object-type-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Filter to lists of one object type, e.g. 0-1."
+        },
+        {
+          "name": "list-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "additional-properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "count",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Page size (also --limit; default 20)."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "offset",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full ListSearchRequest body."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/search/search-lists",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3608,6 +4181,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi lists get <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "include-filters",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Include the filter branch definition."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/get-list-listId",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3625,6 +4212,27 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi lists get-by-name <objectTypeId> <listName>",
+      "args": [
+        {
+          "name": "objectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object type ID, e.g. 0-1 (names resolve too)."
+        },
+        {
+          "name": "listName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "include-filters",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Include the filter branch definition."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/get-list",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3642,6 +4250,32 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi lists update-name <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "New list name."
+        },
+        {
+          "name": "include-filters",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/guide",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3659,6 +4293,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi lists delete <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/delete-list",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3676,6 +4324,20 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi lists restore <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/restore-list",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3693,6 +4355,20 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi lists memberships <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Page size (default 100)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/memberships/get-memberships-by-id",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3710,6 +4386,38 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi lists membership-update <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "add",
+          "kind": "flag",
+          "type": "list",
+          "description": "Record IDs to add (CSV/JSON/@file)."
+        },
+        {
+          "name": "remove",
+          "kind": "flag",
+          "type": "list",
+          "description": "Record IDs to remove (CSV/JSON/@file)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"recordIdsToAdd\":[],\"recordIdsToRemove\":[]} body."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/memberships/update-list-memberships",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "scopeNotes": "Only valid for MANUAL or SNAPSHOT lists. DYNAMIC lists are controlled by filters.",
@@ -3728,6 +4436,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi lists memberships-clear <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/memberships/delete-list-listId",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3745,6 +4467,21 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi lists record-memberships <objectTypeId> <recordId>",
+      "args": [
+        {
+          "name": "objectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object type ID, e.g. 0-1 (names resolve too)."
+        },
+        {
+          "name": "recordId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/memberships/get-lists-per-record",
       "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
       "auth": {
@@ -3762,6 +4499,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi account subscription",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/guide",
       "auth": {
         "family": "portal_bearer",
@@ -4985,6 +5723,38 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi property-groups create <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/guide",
       "auth": {
         "family": "portal_bearer",
@@ -5001,6 +5771,37 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi property-groups update <objectType> <groupName>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "groupName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/guide",
       "auth": {
         "family": "portal_bearer",
@@ -5017,6 +5818,27 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi property-groups archive <objectType> <groupName>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "groupName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/property-groups/delete-property",
       "contextUrl": "docs/hubspot-api-context/properties.md",
       "auth": {
@@ -5034,6 +5856,46 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi property-validations set <objectType> <propertyName> <ruleType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ruleType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "arguments",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "ruleArguments JSON for the rule type."
+        },
+        {
+          "name": "normalize",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Set shouldApplyNormalization."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/property-validations/guide",
       "contextUrl": "docs/hubspot-api-context/property-validations-limits.md",
       "auth": {
@@ -5051,6 +5913,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi schemas get <objectTypeId|fullyQualifiedName>",
+      "args": [
+        {
+          "name": "objectTypeId|fullyQualifiedName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
       "tierRequirement": "Enterprise",
       "auth": {
@@ -5068,6 +5938,20 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi schemas create",
+      "args": [
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full object schema definition (also --schema)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
       "tierRequirement": "Enterprise",
       "auth": {
@@ -5085,6 +5969,26 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi schemas update <objectTypeId>",
+      "args": [
+        {
+          "name": "objectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Schema patch (also --schema)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
       "tierRequirement": "Enterprise",
       "auth": {
@@ -5102,6 +6006,27 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi schemas delete <objectTypeId>",
+      "args": [
+        {
+          "name": "objectTypeId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "danger-archive-schema",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment for schema archive."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/schemas/guide",
       "tierRequirement": "Enterprise",
       "auth": {
@@ -5463,6 +6388,21 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi pipelines get <objectType> <pipelineId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5480,6 +6420,27 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi pipelines create <objectType>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Pipeline definition with label, displayOrder, stages."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5497,6 +6458,43 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi pipelines update <objectType> <pipelineId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Patch body; overrides the per-flag form."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5514,6 +6512,33 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi pipelines delete <objectType> <pipelineId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "validate-references",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Ask HubSpot to validate references before deleting."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5531,6 +6556,21 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi pipelines stages <objectType> <pipelineId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5548,6 +6588,27 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi pipelines stage-audit <objectType> <pipelineId> <stageId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "stageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
       "auth": {
@@ -5973,6 +7034,51 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi pipelines stage-create <objectType> <pipelineId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json",
+          "description": "Stage metadata, e.g. {\"probability\":\"0.5\"}."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Stage definition (also --stage)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "scopeNotes": "Requires pipeline write access for the object type. Deal stages require probability metadata.",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
@@ -5991,6 +7097,54 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi pipelines stage-update <objectType> <pipelineId> <stageId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "stageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "display-order",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "metadata",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Stage patch (also --stage)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "scopeNotes": "Requires pipeline write access for the object type. Moving or changing stages can affect reports, automations, and record routing.",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
@@ -6009,6 +7163,33 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi pipelines stage-delete <objectType> <pipelineId> <stageId>",
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "pipelineId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "stageId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/pipelines/guide",
       "scopeNotes": "Requires pipeline write access for the object type. Deleting stages can break records, workflows, reporting, and forecasts if not prepared first.",
       "contextUrl": "docs/hubspot-api-context/pipelines.md",
