@@ -8174,38 +8174,6 @@
     },
     {
       "family": "automation.flows",
-      "name": "automation.flows.get",
-      "method": "GET",
-      "path": "/automation/v4/flows/{flowId}",
-      "versionMode": "v4",
-      "risk": "read",
-      "status": "typed",
-      "command": "hsapi automation flows get <flowId>",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
-      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
-      "auth": {
-        "family": "portal_bearer",
-        "subtype": "private_app_or_static_app",
-        "fallback": "none"
-      },
-      "requiredScopes": [
-        "automation"
-      ],
-      "args": [
-        {
-          "name": "flowId",
-          "kind": "positional",
-          "type": "string",
-          "required": true,
-          "aliases": [
-            "flow-id"
-          ],
-          "description": "Flow (workflow) ID (also --flow-id)."
-        }
-      ]
-    },
-    {
-      "family": "automation.flows",
       "name": "automation.flows.email_campaigns",
       "method": "GET",
       "path": "/automation/v4/flows/email-campaigns",
@@ -8269,6 +8237,38 @@
           "kind": "flag",
           "type": "json",
           "description": "Explicit {\"inputs\":[...]} body; overrides --ids."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.get",
+      "method": "GET",
+      "path": "/automation/v4/flows/{flowId}",
+      "versionMode": "v4",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi automation flows get <flowId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "flowId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "flow-id"
+          ],
+          "description": "Flow (workflow) ID (also --flow-id)."
         }
       ]
     },
@@ -13305,6 +13305,335 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "settings.users",
+      "name": "settings.users.list",
+      "method": "GET",
+      "path": "/settings/v3/users",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi users list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.read"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.users.teams",
+      "method": "GET",
+      "path": "/settings/v3/users/teams",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi users teams",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.teams.read"
+      ],
+      "args": []
+    },
+    {
+      "family": "settings.roles",
+      "name": "settings.users.roles",
+      "method": "GET",
+      "path": "/settings/v3/users/roles",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi users roles",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.read"
+      ],
+      "scopeNotes": "Role management requires an Enterprise hub; the read returns the defined role set.",
+      "args": []
+    },
+    {
+      "family": "settings.users",
+      "name": "settings.users.get",
+      "method": "GET",
+      "path": "/settings/v3/users/{userId}",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi users get <userId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.read"
+      ],
+      "args": [
+        {
+          "name": "userId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "user-id"
+          ],
+          "description": "User ID, or an email with --id-property EMAIL (also --user-id)."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "USER_ID",
+            "EMAIL"
+          ],
+          "description": "Address the user by EMAIL instead of user ID."
+        }
+      ]
+    },
+    {
+      "family": "settings.users",
+      "name": "settings.users.create",
+      "method": "POST",
+      "path": "/settings/v3/users",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi users create",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.write"
+      ],
+      "scopeNotes": "Provisioning sends a welcome email when sendWelcomeEmail is true; role/team assignment requires the corresponding seats.",
+      "args": [
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "role-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Single role ID (see hsapi users roles)."
+        },
+        {
+          "name": "role-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "primary-team-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Team ID (see hsapi users teams)."
+        },
+        {
+          "name": "secondary-team-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "send-welcome-email",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "settings.users",
+      "name": "settings.users.update",
+      "method": "PUT",
+      "path": "/settings/v3/users/{userId}",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi users update <userId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.write"
+      ],
+      "args": [
+        {
+          "name": "userId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "user-id"
+          ],
+          "description": "User ID, or an email with --id-property EMAIL (also --user-id)."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "USER_ID",
+            "EMAIL"
+          ],
+          "description": "Address the user by EMAIL instead of user ID."
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "role-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Single role ID (see hsapi users roles)."
+        },
+        {
+          "name": "role-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "primary-team-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Team ID (see hsapi users teams)."
+        },
+        {
+          "name": "secondary-team-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "settings.users",
+      "name": "settings.users.delete",
+      "method": "DELETE",
+      "path": "/settings/v3/users/{userId}",
+      "versionMode": "v3",
+      "risk": "destructive",
+      "status": "typed",
+      "command": "hsapi users delete <userId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.users.write"
+      ],
+      "scopeNotes": "Removes the user from the portal (their content remains).",
+      "args": [
+        {
+          "name": "userId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "user-id"
+          ],
+          "description": "User ID, or an email with --id-property EMAIL (also --user-id)."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "USER_ID",
+            "EMAIL"
+          ],
+          "description": "Address the user by EMAIL instead of user ID."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "cms.pages.site",

@@ -258,7 +258,7 @@ This matters most for custom objects, schema configuration, association labels/l
 
 <!-- BEGIN GENERATED: current-scope (npm run readme:scope) -->
 
-The catalog covers **283 typed commands** across **48 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
+The catalog covers **290 typed commands** across **51 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
 
 - `hsapi account` — 3 commands
 - `hsapi association-labels` — 4 commands
@@ -305,10 +305,11 @@ The catalog covers **283 typed commands** across **48 endpoint families**, every
 - `hsapi scheduler` — 5 commands
 - `hsapi schemas` — 5 commands
 - `hsapi subscriptions` — 10 commands
+- `hsapi users` — 7 commands
 - `hsapi webhook-journal` — 19 commands
 - `hsapi webhooks` — 6 commands
 
-Argspec coverage: 283/283 typed commands documented.
+Argspec coverage: 290/290 typed commands documented.
 
 <!-- END GENERATED: current-scope -->
 

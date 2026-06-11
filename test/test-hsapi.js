@@ -5769,3 +5769,63 @@ test('77 Issue #24: automation v4 flows - typed CRUD surface', async () => {
   assert.notStrictEqual(typo.status, 0);
   assert.match(typo.stderr, /Unknown flag --limt/);
 });
+
+test('78 Issue #24: settings users/teams/roles provisioning', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  await expectShowRequest(['users', 'list', '--limit', '5'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/users',
+    endpointId: 'settings.users.list'
+  });
+
+  const byEmail = await expectShowRequest(['users', 'get', 'ada@example.com', '--id-property', 'EMAIL'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/users/ada%40example.com',
+    endpointId: 'settings.users.get'
+  });
+  assert.strictEqual(byEmail.request.query.idProperty, 'EMAIL');
+
+  await expectShowRequest(['users', 'teams'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/users/teams',
+    endpointId: 'settings.users.teams'
+  });
+
+  await expectShowRequest(['users', 'roles'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/settings/v3/users/roles',
+    endpointId: 'settings.users.roles'
+  });
+
+  await expectShowRequest(['users', 'create', '--email', 'new@example.com', '--role-ids', '7,8', '--send-welcome-email'], env, {
+    requests,
+    method: 'POST',
+    pathname: '/settings/v3/users',
+    endpointId: 'settings.users.create',
+    body: { email: 'new@example.com', roleIds: ['7', '8'], sendWelcomeEmail: true }
+  });
+
+  await expectShowRequest(['users', 'update', '43877071', '--primary-team-id', '99'], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/settings/v3/users/43877071',
+    endpointId: 'settings.users.update',
+    body: { primaryTeamId: '99' }
+  });
+
+  const blockedDelete = await run(['users', 'delete', '43877071'], env);
+  assert.strictEqual(blockedDelete.status, 2, 'users delete without --yes must be a blocked preview');
+
+  const missingEmail = await run(['users', 'create', '--first-name', 'Ada', '--show-request'], env);
+  assert.notStrictEqual(missingEmail.status, 0);
+  assert.match(missingEmail.stderr, /requires --email/);
+
+  // generic path resolution: literal segments win over the {userId} template
+  const teamsResolved = parseJsonOutput(await run(['help', 'users', 'teams'], env));
+  assert.strictEqual(teamsResolved.endpointId, 'settings.users.teams');
+});
