@@ -6924,6 +6924,103 @@
     },
     {
       "family": "marketing.emails",
+      "name": "marketing.emails.list",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing emails list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/emails",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "args": [
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/{emailId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing emails get <emailId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/emails",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "args": [
+        {
+          "name": "emailId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "email-id"
+          ]
+        },
+        {
+          "name": "include-stats",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "family": "marketing.emails",
       "name": "marketing.emails.update",
       "method": "PATCH",
       "path": "/marketing/emails/2026-03/{emailId}",
@@ -7140,6 +7237,211 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.list",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing campaigns list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "marketing.campaigns.read"
+      ],
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "description": "Name contains filter."
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.report_metrics",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/reports/metrics",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing campaigns report-metrics <campaignGuid>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "marketing.campaigns.read"
+      ],
+      "args": [
+        {
+          "name": "campaignGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "campaign-guid",
+            "campaign-id"
+          ],
+          "description": "Campaign GUID (hsapi marketing campaigns list)."
+        },
+        {
+          "name": "start-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        },
+        {
+          "name": "end-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        }
+      ]
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.report_revenue",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/reports/revenue",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing campaigns report-revenue <campaignGuid>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "marketing.campaigns.read"
+      ],
+      "args": [
+        {
+          "name": "campaignGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "campaign-guid",
+            "campaign-id"
+          ],
+          "description": "Campaign GUID (hsapi marketing campaigns list)."
+        },
+        {
+          "name": "attribution-model",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "start-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        },
+        {
+          "name": "end-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        }
+      ]
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.report_contacts",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/reports/contacts/{contactType}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi marketing campaigns report-contacts <campaignGuid> <contactType>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/marketing/campaigns",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "marketing.campaigns.read"
+      ],
+      "args": [
+        {
+          "name": "campaignGuid",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "campaign-guid",
+            "campaign-id"
+          ],
+          "description": "Campaign GUID (hsapi marketing campaigns list)."
+        },
+        {
+          "name": "contactType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "contact-type"
+          ],
+          "description": "e.g. contactFirstTouch, contactLastTouch, sessions, influenced."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "start-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        },
+        {
+          "name": "end-date",
+          "kind": "flag",
+          "type": "string",
+          "description": "YYYY-MM-DD."
+        }
+      ]
     },
     {
       "family": "marketing.campaigns",
@@ -9009,6 +9311,72 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "crm.extensions.videoconferencing",
+      "name": "crm.extensions.videoconferencing.settings.update",
+      "method": "PUT",
+      "path": "/crm/extensions/videoconferencing/2026-03/settings/{appId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi extensions videoconferencing settings update",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/video-conferencing",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [],
+      "scopeNotes": "Closes the get/delete/update asymmetry from the original catalog.",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "aliases": [
+            "app-id"
+          ],
+          "description": "Developer app ID (also --app-id)."
+        },
+        {
+          "name": "create-meeting-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "update-meeting-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "delete-meeting-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "user-verify-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "fetch-accounts-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "scheduler.meetings",
@@ -16180,6 +16548,102 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "cms.audit_logs",
+      "name": "cms.audit_logs.list",
+      "method": "GET",
+      "path": "/cms/audit-logs/2026-03",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "typed",
+      "command": "hsapi cms audit-logs",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/audit-logs",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "cms.functions.read"
+      ],
+      "scopeNotes": "Who changed what in CMS content; verified 200 live 2026-06-11.",
+      "args": [
+        {
+          "name": "user-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "occurred-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "occurred-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "cms.audit_logs",
+      "name": "cms.audit_logs.export",
+      "method": "POST",
+      "path": "/cms/audit-logs/2026-03/export",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi cms audit-logs-export",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/cms/audit-logs",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "cms.functions.read"
+      ],
+      "args": [
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Export request body (filters)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "cms.domains",

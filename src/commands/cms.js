@@ -5,6 +5,7 @@ const {
 const {
   boolFlag,
   configString,
+  parseBody,
   pathPart,
   pathTail,
 } = require('../flags');
@@ -13,6 +14,7 @@ const {
   redactTokenUrl,
 } = require('../output');
 const {
+  appendMappedSearchQuery,
   cmsBlogPostBodyFromFlags,
   cmsBlogPostListQueryFlags,
   cmsIndexedDataQueryFlags,
@@ -82,6 +84,30 @@ async function runCms(portal, action, rest, flags) {
 
   if (action === 'search' || action === 'indexed-data') {
     await runCmsSearch(portal, action, rest, flags);
+    return;
+  }
+
+  if (action === 'audit-logs') {
+    const queryFlags = appendMappedSearchQuery(flags, {
+      limit: 'limit',
+      after: 'after',
+      'user-id': 'userId',
+      'event-type': 'eventType',
+      'object-type': 'objectType',
+      'occurred-after': 'occurredAfter',
+      'occurred-before': 'occurredBefore'
+    });
+    const target = '/cms/audit-logs/2026-03';
+    const result = boolFlag(flags, 'paginate')
+      ? await collectPages(portal, 'GET', target, queryFlags)
+      : await hubspotFetch(portal, 'GET', target, queryFlags);
+    printJson(result);
+    return;
+  }
+
+  if (action === 'audit-logs-export') {
+    const body = parseBody(flags.body) || {};
+    printJson(await guardedFetch(portal, 'POST', '/cms/audit-logs/2026-03/export', flags, body));
     return;
   }
 
