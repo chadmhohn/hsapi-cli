@@ -6019,3 +6019,26 @@ test('82 Issue #66: cms audit logs, campaign reports, emails list/get, vc settin
     body: { createMeetingUrl: 'https://example.com/create' }
   });
 });
+
+test('83 Issue #66: catalog-only backfill tranche 1 backs generic requests', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const campaignBudget = await expectShowRequest(['request', 'GET', '/marketing/campaigns/2026-03/guid-9/budget/totals'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/marketing/campaigns/2026-03/guid-9/budget/totals'
+  });
+  assert.match(campaignBudget.endpoint.id, /^marketing\.campaigns\./);
+
+  const splitsRead = await expectShowRequest(['request', 'POST', '/crm/objects/v3/deals/splits/batch/read', '--body', '{"inputs":["1"]}'], env, {
+    requests,
+    method: 'POST',
+    pathname: '/crm/objects/v3/deals/splits/batch/read'
+  });
+  assert.match(splitsRead.endpoint.id, /^crm\.deal_splits\./);
+
+  // developer-auth stubs resolve too: the auth gate names the catalog entry
+  const actionsList = await run(['request', 'GET', '/automation/actions/2026-03/12345', '--show-request'], env);
+  assert.notStrictEqual(actionsList.status, 0);
+  assert.match(actionsList.stderr, /Endpoint automation\.actions\.\w+ requires auth developer\/developer_api_key/);
+});

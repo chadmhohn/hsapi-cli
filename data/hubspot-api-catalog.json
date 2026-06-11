@@ -17222,6 +17222,1232 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.delete_crm_lists_2026_03_schedule_conversion",
+      "method": "DELETE",
+      "path": "/crm/lists/2026-03/{listId}/schedule-conversion",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.delete_crm_lists_2026_03_folders",
+      "method": "DELETE",
+      "path": "/crm/lists/2026-03/folders/{folderId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.get_crm_lists_2026_03_memberships_join_order",
+      "method": "GET",
+      "path": "/crm/lists/2026-03/{listId}/memberships/join-order",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.get_crm_lists_2026_03_schedule_conversion",
+      "method": "GET",
+      "path": "/crm/lists/2026-03/{listId}/schedule-conversion",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.post_crm_lists_2026_03_folders",
+      "method": "POST",
+      "path": "/crm/lists/2026-03/folders",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.deal_splits",
+      "name": "crm.deal_splits.post_crm_objects_v3_deals_splits_batch_read",
+      "method": "POST",
+      "path": "/crm/objects/v3/deals/splits/batch/read",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Deal splits (requires Sales Hub Enterprise + splits enabled)."
+    },
+    {
+      "family": "crm.deal_splits",
+      "name": "crm.deal_splits.post_crm_objects_v3_deals_splits_batch_upsert",
+      "method": "POST",
+      "path": "/crm/objects/v3/deals/splits/batch/upsert",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Deal splits (requires Sales Hub Enterprise + splits enabled)."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_schedule_conversion",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/{listId}/schedule-conversion",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_folders_move",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/folders/{folderId}/move/{newParentFolderId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_folders_rename",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/folders/{folderId}/rename",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "crm.lists",
+      "name": "crm.lists.put_crm_lists_2026_03_folders_move_list",
+      "method": "PUT",
+      "path": "/crm/lists/2026-03/folders/move-list",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "List folders and conversion scheduling."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.delete_automation_actions_2026_03",
+      "method": "DELETE",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.delete_automation_actions_2026_03_functions",
+      "method": "DELETE",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.delete_automation_actions_2026_03_functions_2",
+      "method": "DELETE",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}/{functionId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.delete_cms_blogs_2026_03_authors",
+      "method": "DELETE",
+      "path": "/cms/blogs/2026-03/authors/{objectId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.delete_cms_blogs_2026_03_tags",
+      "method": "DELETE",
+      "path": "/cms/blogs/2026-03/tags/{objectId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.delete_marketing_campaigns_2026_03_assets",
+      "method": "DELETE",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/assets/{assetType}/{assetId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.delete_marketing_campaigns_2026_03_budget",
+      "method": "DELETE",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/budget/{budgetId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.delete_marketing_campaigns_2026_03_spend",
+      "method": "DELETE",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/spend/{spendId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03_2",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03_functions",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03_functions_2",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}/{functionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03_revisions",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/revisions",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.get_automation_actions_2026_03_revisions_2",
+      "method": "GET",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.get_cms_blogs_2026_03_authors",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/authors",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.get_cms_blogs_2026_03_authors_2",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/authors/{objectId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.get_cms_blogs_2026_03_tags",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/tags",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.get_cms_blogs_2026_03_tags_2",
+      "method": "GET",
+      "path": "/cms/blogs/2026-03/tags/{objectId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.get_marketing_campaigns_2026_03_assets",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/assets/{assetType}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.get_marketing_campaigns_2026_03_budget",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/budget/{budgetId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.get_marketing_campaigns_2026_03_budget_totals",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/budget/totals",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.get_marketing_campaigns_2026_03_spend",
+      "method": "GET",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/spend/{spendId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_emails_2026_03_ab_test_get_variation",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/{emailId}/ab-test/get-variation",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_emails_2026_03_draft",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/{emailId}/draft",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_emails_2026_03_revisions",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/{emailId}/revisions/{revisionId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_emails_2026_03_statistics_histogram",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/statistics/histogram",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.get_marketing_emails_2026_03_statistics_list",
+      "method": "GET",
+      "path": "/marketing/emails/2026-03/statistics/list",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.patch_automation_actions_2026_03",
+      "method": "PATCH",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.patch_cms_blogs_2026_03_authors",
+      "method": "PATCH",
+      "path": "/cms/blogs/2026-03/authors/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.patch_cms_blogs_2026_03_tags",
+      "method": "PATCH",
+      "path": "/cms/blogs/2026-03/tags/{objectId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.patch_marketing_emails_2026_03_draft",
+      "method": "PATCH",
+      "path": "/marketing/emails/2026-03/{emailId}/draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.post_automation_actions_2026_03",
+      "method": "POST",
+      "path": "/automation/actions/2026-03/{appId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.post_automation_actions_2026_03_requires_object",
+      "method": "POST",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/requires-object",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors_batch_archive",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors_batch_create",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors_batch_read",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors_batch_update",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_ms_blogs_2026_03_authors_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_ogs_2026_03_authors_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post__blogs_2026_03_authors_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_authors_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/authors/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_batch_archive",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/batch/archive",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_batch_create",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_batch_read",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_batch_update",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_multi_language_attach_to_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/multi-language/attach-to-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post__blogs_2026_03_tags_multi_language_create_language_variation",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/multi-language/create-language-variation",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_multi_language_detach_from_lang_group",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/multi-language/detach-from-lang-group",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.post_cms_blogs_2026_03_tags_multi_language_update_languages",
+      "method": "POST",
+      "path": "/cms/blogs/2026-03/tags/multi-language/update-languages",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_budget",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/budget",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.post_marketing_campaigns_2026_03_spend",
+      "method": "POST",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/spend",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_emails_2026_03_draft_reset",
+      "method": "POST",
+      "path": "/marketing/emails/2026-03/{emailId}/draft/reset",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_emails_2026_03_revisions_restore",
+      "method": "POST",
+      "path": "/marketing/emails/2026-03/{emailId}/revisions/{revisionId}/restore",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "marketing.emails",
+      "name": "marketing.emails.post_marketing_emails_2026_03_revisions_restore_to_draft",
+      "method": "POST",
+      "path": "/marketing/emails/2026-03/{emailId}/revisions/{revisionId}/restore-to-draft",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Email A/B variations, drafts, revisions, and aggregate statistics."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.put_automation_actions_2026_03_functions",
+      "method": "PUT",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "automation.actions",
+      "name": "automation.actions.put_automation_actions_2026_03_functions_2",
+      "method": "PUT",
+      "path": "/automation/actions/2026-03/{appId}/{definitionId}/functions/{functionType}/{functionId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Custom workflow action definitions live on the developer app."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.put_ms_blogs_2026_03_authors_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/blogs/2026-03/authors/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "cms.blogs.meta",
+      "name": "cms.blogs.meta.put_cms_blogs_2026_03_tags_multi_language_set_new_lang_primary",
+      "method": "PUT",
+      "path": "/cms/blogs/2026-03/tags/multi-language/set-new-lang-primary",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Blog author + tag management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.put_marketing_campaigns_2026_03_assets",
+      "method": "PUT",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/assets/{assetType}/{assetId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.put_marketing_campaigns_2026_03_budget",
+      "method": "PUT",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/budget/{budgetId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "marketing.campaigns",
+      "name": "marketing.campaigns.put_marketing_campaigns_2026_03_spend",
+      "method": "PUT",
+      "path": "/marketing/campaigns/2026-03/{campaignGuid}/spend/{spendId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/deprecated-apis",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Campaign asset/budget/spend management."
     }
   ]
 }
