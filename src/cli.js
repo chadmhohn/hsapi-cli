@@ -2644,6 +2644,7 @@ function assertAllowedHubSpotUrl(portal, url) {
 }
 
 function printJson(value) {
+  if (value === JSONL_STREAMED) return;
   const output = processOutput(value, currentOutputFlags);
   if (output.raw) {
     writeStdout(output.text);
@@ -4843,6 +4844,26 @@ function associationLimitBodyFromFlags(flags, options = {}) {
   return { inputs: [input] };
 }
 
+const JSONL_STREAMED = Symbol('jsonl-streamed');
+const JSONL_INCOMPATIBLE_FLAGS = ['select', 'pick', 'ids-only', 'names-only', 'id-name-map', 'max-chars', 'include-truncated', 'count-only', 'raw-value'];
+
+function jsonlStreamingRequested(flags) {
+  return String(flags.format || '').toLowerCase() === 'jsonl';
+}
+
+// Issue #21: --paginate --format jsonl streams one record per line page-by-page
+// (flat memory, pipe-friendly). Records bypass processOutput, so projection and
+// character budgets cannot combine with it; --max-results still applies.
+function jsonlStreamFromFlags(flags) {
+  if (!jsonlStreamingRequested(flags)) return null;
+  for (const name of JSONL_INCOMPATIBLE_FLAGS) {
+    if (flags[name] !== undefined) {
+      fail(`--format jsonl streams raw records to stdout and cannot be combined with --${name}.`);
+    }
+  }
+  return { streamed: 0 };
+}
+
 const DEFAULT_PAGINATE_MAX_RESULTS = 1000;
 
 function paginationBudgetFromFlags(flags) {
@@ -4853,10 +4874,12 @@ function paginationBudgetFromFlags(flags) {
 }
 
 async function collectPages(portal, method, inputPath, flags, body) {
+  const stream = jsonlStreamFromFlags(flags);
   const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
   const firstUrl = buildUrl(portal, inputPath, flags);
   let after = firstUrl.searchParams.get('after');
   const results = [];
+  let collected = 0;
   let pageCount = 0;
   let last = null;
   let truncated = false;
@@ -4871,13 +4894,18 @@ async function collectPages(portal, method, inputPath, flags, body) {
 
     const data = last.data;
     if (data && Array.isArray(data.results)) {
-      if (maxResults === undefined) {
-        results.push(...data.results);
+      const remaining = maxResults === undefined ? Infinity : Math.max(maxResults - collected, 0);
+      const accepted = data.results.length > remaining ? data.results.slice(0, remaining) : data.results;
+      if (stream) {
+        for (const record of accepted) writeStdout(JSON.stringify(record));
+        stream.streamed += accepted.length;
       } else {
-        const remaining = Math.max(maxResults - results.length, 0);
-        if (remaining > 0) results.push(...data.results.slice(0, remaining));
+        results.push(...accepted);
+      }
+      collected += accepted.length;
+      if (maxResults !== undefined) {
         const nextAfter = data && data.paging && data.paging.next && data.paging.next.after;
-        if (data.results.length > remaining || (results.length >= maxResults && nextAfter)) {
+        if (data.results.length > remaining || (collected >= maxResults && nextAfter)) {
           truncated = true;
           truncation = {
             reason: 'max-results',
@@ -4885,7 +4913,7 @@ async function collectPages(portal, method, inputPath, flags, body) {
             maxResults,
             defaultCap: defaultCap || undefined,
             note: defaultCap ? 'Default pagination cap. Pass an explicit --max-results, or --max-results 0 for unlimited.' : undefined,
-            returnedResultCount: results.length,
+            returnedResultCount: collected,
             fetchedPageResultCount: data.results.length,
             pageCount,
             nextAfter: nextAfter || null
@@ -4900,6 +4928,11 @@ async function collectPages(portal, method, inputPath, flags, body) {
 
     after = data && data.paging && data.paging.next && data.paging.next.after;
     if (!after) break;
+  }
+
+  if (stream) {
+    writeStderr(jsonlStreamSummary(collected, pageCount, truncated, truncation));
+    return JSONL_STREAMED;
   }
 
   const output = {
@@ -4919,12 +4952,23 @@ async function collectPages(portal, method, inputPath, flags, body) {
   return output;
 }
 
+function jsonlStreamSummary(collected, pageCount, truncated, truncation) {
+  const base = `jsonl: streamed ${collected} record(s) over ${pageCount} page(s)`;
+  if (!truncated || !truncation) return base;
+  if (truncation.reason === 'search-window') {
+    return `${base} (stopped at HubSpot's ${CRM_SEARCH_WINDOW_LIMIT}-result search window; narrow the filters to fetch the rest)`;
+  }
+  return `${base} (stopped at --max-results ${truncation.maxResults}${truncation.defaultCap ? ' default cap; pass --max-results 0 for unlimited' : ''}; nextAfter ${truncation.nextAfter || 'n/a'})`;
+}
+
 const CRM_SEARCH_WINDOW_LIMIT = 10000;
 
 async function collectSearchPages(portal, objectType, flags, baseBody) {
+  const stream = jsonlStreamFromFlags(flags);
   const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
   const target = `/crm/objects/2026-03/${pathPart(objectType)}/search`;
   const results = [];
+  let collected = 0;
   let after = baseBody.after;
   let pageCount = 0;
   let last = null;
@@ -4945,26 +4989,29 @@ async function collectSearchPages(portal, objectType, flags, baseBody) {
     const pageResults = data && Array.isArray(data.results) ? data.results : [];
     const nextAfter = data && data.paging && data.paging.next && data.paging.next.after;
 
-    if (maxResults === undefined) {
-      results.push(...pageResults);
+    const remaining = maxResults === undefined ? Infinity : Math.max(maxResults - collected, 0);
+    const accepted = pageResults.length > remaining ? pageResults.slice(0, remaining) : pageResults;
+    if (stream) {
+      for (const record of accepted) writeStdout(JSON.stringify(record));
+      stream.streamed += accepted.length;
     } else {
-      const remaining = Math.max(maxResults - results.length, 0);
-      if (remaining > 0) results.push(...pageResults.slice(0, remaining));
-      if (pageResults.length > remaining || (results.length >= maxResults && nextAfter)) {
-        truncated = true;
-        truncation = {
-          reason: 'max-results',
-          path: 'results',
-          maxResults,
-          defaultCap: defaultCap || undefined,
-          note: defaultCap ? 'Default pagination cap. Pass an explicit --max-results, or --max-results 0 for unlimited.' : undefined,
-          returnedResultCount: results.length,
-          fetchedPageResultCount: pageResults.length,
-          pageCount,
-          nextAfter: nextAfter || null
-        };
-        break;
-      }
+      results.push(...accepted);
+    }
+    collected += accepted.length;
+    if (maxResults !== undefined && (pageResults.length > remaining || (collected >= maxResults && nextAfter))) {
+      truncated = true;
+      truncation = {
+        reason: 'max-results',
+        path: 'results',
+        maxResults,
+        defaultCap: defaultCap || undefined,
+        note: defaultCap ? 'Default pagination cap. Pass an explicit --max-results, or --max-results 0 for unlimited.' : undefined,
+        returnedResultCount: collected,
+        fetchedPageResultCount: pageResults.length,
+        pageCount,
+        nextAfter: nextAfter || null
+      };
+      break;
     }
 
     if (!nextAfter) break;
@@ -4973,13 +5020,18 @@ async function collectSearchPages(portal, objectType, flags, baseBody) {
       truncation = {
         reason: 'search-window',
         message: `HubSpot CRM search only pages through the first ${CRM_SEARCH_WINDOW_LIMIT} results. Narrow the filters to fetch the rest.`,
-        returnedResultCount: results.length,
+        returnedResultCount: collected,
         pageCount,
         nextAfter: String(nextAfter)
       };
       break;
     }
     after = nextAfter;
+  }
+
+  if (stream) {
+    writeStderr(jsonlStreamSummary(collected, pageCount, truncated, truncation));
+    return JSONL_STREAMED;
   }
 
   const output = {
@@ -5663,7 +5715,8 @@ const GLOBAL_FLAG_NAMES = new Set([
   'select', 'pick', 'raw-value', 'ids-only', 'names-only', 'id-name-map',
   'compact', 'agent', 'max-results', 'max-chars', 'include-truncated',
   'limit', 'after', 'before', 'offset', 'sort', 'archived', 'paginate',
-  'properties', 'status', 'created-after', 'created-before', 'updated-after', 'updated-before'
+  'properties', 'status', 'created-after', 'created-before', 'updated-after', 'updated-before',
+  'format'
 ]);
 
 function flagValidationDisabled() {
@@ -5742,6 +5795,9 @@ async function main(argv = process.argv.slice(2)) {
 
   outputOptionsFromFlags(flags);
   validateCommandFlags(positionals, flags);
+  if (jsonlStreamingRequested(flags) && !boolFlag(flags, 'paginate')) {
+    fail('--format jsonl is a streaming mode for --paginate. Add --paginate (and optionally --max-results <n>).');
+  }
 
   if (area === 'catalog') {
     await runCatalog(action);

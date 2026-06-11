@@ -1333,6 +1333,36 @@ async function main() {
       assert.strictEqual(unlimited.resultCount, 2);
       assert.strictEqual(unlimited.pageCount, 2);
       assert.strictEqual(unlimited.truncated, undefined);
+
+      {
+        // Issue #21 (final slice): --paginate --format jsonl streams one record
+        // per line page-by-page; stdout is pure JSONL, summary goes to stderr.
+        const streamed = await run(['request', 'GET', '/crm/v3/paged', '--paginate', '--max-results', '0', '--format', 'jsonl'], env);
+        assert.strictEqual(streamed.status, 0);
+        const lines = streamed.stdout.split(/\r?\n/).filter(Boolean);
+        assert.deepStrictEqual(lines.map((line) => JSON.parse(line).id), ['1', '2']);
+        assert.match(streamed.stderr, /jsonl: streamed 2 record\(s\) over 2 page\(s\)/);
+
+        const searchStreamed = await run(['crm', 'search', 'paged_targets', '--filter', 'email:HAS_PROPERTY', '--paginate', '--format', 'jsonl'], env);
+        assert.strictEqual(searchStreamed.status, 0);
+        const searchLines = searchStreamed.stdout.split(/\r?\n/).filter(Boolean);
+        assert.deepStrictEqual(searchLines.map((line) => JSON.parse(line).id), ['1', '2', '3']);
+        assert.match(searchStreamed.stderr, /jsonl: streamed 3 record\(s\) over 2 page\(s\)/);
+
+        const cappedStream = await run(['crm', 'search', 'paged_targets', '--filter', 'email:HAS_PROPERTY', '--paginate', '--max-results', '2', '--format', 'jsonl'], env);
+        assert.strictEqual(cappedStream.status, 0);
+        const cappedLines = cappedStream.stdout.split(/\r?\n/).filter(Boolean);
+        assert.deepStrictEqual(cappedLines.map((line) => JSON.parse(line).id), ['1', '2']);
+        assert.match(cappedStream.stderr, /stopped at --max-results 2/);
+
+        const withoutPaginate = await run(['request', 'GET', '/crm/v3/paged', '--format', 'jsonl'], env);
+        assert.notStrictEqual(withoutPaginate.status, 0);
+        assert.match(withoutPaginate.stderr, /--format jsonl is a streaming mode for --paginate/);
+
+        const withSelect = await run(['request', 'GET', '/crm/v3/paged', '--paginate', '--format', 'jsonl', '--select', 'data.results[].id'], env);
+        assert.notStrictEqual(withSelect.status, 0);
+        assert.match(withSelect.stderr, /cannot be combined with --select/);
+      }
     }
 
     {
