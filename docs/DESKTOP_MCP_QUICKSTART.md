@@ -245,7 +245,26 @@ Multi-portal Claude Desktop example:
 
 Fully quit and restart Claude Desktop after editing the file. Then ask Claude to run `hsapi_auth_doctor` through the HubSpot MCP server and summarize only status fields.
 
-## 7. Troubleshooting
+## 7. Sandboxed Agent Runtimes (Claude Cowork, Codex Cloud)
+
+Agent products that run tasks inside an isolated sandbox still use the same pattern, with one nuance: the MCP server is spawned by the *client* (host side), not inside the task sandbox.
+
+- **Claude Cowork:** configure `hsapi-mcp` as a custom connector in the Claude desktop app config (same JSON shape as Claude Desktop in section 6). The server process runs host-side where the configured `env` applies; the agent's Linux sandbox only sees tool calls and tool results, never the environment. Scheduled/automated Cowork tasks therefore also reach HubSpot through the connector, even though the sandbox itself has no credentials.
+- **Codex (cloud sandbox):** same `mcpServers` shape in the Codex config. If the runtime cannot inject env securely, point `command` at the neutral-token wrapper (`examples/neutral-token-wrapper.sample.sh`) so token values come from a local secret lookup command instead of config.
+
+### What this isolation guarantees (validated 2026-06-10)
+
+A scripted validation run inside a Cowork Linux sandbox (results on issue #29) drove an 8-message MCP conversation with a fake token injected only via child-process env:
+
+- zero occurrences of the token value in any stdout/stderr; only env var *names* and `Bearer $ENV_NAME` placeholders appear in previews
+- `tokenPresent: true` confirms the env was seen without exposing it
+- mutations without `confirmMutation` return blocked previews; `--show-secrets` smuggled inside argv is rejected; absolute URLs on non-portal origins are refused before any credential attaches
+- with no token set, failures are structured and name only the env var
+- the full test suite runs green with no HubSpot credentials at all (mock-server fixtures), so agents can develop against this repo with no secret present anywhere
+
+The takeaway for repo work: tokens live only in client-side env injection or a wrapper-backed secret lookup. The repo, the portals config, MCP client config committed nowhere, and every tool output stay token-free.
+
+## 8. Troubleshooting
 
 - No MCP tools appear: restart the desktop app, then confirm the MCP server entry exists in the client config and `hsapi-mcp` can be resolved by full path.
 - MCP server starts but auth fails: run `hsapi auth doctor --portal <name> --require-env` in a fresh terminal. The desktop app may not inherit your shell-only env vars.
@@ -253,7 +272,7 @@ Fully quit and restart Claude Desktop after editing the file. Then ask Claude to
 - Token value appears in output: stop and rotate the token. File an issue with the command and redacted reproduction steps.
 - Codex/OpenClaw-style clients time out on MCP startup: make sure the installed package includes newline-delimited MCP stdio support. `npm test` includes a regression for this.
 
-## 8. Sharing Checklist
+## 9. Sharing Checklist
 
 When sharing the repo with another user or agent, give them:
 
