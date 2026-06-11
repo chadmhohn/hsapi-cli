@@ -38,6 +38,7 @@ const OAUTH_TOKEN_CACHE_SCHEMA = 'hsapi.oauthTokenCache.v1';
 const DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA = 'hsapi.developerClientCredentialsTokenCache.v1';
 const OAUTH_TOKEN_REFRESH_SKEW_MS = 60 * 1000;
 let currentOutputFlags = {};
+let currentCliArgv = [];
 const DEFAULT_RUNTIME = {
   stdout: process.stdout,
   stderr: process.stderr,
@@ -710,6 +711,7 @@ Usage:
   hsapi limits records|associations|custom-properties|calculated-properties|association-labels|pipelines|custom-object-types [--portal <name>]
   hsapi catalog coverage
   hsapi catalog commands
+  hsapi history [--since 24h|7d|ISO] [--portal <name>] [--limit n]
 
 Config:
   ${DEFAULT_CONFIG}
@@ -727,6 +729,7 @@ Output:
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
 
 Notes:
+  - Executed mutations append to a local audit log (~/.local/state/hsapi/history.jsonl, 0600; override with HSAPI_HISTORY_FILE, disable with HSAPI_HISTORY=0). Payload flag values are recorded as lengths only. Read it with: hsapi history --since 24h
   - --paginate follows page cursors (crm list query-param after; crm search body after, stopping at HubSpot's 10K search window) and applies a default 1000-result cap. Pass --max-results <n> to change it or --max-results 0 for unlimited.
   - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.
   - CRM search filters: property:OP:value (EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, ...), property:IN:a,b / property:NOT_IN:a,b, property:BETWEEN:low:high, property:HAS_PROPERTY / property:NOT_HAS_PROPERTY. Multiple --filter flags AND within one group; repeat --filter-group "expr;expr" for OR between groups; --search-body sends a full HubSpot search JSON body.
@@ -3162,6 +3165,112 @@ function truncationSummary(output, serializedChars, maxChars, extra = {}) {
   return summary;
 }
 
+const HISTORY_PAYLOAD_FLAGS = new Set(['--body', '--properties', '--inputs', '--fields', '--data', '--search-body']);
+
+function historyFilePath() {
+  const explicit = configString(process.env.HSAPI_HISTORY_FILE);
+  if (explicit) return path.resolve(explicit);
+  const home = resolveHomeDirectory();
+  if (!home) return null;
+  return path.join(home, '.local', 'state', 'hsapi', 'history.jsonl');
+}
+
+function historyEnabled() {
+  const raw = configString(process.env.HSAPI_HISTORY);
+  if (raw && ['0', 'false', 'off', 'no'].includes(raw.toLowerCase())) return false;
+  return true;
+}
+
+function redactedHistoryArgv(argv) {
+  const output = [];
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = String(argv[index]);
+    output.push(arg);
+    if (HISTORY_PAYLOAD_FLAGS.has(arg) && index + 1 < argv.length) {
+      output.push(`[payload:${String(argv[index + 1]).length} chars]`);
+      index += 1;
+    }
+  }
+  return output;
+}
+
+function recordMutationHistory(portal, method, url, endpoint, response) {
+  if (!historyEnabled()) return;
+  if (SAFE_METHODS.has(method)) return;
+  if (endpoint && endpoint.readOnlyPost === true && endpoint.risk === 'read') return;
+  const filePath = historyFilePath();
+  if (!filePath) return;
+  const entry = {
+    ts: new Date().toISOString(),
+    portal: portal.name,
+    portalId: portal.portalId || null,
+    method,
+    url: redactTokenUrl(url.toString()),
+    endpointId: endpoint && endpoint.id || null,
+    risk: endpoint && endpoint.risk || null,
+    status: response.status,
+    ok: response.ok,
+    requestId: response.headers.get('x-hubspot-correlation-id') || null,
+    argv: redactedHistoryArgv(currentCliArgv)
+  };
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true, mode: 0o700 });
+    fs.appendFileSync(filePath, `${JSON.stringify(entry)}\n`, { mode: 0o600 });
+  } catch (error) {
+    if (process.env.HSAPI_DEBUG) writeStderr(`history write failed: ${error.message}`);
+  }
+}
+
+function parseHistorySince(raw) {
+  if (raw === undefined || raw === true || raw === '') return null;
+  const text = String(raw).trim();
+  const match = /^(\d+)([hdm])$/i.exec(text);
+  if (match) {
+    const value = Number(match[1]);
+    const unitMs = { h: 3600000, d: 86400000, m: 60000 }[match[2].toLowerCase()];
+    return Date.now() - value * unitMs;
+  }
+  const parsed = Date.parse(text);
+  if (Number.isFinite(parsed)) return parsed;
+  fail(`Invalid --since "${raw}". Use forms like 24h, 7d, 30m, or an ISO date.`);
+}
+
+function runHistory(flags) {
+  const filePath = historyFilePath();
+  const sinceMs = parseHistorySince(flags.since);
+  const portalFilter = flags.portal ? String(flags.portal) : null;
+  const limit = flags.limit === undefined ? 50 : Number(flags.limit);
+  if (!Number.isInteger(limit) || limit < 1) fail('--limit must be a positive integer.');
+
+  let entries = [];
+  if (filePath && fs.existsSync(filePath)) {
+    entries = fs.readFileSync(filePath, 'utf8')
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch (_error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }
+  if (portalFilter) entries = entries.filter((entry) => entry.portal === portalFilter);
+  if (sinceMs !== null) entries = entries.filter((entry) => Date.parse(entry.ts) >= sinceMs);
+  const totalCount = entries.length;
+  entries = entries.slice(-limit);
+
+  printJson({
+    ok: true,
+    file: filePath,
+    enabled: historyEnabled(),
+    totalCount,
+    returnedCount: entries.length,
+    entries
+  });
+}
+
 function responseMeta(response) {
   const headers = {};
   for (const header of RATE_LIMIT_HEADERS) {
@@ -3260,6 +3369,7 @@ async function hubspotFetchAllowError(portal, method, inputPath, flags, body, en
   }
 
   const response = await hubspotFetchResponse(url, options, method, readOnlyPostRetryOption(endpoint));
+  recordMutationHistory(portal, method, url, endpoint, response);
   const text = await response.text();
   let payload = null;
   if (text) {
@@ -3314,6 +3424,7 @@ async function hubspotFetch(portal, method, inputPath, flags, body, endpointOver
   }
 
   const response = await hubspotFetchResponse(url, options, method, readOnlyPostRetryOption(endpoint));
+  recordMutationHistory(portal, method, url, endpoint, response);
   const text = await response.text();
   let payload = null;
   if (text) {
@@ -3375,6 +3486,7 @@ async function hubspotMultipartFetch(portal, method, inputPath, flags, formBody,
     headers,
     body: formBody
   });
+  recordMutationHistory(portal, method, url, endpoint, response);
   const text = await response.text();
   let payload = null;
   if (text) {
@@ -5545,6 +5657,7 @@ async function runProjectBridge(action, rest, flags) {
 async function main(argv = process.argv.slice(2)) {
   const { positionals, flags } = parseArgs(argv);
   currentOutputFlags = flags;
+  currentCliArgv = argv.map((item) => String(item));
   const [area, action, ...rest] = positionals;
 
   if (!area || area === 'help' || boolFlag(flags, 'help')) {
@@ -5556,6 +5669,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (area === 'catalog') {
     await runCatalog(action);
+    return;
+  }
+
+  if (area === 'history') {
+    runHistory(flags);
     return;
   }
 

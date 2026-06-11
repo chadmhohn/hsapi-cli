@@ -589,7 +589,9 @@ async function main() {
   const baseEnv = {
     HSAPI_PORTALS_CONFIG: configPath,
     HUBSPOT_ACCESS_TOKEN: 'generic-token',
-    HSAPI_TEST_TOKEN: ''
+    HSAPI_TEST_TOKEN: '',
+    // Keep test-run mutations out of any real local history file.
+    HSAPI_HISTORY: '0'
   };
   const importDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-import-'));
   const importCsv = path.join(importDir, 'contacts.csv');
@@ -1045,6 +1047,46 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #25: executed mutations append to the local history log; reads and
+      // read-only POST search do not; hsapi history reads it back.
+      const historyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-history-'));
+      const historyFile = path.join(historyDir, 'history.jsonl');
+      const env = {
+        ...baseEnv,
+        HSAPI_TEST_TOKEN: 'profile-token',
+        HSAPI_HISTORY: '1',
+        HSAPI_HISTORY_FILE: historyFile
+      };
+
+      const update = await run(['crm', 'update', 'contacts', '101', '--properties', '{"firstname":"Ada"}', '--yes'], env);
+      assert.strictEqual(update.status, 0, update.stderr || update.stdout);
+      await run(['request', 'GET', '/crm/v3/owners'], env);
+      await run(['crm', 'search', 'contacts', '--filter', 'email:HAS_PROPERTY'], env);
+
+      const lines = fs.readFileSync(historyFile, 'utf8').split(/\r?\n/).filter(Boolean);
+      assert.strictEqual(lines.length, 1, 'only the mutation should be recorded');
+      const entry = JSON.parse(lines[0]);
+      assert.strictEqual(entry.method, 'PATCH');
+      assert.strictEqual(entry.portal, 'test');
+      assert.strictEqual(entry.ok, true);
+      assert(entry.url.includes('/crm/objects/2026-03/contacts/101'));
+      const payloadIndex = entry.argv.indexOf('--properties') + 1;
+      assert.match(entry.argv[payloadIndex], /^\[payload:\d+ chars\]$/, 'payload values must be redacted to lengths');
+
+      const historyOutput = parseJsonOutput(await run(['history', '--since', '24h', '--limit', '10'], env));
+      assert.strictEqual(historyOutput.ok, true);
+      assert.strictEqual(historyOutput.returnedCount, 1);
+      assert.strictEqual(historyOutput.entries[0].method, 'PATCH');
+
+      const filtered = parseJsonOutput(await run(['history', '--portal', 'other'], env));
+      assert.strictEqual(filtered.returnedCount, 0);
+
+      const disabled = await run(['crm', 'update', 'contacts', '102', '--properties', '{"firstname":"Grace"}', '--yes'], { ...env, HSAPI_HISTORY: '0' });
+      assert.strictEqual(disabled.status, 0, disabled.stderr || disabled.stdout);
+      assert.strictEqual(fs.readFileSync(historyFile, 'utf8').split(/\r?\n/).filter(Boolean).length, 1, 'HSAPI_HISTORY=0 must disable recording');
     }
 
     {
