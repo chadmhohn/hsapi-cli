@@ -3179,6 +3179,39 @@ test('65 block (45)', async () => {
 
 });
 
+test('84 Issue #66: updater triages version duplicates out of proposals', async () => {
+  const proposalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-version-dup-'));
+  const candidateFile = path.join(proposalDir, 'candidate.html');
+  fs.writeFileSync(candidateFile, [
+    '<html><body>',
+    '<code>GET /crm/v3/objects/{objectType}/{objectId}</code>',
+    '<code>GET /settings/v4/users/{userId}</code>',
+    '<code>GET /crm/v3/sandboxes/{sandboxId}</code>',
+    '</body></html>'
+  ].join('\n'));
+  const output = parseJsonOutput(await runNodeScript(CATALOG_UPDATER, [
+    '--offline',
+    '--propose-diff',
+    '--candidate-file',
+    candidateFile,
+    '--json'
+  ], baseEnv));
+
+  // /crm/v3/objects/... is the old-version twin of the cataloged 2026-03 surface
+  const objectsDup = output.proposals.versionDuplicates.find((dup) => dup.path === '/crm/v3/objects/{objectType}/{objectId}');
+  assert(objectsDup, 'v3 objects path must be triaged as a version duplicate');
+  assert.match(objectsDup.duplicateOf, /^\/crm\/objects\/2026-03\//);
+  assert(!output.proposals.catalogAdditions.some((proposal) => proposal.path === '/crm/v3/objects/{objectType}/{objectId}'));
+
+  // /settings/v4/users is a version twin of the cataloged v3 users surface
+  const usersDup = output.proposals.versionDuplicates.find((dup) => dup.path === '/settings/v4/users/{userId}');
+  assert(usersDup, 'v4 users path must be triaged as a version duplicate');
+  assert.strictEqual(usersDup.duplicateOf, '/settings/v3/users/{userId}');
+
+  // genuinely new surfaces still propose
+  assert(output.proposals.catalogAdditions.some((proposal) => proposal.path === '/crm/v3/sandboxes/{sandboxId}'));
+});
+
 test('66 block (46)', async () => {
     const reportDate = '2099-12-31';
     const reportPath = path.join(WORKSPACE_ROOT, 'docs', 'hubspot-api-updates', `${reportDate}.md`);
