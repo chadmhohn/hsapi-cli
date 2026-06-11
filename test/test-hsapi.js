@@ -1050,6 +1050,71 @@ async function main() {
     }
 
     {
+      // Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help.
+      const ownersHelp = parseJsonOutput(await run(['help', 'owners', 'list'], baseEnv));
+      assert.strictEqual(ownersHelp.ok, true);
+      assert.strictEqual(ownersHelp.endpointId, 'owners.list');
+      assert.strictEqual(ownersHelp.argsDocumented, true);
+      assert(ownersHelp.args.some((arg) => arg.name === 'email' && arg.kind === 'flag'));
+      assert(ownersHelp.args.some((arg) => arg.name === 'paginate' && arg.type === 'boolean'));
+
+      const searchHelpViaFlag = parseJsonOutput(await run(['crm', 'search', '--help'], baseEnv));
+      assert.strictEqual(searchHelpViaFlag.endpointId, 'objects.search');
+      const filterArg = searchHelpViaFlag.args.find((arg) => arg.name === 'filter');
+      assert.strictEqual(filterArg.repeatable, true);
+      assert(searchHelpViaFlag.args.some((arg) => arg.name === 'objectType' && arg.kind === 'positional' && arg.required === true));
+
+      const undocumented = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
+      assert.strictEqual(undocumented.argsDocumented, false);
+      assert.match(undocumented.note, /No argspec documented/);
+
+      const unknown = await run(['help', 'definitely', 'not-a-command'], baseEnv);
+      assert.notStrictEqual(unknown.status, 0);
+      assert.match(unknown.stderr, /No catalog command matches/);
+
+      const fullUsageFallback = await run(['not-an-area', '--help'], baseEnv);
+      assert.strictEqual(fullUsageFallback.status, 0);
+      assert.match(fullUsageFallback.stdout, /^hsapi - portal-aware HubSpot API CLI/);
+
+      const bareHelp = await run(['help'], baseEnv);
+      assert.strictEqual(bareHelp.status, 0);
+      assert.match(bareHelp.stdout, /^hsapi - portal-aware HubSpot API CLI/);
+    }
+
+    {
+      // Issue #17 (slice 1): hsapi_command_help MCP tool.
+      const mcp = await runMcpConversation([
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'hsapi-test-command-help', version: '0.0.0' }
+          }
+        },
+        { jsonrpc: '2.0', method: 'notifications/initialized' },
+        { jsonrpc: '2.0', id: 2, method: 'tools/list' },
+        { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'hsapi_command_help', arguments: { command: 'crm search' } } },
+        { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'hsapi_command_help', arguments: { command: 'totally bogus' } } }
+      ], baseEnv, 4);
+      assert.strictEqual(mcp.stderr, '');
+      const toolNames = mcp.responses[1].result.tools.map((tool) => tool.name);
+      assert(toolNames.includes('hsapi_command_help'));
+
+      const searchHelp = mcpStructuredContent(mcp.responses[2]);
+      assert.strictEqual(searchHelp.endpointId, 'objects.search');
+      assert.strictEqual(searchHelp.argsDocumented, true);
+      assert(searchHelp.args.some((arg) => arg.name === 'search-body' && arg.type === 'json'));
+
+      assert.strictEqual(mcp.responses[3].result.isError, true);
+      const bogus = mcpStructuredContent(mcp.responses[3]);
+      assert.strictEqual(bogus.ok, false);
+      assert.match(bogus.error.message, /No catalog command matches/);
+    }
+
+    {
       // hsapi upgrade: git-checkout installs fast-forward to origin/main; tarball
       // installs get the release-download flow. Uses a local fixture origin.
       const { spawnSync } = require('child_process');

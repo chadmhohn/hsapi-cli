@@ -12,6 +12,7 @@ const {
 const {
   endpointDefinitionById,
   endpointDefinitions,
+  endpointForCommandTokens,
   findEndpointDefinition,
   loadCatalogData,
   pathTemplateToRegex,
@@ -713,6 +714,7 @@ Usage:
   hsapi catalog commands
   hsapi history [--since 24h|7d|ISO] [--portal <name>] [--limit n]
   hsapi upgrade [--check]
+  hsapi help <command words>     e.g. hsapi help crm search   (also: any typed command + --help)
 
 Config:
   ${DEFAULT_CONFIG}
@@ -3237,6 +3239,43 @@ function parseHistorySince(raw) {
   fail(`Invalid --since "${raw}". Use forms like 24h, 7d, 30m, or an ISO date.`);
 }
 
+function commandHelpOutput(tokens) {
+  const endpoint = endpointForCommandTokens(tokens, CATALOG_FILE);
+  if (!endpoint) return null;
+  return {
+    ok: true,
+    command: endpoint.command,
+    endpointId: endpoint.id,
+    family: endpoint.family,
+    method: endpoint.method,
+    path: endpoint.pathTemplate,
+    risk: endpoint.risk,
+    readOnlyPost: endpoint.readOnlyPost === true ? true : undefined,
+    auth: endpoint.auth ? { family: endpoint.auth.family, subtype: endpoint.auth.subtype || null } : null,
+    requiredScopes: endpoint.requiredScopes.length ? endpoint.requiredScopes : undefined,
+    tierRequirement: endpoint.tierRequirement || undefined,
+    docsUrl: endpoint.docsUrl || undefined,
+    contextUrl: endpoint.contextUrl || undefined,
+    argsDocumented: endpoint.args.length > 0,
+    args: endpoint.args.length ? endpoint.args : undefined,
+    note: endpoint.args.length
+      ? undefined
+      : 'No argspec documented for this command yet (issue #17 rollout in progress). Preview with --show-request before executing.'
+  };
+}
+
+function runCommandHelp(tokens) {
+  if (!tokens.length) {
+    writeStdout(usage());
+    return;
+  }
+  const output = commandHelpOutput(tokens);
+  if (!output) {
+    fail(`No catalog command matches "${tokens.join(' ')}". Discover commands with: hsapi catalog commands --pick commands[].command`);
+  }
+  printJson(output);
+}
+
 function upgradeRootPath() {
   const explicit = configString(process.env.HSAPI_UPGRADE_ROOT);
   return explicit ? path.resolve(explicit) : PACKAGE_ROOT;
@@ -5750,7 +5789,22 @@ async function main(argv = process.argv.slice(2)) {
   currentCliArgv = argv.map((item) => String(item));
   const [area, action, ...rest] = positionals;
 
-  if (!area || area === 'help' || boolFlag(flags, 'help')) {
+  if (!area) {
+    writeStdout(usage());
+    return;
+  }
+
+  if (area === 'help') {
+    runCommandHelp([action, ...rest].filter((token) => token !== undefined));
+    return;
+  }
+
+  if (boolFlag(flags, 'help')) {
+    const helpOutput = commandHelpOutput(positionals);
+    if (helpOutput) {
+      printJson(helpOutput);
+      return;
+    }
     writeStdout(usage());
     return;
   }
