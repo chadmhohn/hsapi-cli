@@ -66,6 +66,21 @@ async function runCurrencies(portal, action, flags) {
     return;
   }
 
+  if (action === 'company-currency') {
+    printJson(await hubspotFetch(portal, 'GET', '/settings/currencies/2026-03/company-currency', flags));
+    return;
+  }
+
+  if (action === 'current-rates') {
+    printJson(await hubspotFetch(portal, 'GET', '/settings/currencies/2026-03/exchange-rates/current', flags));
+    return;
+  }
+
+  if (action === 'central-fx') {
+    printJson(await hubspotFetch(portal, 'GET', '/settings/currencies/2026-03/central-fx-rates/information', flags));
+    return;
+  }
+
   if (action === 'exchange-rates' || action === 'rates') {
     const queryFlags = appendMappedSearchQuery(flags, { limit: 'limit', after: 'after' });
     const target = '/settings/v3/currencies/exchange-rates';

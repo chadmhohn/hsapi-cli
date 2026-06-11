@@ -14255,7 +14255,7 @@
       "requiredScopes": [
         "settings.currencies.read"
       ],
-      "scopeNotes": "No company-currency endpoint exists (v2/v3 both 404, verified 2026-06-11); the home currency appears in exchange-rates output on multi-currency portals.",
+      "scopeNotes": "Company-currency and the write surface live on the /settings/currencies/2026-03/ base (the /settings/v3/currencies/company-currency form 404s - earlier note corrected 2026-06-11).",
       "args": []
     },
     {
@@ -14294,6 +14294,69 @@
           "description": "Follow page cursors (default 1000-result cap)."
         }
       ]
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.company_currency",
+      "method": "GET",
+      "path": "/settings/currencies/2026-03/company-currency",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi currencies company-currency",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.currencies.read"
+      ],
+      "scopeNotes": "404 on portals without multi-currency configured (verified on a single-currency portal; sibling endpoints 200). Note the date-versioned base is /settings/currencies/2026-03/, not /settings/v3/currencies/.",
+      "args": []
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates_current",
+      "method": "GET",
+      "path": "/settings/currencies/2026-03/exchange-rates/current",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi currencies current-rates",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.currencies.read"
+      ],
+      "scopeNotes": "Verified 200 live 2026-06-11.",
+      "args": []
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.central_fx_information",
+      "method": "GET",
+      "path": "/settings/currencies/2026-03/central-fx-rates/information",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi currencies central-fx",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "settings.currencies.read"
+      ],
+      "scopeNotes": "Verified 200 live 2026-06-11.",
+      "args": []
     },
     {
       "family": "business_units",
@@ -18448,6 +18511,478 @@
         "fallback": "none"
       },
       "scopeNotes": "Campaign asset/budget/spend management."
+    },
+    {
+      "family": "email.events",
+      "name": "email.events.list",
+      "method": "GET",
+      "path": "/email/public/v1/events",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi email-events list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "scopeNotes": "Per-recipient deliverability detail (SENT/DELIVERED/OPEN/CLICK/BOUNCE/SPAMREPORT/...). Legacy offset paging (hasMore/offset), not cursor paging. Verified 200 live 2026-06-11.",
+      "args": [
+        {
+          "name": "recipient",
+          "kind": "flag",
+          "type": "string",
+          "description": "Filter to one email address."
+        },
+        {
+          "name": "campaign-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "app-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "event-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "SENT, DELIVERED, OPEN, CLICK, BOUNCE, DEFERRED, DROPPED, SPAMREPORT, UNSUBSCRIBED."
+        },
+        {
+          "name": "start-timestamp",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Epoch ms."
+        },
+        {
+          "name": "end-timestamp",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Epoch ms."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "offset",
+          "kind": "flag",
+          "type": "string",
+          "description": "Offset token from the previous page."
+        }
+      ]
+    },
+    {
+      "family": "email.events",
+      "name": "email.events.get",
+      "method": "GET",
+      "path": "/email/public/v1/events/{created}/{id}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi email-events get <created> <id>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "args": [
+        {
+          "name": "created",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Created timestamp from the list row."
+        },
+        {
+          "name": "id",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Event ID from the list row."
+        }
+      ]
+    },
+    {
+      "family": "email.events",
+      "name": "email.events.campaigns",
+      "method": "GET",
+      "path": "/email/public/v1/campaigns/by-id",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi email-events campaigns",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "offset",
+          "kind": "flag",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "family": "email.events",
+      "name": "email.events.campaign",
+      "method": "GET",
+      "path": "/email/public/v1/campaigns/{campaign_id}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi email-events campaign <campaignId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "content"
+      ],
+      "args": [
+        {
+          "name": "campaignId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "campaign-id"
+          ]
+        },
+        {
+          "name": "app-id",
+          "kind": "flag",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "family": "email.events",
+      "name": "email.campaigns.recent",
+      "method": "GET",
+      "path": "/email/public/v1/campaigns",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Recently-used campaign IDs."
+    },
+    {
+      "family": "email.smtp",
+      "name": "email.smtp.tokens.list",
+      "method": "GET",
+      "path": "/email/public/v1/smtpapi/tokens",
+      "versionMode": "legacy",
+      "risk": "sensitive-read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "email.smtp",
+      "name": "email.smtp.tokens.create",
+      "method": "POST",
+      "path": "/email/public/v1/smtpapi/tokens",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "email.smtp",
+      "name": "email.smtp.tokens.password_reset",
+      "method": "POST",
+      "path": "/email/public/v1/smtpapi/tokens/{userName}/password-reset",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "email.subscriptions_v1",
+      "name": "email.subscriptions.types",
+      "method": "GET",
+      "path": "/email/public/v1/subscriptions",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Legacy subscription types; prefer hsapi subscriptions (communication preferences)."
+    },
+    {
+      "family": "email.subscriptions_v1",
+      "name": "email.subscriptions.status",
+      "method": "GET",
+      "path": "/email/public/v1/subscriptions/{email_address}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "email.subscriptions_v1",
+      "name": "email.subscriptions.timeline",
+      "method": "GET",
+      "path": "/email/public/v1/subscriptions/timeline",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Verified 200 live 2026-06-11."
+    },
+    {
+      "family": "email.subscriptions_v1",
+      "name": "email.subscriptions.update",
+      "method": "PUT",
+      "path": "/email/public/v1/subscriptions/{email_address}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "email.transactional_v1",
+      "name": "email.single_send.v1",
+      "method": "POST",
+      "path": "/email/public/v1/singleEmail/send",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/email-events",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Legacy single-send; prefer hsapi marketing transactional send."
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.company_currency_update",
+      "method": "PUT",
+      "path": "/settings/currencies/2026-03/company-currency",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.create",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/exchange-rates",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.get",
+      "method": "GET",
+      "path": "/settings/currencies/2026-03/exchange-rates/{exchangeRateId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.update",
+      "method": "PATCH",
+      "path": "/settings/currencies/2026-03/exchange-rates/{exchangeRateId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.batch_create",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/exchange-rates/batch/create",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.batch_read",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/exchange-rates/batch/read",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.batch_update",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/exchange-rates/batch/update",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.exchange_rates.update_visibility",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/exchange-rates/update-visibility",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.central_fx.add_currency",
+      "method": "POST",
+      "path": "/settings/currencies/2026-03/central-fx-rates/add-currency",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.currencies",
+      "name": "settings.currencies.central_fx.unsupported",
+      "method": "GET",
+      "path": "/settings/currencies/2026-03/central-fx-rates/unsupported-currencies",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/currencies",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.modified_after",
+      "method": "GET",
+      "path": "/engagements/v1/engagements/modified/after",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
     }
   ]
 }
