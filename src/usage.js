@@ -78,6 +78,7 @@ Output:
   --max-results <n>            Trim obvious results arrays and mark output truncated
   --max-chars <n>              Fail when serialized output exceeds n chars
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
+  --format jsonl               With --paginate: stream one record per line page-by-page (flat memory, pipe-friendly). Not combinable with --select/--pick/--max-chars; --max-results still applies; summary goes to stderr
 
 Notes:
   - hsapi upgrade fast-forwards a git-checkout install to origin/main (--check to inspect first); tarball installs get the gh release download flow printed. The repo can stay private - your existing GitHub auth is used. Restart hsapi-mcp consumers after upgrading.
