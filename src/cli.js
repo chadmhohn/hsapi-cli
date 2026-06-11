@@ -3859,6 +3859,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (area === 'quotes' || area === 'quote') {
+    await runQuotes(portal, action, rest, flags);
+    return;
+  }
+
   if (area === 'tiers') {
     await runTiers(portal, action, flags);
     return;
@@ -4556,6 +4561,43 @@ async function runAccount(portal, action, flags) {
   }
 
   fail(`Unknown account action: ${action}`);
+}
+
+// Quote lifecycle helpers (issue #24): publish/recall are hs_status property
+// transitions on the quote CRM object - there is no dedicated publish endpoint.
+// Publish sets APPROVAL_NOT_NEEDED (or PENDING_APPROVAL with --request-approval
+// on portals using quote approvals); recall returns the quote to DRAFT.
+const QUOTE_STATUS_PROPERTIES = ['hs_status', 'hs_title', 'hs_expiration_date', 'hs_quote_amount', 'hs_quote_link', 'hs_sender_company_name'];
+
+async function runQuotes(portal, action, rest, flags) {
+  const quoteId = rest[0] || flags['quote-id'];
+  if (!quoteId) fail(`quotes ${action || ''} requires <quoteId> or --quote-id.`.trim());
+  const target = `/crm/objects/2026-03/quotes/${pathPart(quoteId)}`;
+
+  if (action === 'status') {
+    const queryFlags = { ...flags, query: values(flags.query) };
+    const extra = parsePropertiesList(flags.properties);
+    for (const property of [...QUOTE_STATUS_PROPERTIES, ...extra]) {
+      queryFlags.query.push(`properties=${property}`);
+    }
+    printJson(await hubspotFetch(portal, 'GET', target, queryFlags, undefined, endpointDefinitionById('quotes.status')));
+    return;
+  }
+
+  if (action === 'publish') {
+    const status = boolFlag(flags, 'request-approval') ? 'PENDING_APPROVAL' : 'APPROVAL_NOT_NEEDED';
+    const body = { properties: { hs_status: status } };
+    printJson(await guardedFetch(portal, 'PATCH', target, flags, body, { endpoint: endpointDefinitionById('quotes.publish') }));
+    return;
+  }
+
+  if (action === 'recall' || action === 'unpublish') {
+    const body = { properties: { hs_status: 'DRAFT' } };
+    printJson(await guardedFetch(portal, 'PATCH', target, flags, body, { endpoint: endpointDefinitionById('quotes.recall') }));
+    return;
+  }
+
+  fail(`Unknown quotes action: ${action}`);
 }
 
 // Multi-currency reads (issue #24): supported codes + portal exchange rates.

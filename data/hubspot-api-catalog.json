@@ -11287,6 +11287,129 @@
       }
     },
     {
+      "family": "crm.quotes",
+      "name": "quotes.status",
+      "method": "GET",
+      "path": "/crm/objects/2026-03/quotes/{quoteId}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi quotes status <quoteId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/quotes",
+      "contextUrl": "docs/hubspot-api-context/commerce-objects.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "crm.objects.quotes.read"
+      ],
+      "scopeNotes": "Convenience read preset: returns hs_status, hs_title, hs_expiration_date, hs_quote_amount, hs_quote_link (+ any --properties extras).",
+      "args": [
+        {
+          "name": "quoteId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "quote-id"
+          ],
+          "description": "Quote record ID (also --quote-id)."
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list",
+          "description": "Extra properties to include beyond the status preset."
+        }
+      ]
+    },
+    {
+      "family": "crm.quotes",
+      "name": "quotes.publish",
+      "method": "PATCH",
+      "path": "/crm/objects/2026-03/quotes/{quoteId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi quotes publish <quoteId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/quotes",
+      "contextUrl": "docs/hubspot-api-context/commerce-objects.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "crm.objects.quotes.write"
+      ],
+      "scopeNotes": "There is no dedicated publish endpoint: publishing is an hs_status transition on the quote object. Sets APPROVAL_NOT_NEEDED (publishes immediately on portals without quote approvals) or PENDING_APPROVAL with --request-approval. HubSpot rejects the transition if the quote is incomplete or expired.",
+      "args": [
+        {
+          "name": "quoteId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "quote-id"
+          ],
+          "description": "Quote record ID (also --quote-id)."
+        },
+        {
+          "name": "request-approval",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Set hs_status PENDING_APPROVAL (portals with quote approvals) instead of APPROVAL_NOT_NEEDED."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "crm.quotes",
+      "name": "quotes.recall",
+      "method": "PATCH",
+      "path": "/crm/objects/2026-03/quotes/{quoteId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi quotes recall <quoteId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/quotes",
+      "contextUrl": "docs/hubspot-api-context/commerce-objects.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "crm.objects.quotes.write"
+      ],
+      "scopeNotes": "Returns the quote to DRAFT (takes the published web quote offline).",
+      "args": [
+        {
+          "name": "quoteId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "quote-id"
+          ],
+          "description": "Quote record ID (also --quote-id)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
       "family": "crm.owners",
       "name": "owners.list",
       "method": "GET",
