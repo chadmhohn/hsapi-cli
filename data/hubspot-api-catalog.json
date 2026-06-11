@@ -427,6 +427,29 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi subscriptions definitions",
+      "args": [
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -447,6 +470,36 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi subscriptions status <email>",
+      "args": [
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Subscriber email (also --email / --subscriber-id-string)."
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -467,6 +520,35 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi subscriptions unsubscribe-all-status <email>",
+      "args": [
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -487,6 +569,75 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi subscriptions set-status <email>",
+      "args": [
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "subscription-id",
+          "kind": "flag",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "status",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "SUBSCRIBED",
+            "UNSUBSCRIBED",
+            "NOT_SPECIFIED"
+          ],
+          "description": "Also --status-state."
+        },
+        {
+          "name": "legal-basis",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "legal-basis-explanation",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -508,6 +659,41 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi subscriptions unsubscribe-all <email>",
+      "args": [
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -530,6 +716,42 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi subscriptions batch-read",
+      "args": [
+        {
+          "name": "emails",
+          "kind": "flag",
+          "type": "list",
+          "required": true,
+          "description": "Subscriber emails (CSV/JSON/@file)."
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -552,6 +774,41 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi subscriptions batch-unsubscribe-all-read",
+      "args": [
+        {
+          "name": "emails",
+          "kind": "flag",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -573,6 +830,47 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi subscriptions batch-unsubscribe-all",
+      "args": [
+        {
+          "name": "emails",
+          "kind": "flag",
+          "type": "list",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -595,6 +893,48 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi subscriptions batch-write",
+      "args": [
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "JSON array / {\"inputs\":[...]} / JSONL of status writes."
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/communication-preferences/guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "requiredScopes": [
@@ -617,6 +957,52 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi subscriptions generate-links <email>",
+      "args": [
+        {
+          "name": "email",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Subscriber email (also --email)."
+        },
+        {
+          "name": "language",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "subscription-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "channel",
+          "kind": "flag",
+          "type": "string",
+          "description": "Subscription channel (default EMAIL where applicable)."
+        },
+        {
+          "name": "business-unit-id",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "verbose",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "include-translations",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/communication-preferences/generate-url-guide",
       "contextUrl": "docs/hubspot-api-context/communication-preferences.md",
       "scopeNotes": "Beta endpoint. Requires communication_preferences.read_write or both communication_preferences.read and communication_preferences.write. Returned URLs are contact-specific and should be shared only with that contact.",
@@ -635,6 +1021,195 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi files search",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "extension",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string",
+          "description": "IMG, DOCUMENT, AUDIO, MOVIE, or OTHER."
+        },
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "file-md5",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "parent-folder-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "size",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "size-gte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "size-lte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "height",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "height-gte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "height-lte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "width",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "width-gte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "width-lte",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "encoding",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "id-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "id-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "expires-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "expires-at-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "expires-at-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "allows-anonymous-access",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "is-usable-in-content",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/files/search-files",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -656,6 +1231,19 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi files get <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -677,6 +1265,20 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi files signed-url <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list",
+          "description": "Optional property list (also --property)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -698,6 +1300,96 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files upload",
+      "args": [
+        {
+          "name": "file",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Local file path to upload."
+        },
+        {
+          "name": "file-name",
+          "kind": "flag",
+          "type": "string",
+          "description": "Override the stored filename."
+        },
+        {
+          "name": "charset-hunch",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "folder-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Destination folder ID (exactly one of --folder-id / --folder-path)."
+        },
+        {
+          "name": "folder-path",
+          "kind": "flag",
+          "type": "string",
+          "description": "Destination folder path (exactly one of --folder-id / --folder-path)."
+        },
+        {
+          "name": "access",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "PRIVATE",
+            "PUBLIC_INDEXABLE",
+            "PUBLIC_NOT_INDEXABLE"
+          ]
+        },
+        {
+          "name": "ttl",
+          "kind": "flag",
+          "type": "string",
+          "description": "Time-to-live before auto-delete, e.g. P3M."
+        },
+        {
+          "name": "expires-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "duplicate-validation-scope",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "ENTIRE_PORTAL",
+            "EXACT_FOLDER"
+          ]
+        },
+        {
+          "name": "duplicate-validation-strategy",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "REJECT",
+            "RETURN_EXISTING"
+          ]
+        },
+        {
+          "name": "overwrite",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw options JSON; per-flag values overlay it."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -719,6 +1411,97 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files import-url",
+      "args": [
+        {
+          "name": "url",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Source URL to import from."
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "description": "Stored file name (also --file-name)."
+        },
+        {
+          "name": "folder-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Destination folder ID (exactly one of --folder-id / --folder-path)."
+        },
+        {
+          "name": "folder-path",
+          "kind": "flag",
+          "type": "string",
+          "description": "Destination folder path (exactly one of --folder-id / --folder-path)."
+        },
+        {
+          "name": "access",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "PRIVATE",
+            "PUBLIC_INDEXABLE",
+            "PUBLIC_NOT_INDEXABLE"
+          ]
+        },
+        {
+          "name": "ttl",
+          "kind": "flag",
+          "type": "string",
+          "description": "Time-to-live before auto-delete, e.g. P3M."
+        },
+        {
+          "name": "expires-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "duplicate-validation-scope",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "ENTIRE_PORTAL",
+            "EXACT_FOLDER"
+          ]
+        },
+        {
+          "name": "duplicate-validation-strategy",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "REJECT",
+            "RETURN_EXISTING"
+          ]
+        },
+        {
+          "name": "overwrite",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw options JSON; per-flag values overlay it."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/files/import-from-url",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -740,6 +1523,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi files import-status <taskId>",
+      "args": [
+        {
+          "name": "taskId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/files/get-file-status",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -760,6 +1551,84 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files replace <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "file",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Local file path to upload."
+        },
+        {
+          "name": "file-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "access",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "PRIVATE",
+            "PUBLIC_INDEXABLE",
+            "PUBLIC_NOT_INDEXABLE"
+          ]
+        },
+        {
+          "name": "ttl",
+          "kind": "flag",
+          "type": "string",
+          "description": "Time-to-live before auto-delete, e.g. P3M."
+        },
+        {
+          "name": "expires-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "duplicate-validation-scope",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "ENTIRE_PORTAL",
+            "EXACT_FOLDER"
+          ]
+        },
+        {
+          "name": "duplicate-validation-strategy",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "REJECT",
+            "RETURN_EXISTING"
+          ]
+        },
+        {
+          "name": "overwrite",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw options JSON; per-flag values overlay it."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -781,6 +1650,67 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files update <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "access",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "PRIVATE",
+            "PUBLIC_INDEXABLE",
+            "PUBLIC_NOT_INDEXABLE"
+          ]
+        },
+        {
+          "name": "expires-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "clear-expires",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "is-usable-in-content",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "parent-folder-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "Move target (exactly one of --parent-folder-id / --parent-folder-path)."
+        },
+        {
+          "name": "parent-folder-path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -801,6 +1731,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi files delete <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -822,6 +1766,27 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi files gdpr-delete <fileId>",
+      "args": [
+        {
+          "name": "fileId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "danger-gdpr-delete",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment: GDPR delete is permanent."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -843,6 +1808,99 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi files folder-search",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "parent-folder-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "id-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "id-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "created-at-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at-gte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "updated-at-lte",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/folders/search-folders",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -863,6 +1921,19 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi files folder-get <folderId>",
+      "args": [
+        {
+          "name": "folderId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/folders/get-folder-folderId",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -883,6 +1954,37 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files folder-create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "parent-folder-id",
+          "kind": "flag",
+          "type": "string",
+          "description": "At most one of --parent-folder-id / --parent-folder-path."
+        },
+        {
+          "name": "parent-folder-path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/guide",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -903,6 +2005,41 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files folder-update <folderId>",
+      "args": [
+        {
+          "name": "folderId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "parent-folder-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "parent-folder-path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/folders/update-folder-folderId",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -923,6 +2060,47 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi files folder-update-async <folderId>",
+      "args": [
+        {
+          "name": "folderId",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Folder ID (also --id / --folder-id)."
+        },
+        {
+          "name": "id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "parent-folder-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "parent-folder-path",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/folders/update-folder",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -944,6 +2122,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi files folder-update-status <taskId>",
+      "args": [
+        {
+          "name": "taskId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/files/folders/get-folder-update-status",
       "contextUrl": "docs/hubspot-api-context/files.md",
       "requiredScopes": [
@@ -964,6 +2150,7 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi events types",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "scopeNotes": "Event API scopes vary by event family and associated CRM object. For occurrence reads, include the scopes for objects whose events are queried.",
@@ -982,6 +2169,65 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi events occurrences",
+      "args": [
+        {
+          "name": "event-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "Event type name from \"hsapi events types\"."
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "occurred-after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "occurred-before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "before",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "scopeNotes": "Event API scopes vary by event family and associated CRM object. For occurrence reads, include the scopes for objects whose events are queried.",
@@ -1000,6 +2246,29 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi events definitions",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1017,6 +2286,14 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi events definition-get <eventName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1034,6 +2311,39 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events definition-create",
+      "args": [
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "primary-object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1051,6 +2361,45 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events definition-update <eventName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "primary-object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1068,6 +2417,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi events definition-delete <eventName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1085,6 +2448,50 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events property-create <eventName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "field-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1102,6 +2509,56 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events property-update <eventName> <propertyName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "field-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1119,6 +2576,26 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi events property-delete <eventName> <propertyName>",
+      "args": [
+        {
+          "name": "eventName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/define-events/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1136,6 +2613,44 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events send",
+      "args": [
+        {
+          "name": "event-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "occurred-at",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1153,6 +2668,20 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi events send-batch",
+      "args": [
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array of event payloads."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/events/send-event-data/guide",
       "contextUrl": "docs/hubspot-api-context/events.md",
       "auth": {
@@ -1170,6 +2699,15 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi webhooks settings <appId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Developer app ID (also --app-id)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1191,6 +2729,42 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhooks settings-update <appId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "target-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "throttling",
+          "kind": "flag",
+          "type": "json",
+          "description": "{\"period\":\"SECONDLY\",\"maxConcurrentRequests\":N}."
+        },
+        {
+          "name": "max-concurrent-requests",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1212,6 +2786,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi webhooks settings-delete <appId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1233,6 +2821,48 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhooks subscription-create <appId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "subscription-type",
+          "kind": "flag",
+          "type": "string",
+          "description": "e.g. contact.propertyChange, deal.creation."
+        },
+        {
+          "name": "property-name",
+          "kind": "flag",
+          "type": "string",
+          "description": "Required for *.propertyChange subscriptions."
+        },
+        {
+          "name": "active",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1254,6 +2884,42 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhooks subscription-update <appId> <subscriptionId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "subscriptionId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "active",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "property-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1275,6 +2941,32 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhooks subscription-batch-update <appId>",
+      "args": [
+        {
+          "name": "appId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "inputs",
+          "kind": "flag",
+          "type": "json",
+          "description": "JSON array / {\"inputs\":[...]} / JSONL. Required unless --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "scopeNotes": "Classic app webhooks are app-level configuration endpoints. They may require developer app auth/API-key style access rather than a normal private-app portal token.",
@@ -1296,6 +2988,7 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal journal-earliest",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1319,6 +3012,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal journal-status <statusId>",
+      "args": [
+        {
+          "name": "statusId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1343,6 +3044,21 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi webhook-journal journal-batch-read",
+      "args": [
+        {
+          "name": "offsets",
+          "kind": "flag",
+          "type": "list",
+          "required": true,
+          "description": "Journal offsets (CSV/JSON)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1366,6 +3082,7 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-earliest",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1389,6 +3106,7 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-latest",
+      "args": [],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1412,6 +3130,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-next <offset>",
+      "args": [
+        {
+          "name": "offset",
+          "kind": "positional",
+          "type": "integer",
+          "required": true,
+          "description": "Journal offset (also --offset)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1435,6 +3162,14 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-status <statusId>",
+      "args": [
+        {
+          "name": "statusId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1458,6 +3193,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-batch-earliest <count>",
+      "args": [
+        {
+          "name": "count",
+          "kind": "positional",
+          "type": "integer",
+          "required": true,
+          "description": "Batch size (also --count)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1481,6 +3225,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal local-batch-latest <count>",
+      "args": [
+        {
+          "name": "count",
+          "kind": "positional",
+          "type": "integer",
+          "required": true,
+          "description": "Batch size (also --count)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1505,6 +3258,21 @@
       "readOnlyPost": true,
       "status": "typed",
       "command": "hsapi webhook-journal local-batch-read",
+      "args": [
+        {
+          "name": "offsets",
+          "kind": "flag",
+          "type": "list",
+          "required": true,
+          "description": "Journal offsets (CSV/JSON)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1528,6 +3296,35 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhook-journal snapshot-crm",
+      "args": [
+        {
+          "name": "portal-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1551,6 +3348,23 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal subscription-list",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "list"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1574,6 +3388,45 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhook-journal subscription-create",
+      "args": [
+        {
+          "name": "portal-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "callback-url",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "active",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "filters",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1597,6 +3450,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi webhook-journal subscription-delete <subscriptionId>",
+      "args": [
+        {
+          "name": "subscriptionId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1620,6 +3487,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi webhook-journal subscription-delete-portal <portalId>",
+      "args": [
+        {
+          "name": "portalId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1643,6 +3524,50 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi webhook-journal filter-create",
+      "args": [
+        {
+          "name": "subscription-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "object-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "property-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "operator",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "filters",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1666,6 +3591,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal filter-list <subscriptionId>",
+      "args": [
+        {
+          "name": "subscriptionId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Subscription ID (also --subscription-id)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1689,6 +3623,15 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi webhook-journal filter-get <filterId>",
+      "args": [
+        {
+          "name": "filterId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Filter ID (also --filter-id)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -1712,6 +3655,20 @@
       "risk": "destructive",
       "status": "typed",
       "command": "hsapi webhook-journal filter-delete <filterId>",
+      "args": [
+        {
+          "name": "filterId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/webhooks-journal/guide",
       "contextUrl": "docs/hubspot-api-context/webhooks.md",
       "requiredScopes": [
@@ -3212,6 +5169,39 @@
       "risk": "read",
       "status": "typed",
       "command": "hsapi scheduler links",
+      "args": [
+        {
+          "name": "organizer-user-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/meetings/get-meeting-links",
       "contextUrl": "docs/hubspot-api-context/scheduler.md",
       "requiredScopes": [
@@ -3232,6 +5222,25 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi scheduler booking-info <slug>",
+      "args": [
+        {
+          "name": "slug",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Meeting link slug (also --slug)."
+        },
+        {
+          "name": "timezone",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "month-offset",
+          "kind": "flag",
+          "type": "integer"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/meetings/get-meeting-slug",
       "contextUrl": "docs/hubspot-api-context/scheduler.md",
       "requiredScopes": [
@@ -3252,6 +5261,24 @@
       "risk": "sensitive-read",
       "status": "typed",
       "command": "hsapi scheduler availability <slug>",
+      "args": [
+        {
+          "name": "slug",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "timezone",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "month-offset",
+          "kind": "flag",
+          "type": "integer"
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/meetings/get-availability",
       "contextUrl": "docs/hubspot-api-context/scheduler.md",
       "requiredScopes": [
@@ -3272,6 +5299,82 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi scheduler book <slug>",
+      "args": [
+        {
+          "name": "slug",
+          "kind": "positional",
+          "type": "string",
+          "required": false,
+          "description": "Meeting link slug (also --slug)."
+        },
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "first-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "last-name",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "start-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "duration",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "timezone",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "locale",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "form-fields",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "legal-consent-responses",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "likely-available-user-ids",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "guest-emails",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/meetings/create-meeting",
       "contextUrl": "docs/hubspot-api-context/scheduler.md",
       "requiredScopes": [
@@ -3292,6 +5395,103 @@
       "risk": "mutation",
       "status": "typed",
       "command": "hsapi scheduler calendar-create",
+      "args": [
+        {
+          "name": "organizer-user-id",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Organizer user ID (query param)."
+        },
+        {
+          "name": "title",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "start-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "end-time",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "timestamp",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "owner-id",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "outcome",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "activity-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "location",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "location-type",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "meeting-body",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "internal-notes",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json",
+          "description": "Raw hs_meeting_* property object; per-flag values overlay it."
+        },
+        {
+          "name": "associations",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "email-reminder-schedule",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "timezone",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full JSON request body (@file / @- supported)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
       "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/scheduler/calendar/create-calendar-event",
       "contextUrl": "docs/hubspot-api-context/scheduler.md",
       "scopeNotes": "Docs require OAuth authorization and organizerUserId query parameter.",
