@@ -22,6 +22,13 @@ From a release tarball:
 npm install -g ./hsapi-cli-<version>.tgz
 ```
 
+From a GitHub Release (preferred once tags exist):
+
+1. Download `hsapi-cli-<version>.tgz` from the release page (or `gh release download v<version> -R chadmhohn/hsapi-cli`).
+2. `npm install -g ./hsapi-cli-<version>.tgz`
+
+Releases are produced by `.github/workflows/release.yml`: pushing a `v*` tag runs the full test suite, stamps the package version from the tag, packs, and attaches the tarball to a GitHub Release.
+
 ## Update
 
 Update by reinstalling the newer tag, branch, or tarball. That keeps the same command surface while replacing the package contents.
