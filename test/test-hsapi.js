@@ -358,6 +358,29 @@ function run(args, env) {
   });
 }
 
+function runWithInput(args, env, input) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [CLI, ...args], {
+      cwd: WORKSPACE_ROOT,
+      env: { ...process.env, ...env },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on('close', (status) => {
+      resolve({ status, stdout, stderr });
+    });
+    child.stdin.write(input);
+    child.stdin.end();
+  });
+}
+
 async function runProgrammatic(args, env) {
   const result = await runCli(args, { env });
   return {
@@ -1004,6 +1027,42 @@ async function main() {
       assert.strictEqual(stringBodyPreview.ok, true);
       assert.deepStrictEqual(stringBodyPreview.preview.request.body, { properties: { email: 'ada@example.com' } });
       assert.strictEqual(requests.length, before + 2, 'MCP smoke should execute only the read operations');
+    }
+
+    {
+      // Issue #23: @- reads stdin; batch --inputs accepts JSONL.
+      const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+      const jsonlStdin = await runWithInput(
+        ['crm', 'batch-update', 'contacts', '--inputs', '@-', '--show-request'],
+        env,
+        '{"id":"101","properties":{"firstname":"Ada"}}\n{"id":"102","properties":{"firstname":"Grace"}}\n'
+      );
+      assert.strictEqual(jsonlStdin.status, 0, jsonlStdin.stderr || jsonlStdin.stdout);
+      const jsonlPreview = JSON.parse(jsonlStdin.stdout);
+      assert.strictEqual(jsonlPreview.showRequest, true);
+      assert.strictEqual(jsonlPreview.request.body.inputs.length, 2);
+      assert.strictEqual(jsonlPreview.request.body.inputs[1].id, '102');
+
+      const arrayStdin = await runWithInput(
+        ['crm', 'create', 'contacts', '--properties', '@-', '--show-request'],
+        env,
+        '{"email":"stdin@example.com"}'
+      );
+      assert.strictEqual(arrayStdin.status, 0, arrayStdin.stderr || arrayStdin.stdout);
+      assert.strictEqual(JSON.parse(arrayStdin.stdout).request.body.properties.email, 'stdin@example.com');
+
+      const jsonlDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-jsonl-'));
+      const jsonlFile = path.join(jsonlDir, 'inputs.jsonl');
+      fs.writeFileSync(jsonlFile, '{"id":"201","properties":{"city":"Denver"}}\n{"id":"202","properties":{"city":"Boise"}}\n');
+      const jsonlFromFile = parseJsonOutput(await run(['crm', 'batch-update', 'contacts', '--inputs', `@${jsonlFile}`, '--show-request'], env));
+      assert.strictEqual(jsonlFromFile.request.body.inputs.length, 2);
+      assert.strictEqual(jsonlFromFile.request.body.inputs[0].id, '201');
+
+      fs.writeFileSync(path.join(jsonlDir, 'bad.jsonl'), '{"id":"301"}\nnot json\n');
+      const badJsonl = await run(['crm', 'batch-update', 'contacts', '--inputs', '@' + path.join(jsonlDir, 'bad.jsonl'), '--show-request'], env);
+      assert.notStrictEqual(badJsonl.status, 0);
+      assert.match(badJsonl.stderr, /line 2 is not valid JSON/);
     }
 
     {
