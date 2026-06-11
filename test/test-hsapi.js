@@ -1064,9 +1064,25 @@ async function main() {
       assert.strictEqual(filterArg.repeatable, true);
       assert(searchHelpViaFlag.args.some((arg) => arg.name === 'objectType' && arg.kind === 'positional' && arg.required === true));
 
-      const undocumented = parseJsonOutput(await run(['help', 'cms', 'indexed-data'], baseEnv));
+      const argslessCatalog = writeTempCatalog((catalog) => {
+        const indexedData = catalog.endpoints.find((endpoint) => endpoint.name === 'cms.site_search.indexed_data');
+        delete indexedData.args;
+      });
+      const undocumented = parseJsonOutput(await run(['help', 'cms', 'indexed-data'], {
+        ...baseEnv,
+        HSAPI_CATALOG_FILE: argslessCatalog
+      }));
       assert.strictEqual(undocumented.argsDocumented, false);
       assert.match(undocumented.note, /No argspec documented/);
+
+      {
+        // Issue #17 completeness gate: every typed command documents args.
+        const catalog = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
+        const missingArgs = catalog.endpoints
+          .filter((endpoint) => endpoint.status === 'typed' && endpoint.command && !Array.isArray(endpoint.args))
+          .map((endpoint) => endpoint.name);
+        assert.deepStrictEqual(missingArgs, [], 'every typed command must document args in the catalog');
+      }
 
       const visitorTokenHelp = parseJsonOutput(await run(['help', 'conversations', 'visitor-token'], baseEnv));
       assert.strictEqual(visitorTokenHelp.argsDocumented, true);
