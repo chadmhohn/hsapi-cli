@@ -16417,6 +16417,347 @@
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.events.create",
+      "method": "POST",
+      "path": "/crm/v3/timeline/events",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "App-defined timeline events; requires an event template created under the app (developer surface below)."
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.events.batch_create",
+      "method": "POST",
+      "path": "/crm/v3/timeline/events/batch/create",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.events.get",
+      "method": "GET",
+      "path": "/crm/v3/timeline/events/{eventTemplateId}/{eventId}",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.events.detail",
+      "method": "GET",
+      "path": "/crm/v3/timeline/events/{eventTemplateId}/{eventId}/detail",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.events.render",
+      "method": "GET",
+      "path": "/crm/v3/timeline/events/{eventTemplateId}/{eventId}/render",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.list",
+      "method": "GET",
+      "path": "/crm/v3/timeline/{appId}/event-templates",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Event-template management runs against the developer app, not the portal token."
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.create",
+      "method": "POST",
+      "path": "/crm/v3/timeline/{appId}/event-templates",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.get",
+      "method": "GET",
+      "path": "/crm/v3/timeline/{appId}/event-templates/{eventTemplateId}",
+      "versionMode": "v3",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.update",
+      "method": "PUT",
+      "path": "/crm/v3/timeline/{appId}/event-templates/{eventTemplateId}",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.delete",
+      "method": "DELETE",
+      "path": "/crm/v3/timeline/{appId}/event-templates/{eventTemplateId}",
+      "versionMode": "v3",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.token_create",
+      "method": "POST",
+      "path": "/crm/v3/timeline/{appId}/event-templates/{eventTemplateId}/tokens",
+      "versionMode": "v3",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "crm.timeline",
+      "name": "timeline.templates.token_delete",
+      "method": "DELETE",
+      "path": "/crm/v3/timeline/{appId}/event-templates/{eventTemplateId}/tokens/{tokenName}",
+      "versionMode": "v3",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/extensions/timeline",
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      }
+    },
+    {
+      "family": "analytics",
+      "name": "analytics.reports",
+      "method": "GET",
+      "path": "/analytics/v2/reports/{breakdownBy}/{timePeriod}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/analytics",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Legacy analytics reads (breakdownBy: totals, sessions, sources, geolocation, pages, ...; timePeriod: total, daily, weekly, monthly, summarize/daily...). Requires start/end query params for ranged reads."
+    },
+    {
+      "family": "analytics",
+      "name": "analytics.views",
+      "method": "GET",
+      "path": "/analytics/v2/views",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/analytics",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.paged",
+      "method": "GET",
+      "path": "/engagements/v1/engagements/paged",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Legacy engagement reads; path verified live 2026-06-11. Some note/task fields (source, queue membership) only exist on v1."
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.recent",
+      "method": "GET",
+      "path": "/engagements/v1/engagements/recent/modified",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.associated",
+      "method": "GET",
+      "path": "/engagements/v1/engagements/associated/{objectType}/{objectId}/paged",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.get",
+      "method": "GET",
+      "path": "/engagements/v1/engagements/{engagementId}",
+      "versionMode": "legacy",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.create",
+      "method": "POST",
+      "path": "/engagements/v1/engagements",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "scopeNotes": "Prefer the modern CRM engagement objects (notes/tasks/calls/emails/meetings) for new writes."
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.update",
+      "method": "PATCH",
+      "path": "/engagements/v1/engagements/{engagementId}",
+      "versionMode": "legacy",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "engagements.v1",
+      "name": "engagements.v1.delete",
+      "method": "DELETE",
+      "path": "/engagements/v1/engagements/{engagementId}",
+      "versionMode": "legacy",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/legacy/engagements",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      }
     }
   ]
 }

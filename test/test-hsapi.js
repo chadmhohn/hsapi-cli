@@ -3149,8 +3149,8 @@ test('65 block (45)', async () => {
     const candidateFile = path.join(proposalDir, 'candidate.html');
     fs.writeFileSync(candidateFile, [
       '<html><body>',
-      '<code>GET /crm/v3/timeline/events/{eventTemplateId}</code>',
-      '<code>POST /crm/v3/timeline/events</code>',
+      '<code>GET /crm/v3/sandboxes/{sandboxId}</code>',
+      '<code>POST /crm/v3/sandboxes</code>',
       '<code>POST /crm/objects/2026-03/contacts/search</code>',
       '</body></html>'
     ].join('\n'));
@@ -3164,12 +3164,12 @@ test('65 block (45)', async () => {
     assert.strictEqual(output.proposals.candidateFileCount, 1);
     assert(output.proposals.catalogAdditions.some((proposal) => (
       proposal.method === 'GET'
-      && proposal.path === '/crm/v3/timeline/events/{eventTemplateId}'
+      && proposal.path === '/crm/v3/sandboxes/{sandboxId}'
       && proposal.risk === 'read'
     )));
     assert(output.proposals.catalogAdditions.some((proposal) => (
       proposal.method === 'POST'
-      && proposal.path === '/crm/v3/timeline/events'
+      && proposal.path === '/crm/v3/sandboxes'
       && proposal.risk === 'mutation'
     )));
     assert(!output.proposals.catalogAdditions.some((proposal) => (
@@ -5925,4 +5925,40 @@ test('80 Issue #24: quotes publish/recall/status lifecycle helpers', async () =>
   const missing = await run(['quotes', 'publish'], env);
   assert.notStrictEqual(missing.status, 0);
   assert.match(missing.stderr, /requires <quoteId>/);
+});
+
+test('81 Issue #24: catalog-only stubs back generic requests (timeline, analytics, engagements v1)', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const engagementsRead = await expectShowRequest(['request', 'GET', '/engagements/v1/engagements/paged'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/engagements/v1/engagements/paged',
+    endpointId: 'engagements.v1.paged'
+  });
+  assert.strictEqual(engagementsRead.endpoint.id, 'engagements.v1.paged');
+
+  const timelineCreate = await expectShowRequest(['request', 'POST', '/crm/v3/timeline/events', '--body', '{"eventTemplateId":"1","email":"a@b.c"}'], env, {
+    requests,
+    method: 'POST',
+    pathname: '/crm/v3/timeline/events',
+    endpointId: 'timeline.events.create'
+  });
+  assert.strictEqual(timelineCreate.endpoint.id, 'timeline.events.create');
+
+  const analyticsResolved = await expectShowRequest(['request', 'GET', '/analytics/v2/reports/sources/total'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/analytics/v2/reports/sources/total',
+    endpointId: 'analytics.reports'
+  });
+  assert.strictEqual(analyticsResolved.endpoint.id, 'analytics.reports');
+
+  // catalog-only stubs have no typed command and stay out of generated usage
+  const usageOut = await run(['help'], env);
+  assert.doesNotMatch(usageOut.stdout, /engagements\.v1|timeline\.events/);
+
+  // mutations against stubs still require --yes (blocked preview exit 2)
+  const blocked = await run(['request', 'POST', '/engagements/v1/engagements', '--body', '{"engagement":{"type":"NOTE"}}'], env);
+  assert.strictEqual(blocked.status, 2, 'stub-backed mutation without --yes must be a blocked preview');
 });
