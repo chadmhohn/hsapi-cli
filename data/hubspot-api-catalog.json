@@ -8135,6 +8135,276 @@
       }
     },
     {
+      "family": "automation.flows",
+      "name": "automation.flows.list",
+      "method": "GET",
+      "path": "/automation/v4/flows",
+      "versionMode": "v4",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi automation flows list",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.get",
+      "method": "GET",
+      "path": "/automation/v4/flows/{flowId}",
+      "versionMode": "v4",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi automation flows get <flowId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "flowId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "flow-id"
+          ],
+          "description": "Flow (workflow) ID (also --flow-id)."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.email_campaigns",
+      "method": "GET",
+      "path": "/automation/v4/flows/email-campaigns",
+      "versionMode": "v4",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi automation flows email-campaigns",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.batch_read",
+      "method": "POST",
+      "path": "/automation/v4/flows/batch/read",
+      "versionMode": "v4",
+      "risk": "read",
+      "readOnlyPost": true,
+      "status": "typed",
+      "command": "hsapi automation flows batch-read",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "ids",
+          "kind": "flag",
+          "type": "string",
+          "required": true,
+          "description": "Flow IDs (CSV/JSON/@file); each becomes a {\"type\":\"FLOW_ID\",\"flowId\":...} coordinate (verified live)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Explicit {\"inputs\":[...]} body; overrides --ids."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.create",
+      "method": "POST",
+      "path": "/automation/v4/flows",
+      "versionMode": "v4",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi automation flows create",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "aliases": [
+            "flow"
+          ],
+          "description": "Full flow definition JSON (@file / @- supported; also --flow)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.update",
+      "method": "PUT",
+      "path": "/automation/v4/flows/{flowId}",
+      "versionMode": "v4",
+      "risk": "mutation",
+      "status": "typed",
+      "command": "hsapi automation flows update <flowId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "scopeNotes": "PUT is a full-document replace; the body must include the current revisionId or HubSpot rejects the write.",
+      "args": [
+        {
+          "name": "flowId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "flow-id"
+          ],
+          "description": "Flow (workflow) ID (also --flow-id)."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "aliases": [
+            "flow"
+          ],
+          "description": "Full flow definition JSON (@file / @- supported; also --flow)."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
+      "family": "automation.flows",
+      "name": "automation.flows.delete",
+      "method": "DELETE",
+      "path": "/automation/v4/flows/{flowId}",
+      "versionMode": "v4",
+      "risk": "destructive",
+      "status": "typed",
+      "command": "hsapi automation flows delete <flowId>",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/automation/flows",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none"
+      },
+      "requiredScopes": [
+        "automation"
+      ],
+      "args": [
+        {
+          "name": "flowId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "flow-id"
+          ],
+          "description": "Flow (workflow) ID (also --flow-id)."
+        },
+        {
+          "name": "danger-delete-flow",
+          "kind": "flag",
+          "type": "boolean",
+          "required": true,
+          "description": "Required acknowledgment: deleted flows are unrecoverable after 90 days."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
+    },
+    {
       "family": "automation.sequences",
       "name": "automation.sequences.list",
       "method": "GET",
