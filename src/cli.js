@@ -5925,10 +5925,7 @@ async function runCrm(portal, action, rest, flags) {
     if (!id) fail('crm update requires object id.');
     const properties = assertObjectBody(parseBody(flags.properties), 'crm update --properties');
     const body = { properties };
-    const target = `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`;
-    if (!boolFlag(flags, 'yes') && !boolFlag(flags, 'show-request')) previewMutation(portal, 'PATCH', target, body);
-    const result = await hubspotFetch(portal, 'PATCH', target, flags, body);
-    printJson(result);
+    printJson(await guardedFetch(portal, 'PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, body));
     return;
   }
 
