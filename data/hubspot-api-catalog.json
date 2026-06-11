@@ -3070,7 +3070,78 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "filter",
+          "kind": "flag",
+          "type": "string",
+          "repeatable": true,
+          "description": "property:OP[:value]. Operators: EQ NEQ GT GTE LT LTE CONTAINS_TOKEN IN NOT_IN BETWEEN HAS_PROPERTY NOT_HAS_PROPERTY. Multiple --filter flags AND together."
+        },
+        {
+          "name": "filter-group",
+          "kind": "flag",
+          "type": "string",
+          "repeatable": true,
+          "description": "\";\"-separated filter expressions; repeat the flag for OR between groups. Mutually exclusive with --filter."
+        },
+        {
+          "name": "search-body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full HubSpot search JSON body escape hatch."
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "properties-with-history",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "search",
+          "kind": "flag",
+          "type": "string",
+          "description": "Free-text query term."
+        },
+        {
+          "name": "sort",
+          "kind": "flag",
+          "type": "string",
+          "description": "property[:ASC|DESC]"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "count-only",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Body-cursor pagination; stops at the 10K search window."
+        }
+      ]
     },
     {
       "family": "crm.properties",
@@ -3087,7 +3158,21 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "names-only",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Return just the property names."
+        }
+      ]
     },
     {
       "family": "crm.property_groups",
@@ -3652,7 +3737,42 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Object name, alias, objectTypeId, or custom fully-qualified name."
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list",
+          "description": "Comma-separated property names to return."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "count-only",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ]
     },
     {
       "family": "crm.objects",
@@ -3669,7 +3789,37 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "id",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "properties-with-history",
+          "kind": "flag",
+          "type": "list"
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "description": "Read by a unique property (e.g. email) instead of record ID."
+        }
+      ]
     },
     {
       "family": "crm.objects",
@@ -3687,7 +3837,33 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json",
+          "required": true,
+          "description": "JSON object of property values (or @file / @-)."
+        },
+        {
+          "name": "associations",
+          "kind": "flag",
+          "type": "json"
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "crm.objects",
@@ -3704,7 +3880,33 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "id",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "properties",
+          "kind": "flag",
+          "type": "json",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "crm.objects",
@@ -3722,7 +3924,27 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "id",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ]
     },
     {
       "family": "crm.objects",
@@ -3870,7 +4092,36 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "email",
+          "kind": "flag",
+          "type": "string",
+          "description": "Filter owners by user email."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer"
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string"
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow page cursors (default 1000-result cap)."
+        }
+      ]
     },
     {
       "family": "crm.owners",
@@ -3891,7 +4142,30 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "ownerId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "description": "Owner ID (or userId with --id-property userId)."
+        },
+        {
+          "name": "id-property",
+          "kind": "flag",
+          "type": "string",
+          "enum": [
+            "id",
+            "userId"
+          ]
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean"
+        }
+      ]
     },
     {
       "family": "crm.properties",
@@ -3908,7 +4182,21 @@
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
-      }
+      },
+      "args": [
+        {
+          "name": "objectType",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "propertyName",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        }
+      ]
     },
     {
       "family": "crm.associations.records",

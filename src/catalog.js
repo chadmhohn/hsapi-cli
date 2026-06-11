@@ -8,6 +8,8 @@ const VALID_STATUSES = new Set(['typed', 'catalog-only']);
 const VALID_RISKS = new Set(['read', 'sensitive-read', 'mutation', 'destructive']);
 const VALID_VERSION_MODES = new Set(['latest', 'legacy', 'v3', 'v4', 'beta']);
 const VALID_SURFACE_TYPES = new Set(['javascript-sdk', 'docs-only']);
+const VALID_ARG_KINDS = new Set(['positional', 'flag']);
+const VALID_ARG_TYPES = new Set(['string', 'integer', 'boolean', 'json', 'list']);
 const catalogCache = new Map();
 
 function fail(message) {
@@ -48,6 +50,31 @@ function optionalStringArray(value, label, context) {
       fail(`${context} ${label}[${index}] must be a non-empty string.`);
     }
     return item.trim();
+  });
+}
+
+function validateEndpointArgs(raw, context) {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) fail(`${context} must define args as an array when present.`);
+  return raw.map((item, index) => {
+    const argContext = `${context} args[${index}]`;
+    if (!item || typeof item !== 'object' || Array.isArray(item)) fail(`${argContext} must be an object.`);
+    const name = requireString(item.name, 'name', argContext);
+    const kind = requireString(item.kind, 'kind', argContext);
+    if (!VALID_ARG_KINDS.has(kind)) fail(`${argContext} kind must be one of ${[...VALID_ARG_KINDS].join(', ')}.`);
+    const type = requireString(item.type, 'type', argContext);
+    if (!VALID_ARG_TYPES.has(type)) fail(`${argContext} type must be one of ${[...VALID_ARG_TYPES].join(', ')}.`);
+    if (item.required !== undefined && typeof item.required !== 'boolean') fail(`${argContext} required must be a boolean.`);
+    if (item.repeatable !== undefined && typeof item.repeatable !== 'boolean') fail(`${argContext} repeatable must be a boolean.`);
+    return {
+      name,
+      kind,
+      type,
+      required: item.required === true,
+      repeatable: item.repeatable === true,
+      enum: optionalStringArray(item.enum, 'enum', argContext),
+      description: optionalString(item.description)
+    };
   });
 }
 
@@ -99,6 +126,7 @@ function validateEndpointDefinition(raw, index) {
   const scopeNotes = optionalString(raw.scopeNotes);
   const requiredScopes = optionalStringArray(raw.requiredScopes, 'requiredScopes', context);
   const auth = normalizeEndpointAuth(raw.auth, context);
+  const args = validateEndpointArgs(raw.args, context);
 
   return {
     id,
@@ -115,7 +143,8 @@ function validateEndpointDefinition(raw, index) {
     tierRequirement,
     requiredScopes,
     scopeNotes,
-    auth
+    auth,
+    args
   };
 }
 
@@ -188,6 +217,7 @@ function endpointDefinitions(filePath) {
   return loadCatalogData(filePath).endpoints.map((endpoint) => ({
     ...endpoint,
     requiredScopes: [...endpoint.requiredScopes],
+    args: endpoint.args.map((arg) => ({ ...arg, enum: [...arg.enum] })),
     auth: endpoint.auth ? {
       ...endpoint.auth,
       queryParams: [...endpoint.auth.queryParams],
@@ -210,6 +240,41 @@ function findEndpointDefinition(method, pathname, filePath) {
     && definition.method === upperMethod
     && pathTemplateToRegex(definition.pathTemplate).test(pathname)
   )) || null;
+}
+
+function commandLiteralPrefix(command) {
+  const tokens = String(command || '').split(/\s+/);
+  const literal = [];
+  for (const token of tokens) {
+    if (token.startsWith('<') || token.startsWith('[')) break;
+    literal.push(token);
+  }
+  return literal.join(' ');
+}
+
+// Resolve a typed command from argv-style tokens by longest literal prefix.
+// Placeholder tokens like <objectType> in catalog command strings are ignored.
+// Ambiguous prefixes resolve to null so callers can fall back safely.
+function endpointForCommandTokens(tokens, filePath) {
+  const positionals = [];
+  for (const token of tokens || []) {
+    if (String(token).startsWith('--')) break;
+    positionals.push(String(token));
+  }
+  if (!positionals.length) return null;
+  const byLiteral = new Map();
+  for (const definition of endpointDefinitions(filePath)) {
+    if (!definition.command) continue;
+    const literal = commandLiteralPrefix(definition.command);
+    if (!byLiteral.has(literal)) byLiteral.set(literal, []);
+    byLiteral.get(literal).push(definition);
+  }
+  for (let length = positionals.length; length >= 1; length -= 1) {
+    const matches = byLiteral.get(`hsapi ${positionals.slice(0, length).join(' ')}`) || [];
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1) return null;
+  }
+  return null;
 }
 
 function endpointDefinitionById(id, filePath) {
@@ -301,7 +366,9 @@ function summarizeCatalogCoverage(catalog) {
 
 module.exports = {
   DEFAULT_CATALOG_FILE,
+  commandLiteralPrefix,
   endpointDefinitionById,
+  endpointForCommandTokens,
   endpointDefinitions,
   findEndpointDefinition,
   loadCatalogData,

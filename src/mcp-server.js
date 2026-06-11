@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { runCli } = require('./cli');
-const { endpointDefinitions, findEndpointDefinition } = require('./catalog');
+const { endpointForCommandTokens, findEndpointDefinition } = require('./catalog');
 const packageJson = require('../package.json');
 
 const CONTEXT_DOCS_DIR = path.resolve(__dirname, '..', 'docs', 'hubspot-api-context');
@@ -111,6 +111,19 @@ const TOOLS = [
         name: { type: 'string', description: 'Context doc basename or catalog contextUrl. Omit to list available docs.' },
         maxChars: { type: 'integer', minimum: 1000, maximum: 60000, description: 'Maximum markdown chars to return. Defaults to 20000.' }
       },
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_command_help',
+    description: 'Return catalog metadata and the documented argspec (positionals, flags, types, enums) for a typed hsapi command, e.g. "crm search" or "owners list". Call this before composing hsapi_command_execute argv.',
+    annotations: { title: 'Command help / argspec', readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        command: { type: 'string', description: 'Command words without the hsapi prefix, for example "crm search".' }
+      },
+      required: ['command'],
       additionalProperties: false
     }
   },
@@ -531,37 +544,8 @@ function offlineEndpointForRequest(args) {
   return findEndpointDefinition(method, pathname) || null;
 }
 
-function commandLiteralPrefix(command) {
-  const tokens = String(command || '').split(/\s+/);
-  const literal = [];
-  for (const token of tokens) {
-    if (token.startsWith('<') || token.startsWith('[')) break;
-    literal.push(token);
-  }
-  return literal.join(' ');
-}
-
 function offlineEndpointForCommand(argv) {
-  const positionals = [];
-  for (const arg of argv) {
-    if (String(arg).startsWith('--')) break;
-    positionals.push(String(arg));
-  }
-  if (!positionals.length) return null;
-  const byLiteral = new Map();
-  for (const definition of endpointDefinitions()) {
-    if (!definition.command) continue;
-    const literal = commandLiteralPrefix(definition.command);
-    if (!byLiteral.has(literal)) byLiteral.set(literal, []);
-    byLiteral.get(literal).push(definition);
-  }
-  for (let length = positionals.length; length >= 1; length -= 1) {
-    const candidate = 'hsapi ' + positionals.slice(0, length).join(' ');
-    const matches = byLiteral.get(candidate) || [];
-    if (matches.length === 1) return matches[0];
-    if (matches.length > 1) return null;
-  }
-  return null;
+  return endpointForCommandTokens(argv);
 }
 
 function offlineReadExecutionAllowed(endpoint, options = {}) {
@@ -748,6 +732,12 @@ function readContextDoc(args) {
 async function callTool(name, args = {}) {
   if (name === 'hsapi_context_doc') {
     return readContextDoc(args);
+  }
+
+  if (name === 'hsapi_command_help') {
+    const tokens = stringArg(args.command, 'command').trim().split(/\s+/).filter((token) => token && token !== 'hsapi');
+    if (!tokens.length) throw new Error('command must contain at least one command word.');
+    return runHsapiJson(['help', ...tokens]);
   }
 
   if (name === 'hsapi_profiles_list') {
