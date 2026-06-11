@@ -727,6 +727,7 @@ Output:
   --include-truncated          With --max-chars, emit a compact truncation summary instead of failing
 
 Notes:
+  - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.
   - CRM search filters: property:OP:value (EQ, NEQ, GT, GTE, LT, LTE, CONTAINS_TOKEN, ...), property:IN:a,b / property:NOT_IN:a,b, property:BETWEEN:low:high, property:HAS_PROPERTY / property:NOT_HAS_PROPERTY. Multiple --filter flags AND within one group; repeat --filter-group "expr;expr" for OR between groups; --search-body sends a full HubSpot search JSON body.
   - Tokens are read from env vars declared in the portal config; secrets are not stored in config.
   - Mutating requests require --yes. Use request/crm update without --yes to preview.
@@ -1267,11 +1268,23 @@ function runAuthDoctor(flags) {
   if (!ok) exitCli(1);
 }
 
+function readStdinText() {
+  try {
+    return fs.readFileSync(0, 'utf8');
+  } catch (error) {
+    fail(`Failed to read stdin for "@-": ${error.message}`);
+  }
+}
+
+function readAtArgumentText(raw) {
+  const value = String(raw);
+  if (value === '@-') return readStdinText();
+  return fs.readFileSync(path.resolve(value.slice(1)), 'utf8');
+}
+
 function parseBody(raw) {
   if (raw === undefined) return undefined;
-  const text = String(raw).startsWith('@')
-    ? fs.readFileSync(path.resolve(String(raw).slice(1)), 'utf8')
-    : String(raw);
+  const text = String(raw).startsWith('@') ? readAtArgumentText(raw) : String(raw);
   try {
     return JSON.parse(text);
   } catch (error) {
@@ -1299,9 +1312,7 @@ function parsePropertiesList(raw) {
 
 function readArgumentText(raw, label) {
   if (raw === undefined || raw === true || raw === '') fail(`Missing required --${label}.`);
-  return String(raw).startsWith('@')
-    ? fs.readFileSync(path.resolve(String(raw).slice(1)), 'utf8')
-    : String(raw);
+  return String(raw).startsWith('@') ? readAtArgumentText(raw) : String(raw);
 }
 
 function parseIdInputs(raw, label = 'ids') {
@@ -1407,12 +1418,32 @@ function gdprDeleteBodyFromFlags(flags, objectId) {
   return body;
 }
 
+function parseBatchInputsValue(raw, label, commandName) {
+  const text = readArgumentText(raw, label).trim();
+  if (!text) fail(`--${label} must not be empty.`);
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    // Fall through to JSONL parsing: one JSON object per line.
+  }
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const inputs = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    try {
+      inputs.push(JSON.parse(lines[index]));
+    } catch (error) {
+      fail(`${commandName} --${label} line ${index + 1} is not valid JSON. Expected a JSON array, an object with an inputs array, or JSONL (one JSON object per line): ${error.message}`);
+    }
+  }
+  return inputs;
+}
+
 function batchWriteBodyFromFlags(flags, commandName, options = {}) {
   const explicitBody = parseBody(flags.body);
   if (explicitBody !== undefined) return assertBatchInputsBody(explicitBody, commandName);
 
   const rawInputs = requireFlag(flags, 'inputs');
-  const parsed = parseBody(rawInputs);
+  const parsed = parseBatchInputsValue(rawInputs, 'inputs', commandName);
   const body = Array.isArray(parsed) ? { inputs: parsed } : parsed;
   assertBatchInputsBody(body, commandName);
   return options.allowIdProperty ? applyInputIdProperty(body, flags['id-property']) : body;
@@ -1446,7 +1477,7 @@ function associationBatchBodyFromFlags(flags, commandName) {
   const explicitBody = parseBody(flags.body);
   if (explicitBody !== undefined) return assertBatchInputsBody(explicitBody, commandName);
   const rawInputs = requireFlag(flags, 'inputs');
-  const parsed = parseBody(rawInputs);
+  const parsed = parseBatchInputsValue(rawInputs, 'inputs', commandName);
   const body = Array.isArray(parsed) ? { inputs: parsed } : parsed;
   return assertBatchInputsBody(body, commandName);
 }
