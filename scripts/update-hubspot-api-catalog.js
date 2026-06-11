@@ -178,17 +178,15 @@ function extractHubSpotDocLinks(text) {
 function normalizeApiPath(rawPath) {
   if (!rawPath || !rawPath.startsWith('/')) return null;
   const pathOnly = rawPath.split(/[?#]/)[0];
-  if (!pathOnly.startsWith('/crm/')
-    && !pathOnly.startsWith('/account-info/')
-    && !pathOnly.startsWith('/automation/')
-    && !pathOnly.startsWith('/cms/')
-    && !pathOnly.startsWith('/communication-preferences/')
-    && !pathOnly.startsWith('/conversations/')
-    && !pathOnly.startsWith('/events/')
-    && !pathOnly.startsWith('/files/')
-    && !pathOnly.startsWith('/marketing/')
-    && !pathOnly.startsWith('/webhooks/')
-    && !pathOnly.startsWith('/oauth/')) {
+  const API_PATH_PREFIXES = [
+    '/crm/', '/account-info/', '/automation/', '/cms/', '/communication-preferences/',
+    '/conversations/', '/events/', '/files/', '/marketing/', '/webhooks/', '/oauth/',
+    // added for issue #66: families the catalog now covers but the extractor was blind to
+    '/settings/', '/business-units/', '/sandboxes/', '/email/', '/engagements/',
+    '/analytics/', '/scheduler/', '/visitor-identification/', '/form-integrations/',
+    '/submissions/', '/webhooks-journal/', '/crm-object-schemas/'
+  ];
+  if (!API_PATH_PREFIXES.some((prefix) => pathOnly.startsWith(prefix))) {
     return null;
   }
   return pathOnly.replace(/\/+$/, '') || '/';
@@ -508,6 +506,43 @@ function endpointExists(catalog, candidate) {
   ));
 }
 
+const VERSION_SEGMENT = /^(v\d+|\d{4}-\d{2}(-beta)?)$/;
+
+// Position-insensitive version-neutral form: HubSpot moved the version segment
+// between conventions (/crm/v3/objects vs /crm/objects/2026-03), so the segment
+// is dropped entirely and template placeholders normalize to {}.
+function versionNeutralSegments(pathName) {
+  return String(pathName)
+    .split('/')
+    .filter(Boolean)
+    .filter((segment) => !VERSION_SEGMENT.test(segment))
+    .map((segment) => (/^\{[^}]+\}$/.test(segment) ? '{}' : segment));
+}
+
+function versionNeutralMatchers(catalog) {
+  const matchers = [];
+  for (const endpoint of catalog.endpoints || []) {
+    const segments = versionNeutralSegments(endpointPath(endpoint));
+    const pattern = `^${segments.map((segment) => (segment === '{}' ? '[^/]+' : escapeRegex(segment))).join('/')}$`;
+    matchers.push({
+      method: endpoint.method,
+      regex: new RegExp(pattern),
+      path: endpointPath(endpoint)
+    });
+  }
+  return matchers;
+}
+
+function versionDuplicateOf(matchers, candidate) {
+  const neutral = versionNeutralSegments(candidate.path).map((segment) => (segment === '{}' ? '__ANY__' : segment));
+  const probe = neutral.map((segment) => (segment === '__ANY__' ? 'x' : segment)).join('/');
+  for (const matcher of matchers) {
+    if (matcher.method !== candidate.method) continue;
+    if (matcher.regex.test(probe)) return matcher.path;
+  }
+  return null;
+}
+
 async function buildDiffProposals(catalog, comparison, flags) {
   const explicitUrls = values(flags['candidate-url']).map(normalizeUrl).filter(Boolean);
   const uncatalogedUrls = comparison.uncatalogedOfficialDocs || [];
@@ -541,8 +576,20 @@ async function buildDiffProposals(catalog, comparison, flags) {
     }
   }
 
-  const allCatalogAdditions = uniqueBy(endpointProposals, (proposal) => `${proposal.method} ${proposal.path}`)
+  const dedupedProposals = uniqueBy(endpointProposals, (proposal) => `${proposal.method} ${proposal.path}`)
     .sort((a, b) => `${a.family} ${a.method} ${a.path}`.localeCompare(`${b.family} ${b.method} ${b.path}`));
+  const neutralMatchers = versionNeutralMatchers(catalog);
+  const novelProposals = [];
+  const versionDuplicates = [];
+  for (const proposal of dedupedProposals) {
+    const duplicateOf = versionDuplicateOf(neutralMatchers, proposal);
+    if (duplicateOf) {
+      versionDuplicates.push({ method: proposal.method, path: proposal.path, duplicateOf });
+    } else {
+      novelProposals.push(proposal);
+    }
+  }
+  const allCatalogAdditions = novelProposals;
   const catalogAdditions = maxProposals === 0 ? allCatalogAdditions : allCatalogAdditions.slice(0, maxProposals);
   const truncatedEndpointProposalCount = allCatalogAdditions.length - catalogAdditions.length;
 
@@ -565,6 +612,8 @@ async function buildDiffProposals(catalog, comparison, flags) {
       note: doc.note
     })),
     catalogAdditions,
+    versionDuplicateCount: versionDuplicates.length,
+    versionDuplicates,
     docTriage: uniqueBy(docOnlyProposals, (proposal) => proposal.docsUrl),
     warnings: [
       'Non-mutating proposal output only. Do not paste proposals blindly into the catalog.',
@@ -635,6 +684,7 @@ function renderReport(result) {
     lines.push('');
     lines.push(`- Inspected docs/files: ${result.proposals.inspected.length}`);
     lines.push(`- Proposed endpoint additions: ${result.proposals.catalogAdditions.length}`);
+    lines.push(`- Version duplicates of cataloged surfaces (excluded from proposals): ${result.proposals.versionDuplicateCount || 0}`);
     if (result.proposals.truncatedEndpointProposalCount > 0) {
       lines.push(`- Additional endpoint candidates not emitted: ${result.proposals.truncatedEndpointProposalCount}`);
     }
