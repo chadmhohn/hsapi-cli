@@ -3,29 +3,29 @@
 Generated: 2026-05-10
 
 ## Snapshot
-- Typed commands: 276
+- Typed commands: 283
 - Catalog-only endpoints: 0
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 276
+- Endpoint count: 283
 - Non-HTTP surface count: 3
-- Total catalog items: 279
+- Total catalog items: 286
 
 ## Coverage by implementation status
-- typed: 276
+- typed: 283
 
 ## Coverage by risk
-- mutation: 102
-- read: 82
+- mutation: 104
+- read: 86
 - sensitive-read: 52
-- destructive: 40
+- destructive: 41
 
 ## Coverage by auth family
-- portal_bearer: 246
+- portal_bearer: 253
 - developer: 25
 - oauth: 4
 
 ## Coverage by tier requirement
-- none: 261
+- none: 268
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
@@ -48,6 +48,7 @@ Generated: 2026-05-10
 - crm.limits: 9
 - crm.associations.schema: 8
 - events.definitions: 8
+- automation.flows: 7
 - files.folders: 6
 - marketing.forms: 6
 - webhooks: 6

@@ -135,6 +135,18 @@ function startServer() {
         }));
         return;
       }
+      if (url.pathname === '/automation/v4/flows') {
+        res.writeHead(200, headers);
+        if (url.searchParams.get('after') === 'flow-page-2') {
+          res.end(JSON.stringify({ results: [{ id: 'flow-2', name: 'Nurture B', revisionId: '4' }] }));
+        } else {
+          res.end(JSON.stringify({
+            results: [{ id: 'flow-1', name: 'Nurture A', revisionId: '9' }],
+            paging: { next: { after: 'flow-page-2' } }
+          }));
+        }
+        return;
+      }
       if (url.pathname === '/crm/v3/paged') {
         res.writeHead(200, headers);
         if (url.searchParams.get('after') === 'page-2') {
@@ -5711,3 +5723,49 @@ test('76 Issue #11: ~ expansion must work when HOME is absent (Windows sets USER
 
 });
 
+test('77 Issue #24: automation v4 flows - typed CRUD surface', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const listed = parseJsonOutput(await run(['automation', 'flows', 'list', '--paginate'], env));
+  assert.strictEqual(listed.ok, true);
+  assert.strictEqual(listed.pageCount, 2);
+  assert.deepStrictEqual(listed.results.map((flow) => flow.id), ['flow-1', 'flow-2']);
+
+  await expectShowRequest(['automation', 'flows', 'get', '12345'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/automation/v4/flows/12345',
+    endpointId: 'automation.flows.get'
+  });
+
+  await expectShowRequest(['automation', 'flows', 'batch-read', '--ids', '1,2'], env, {
+    requests,
+    method: 'POST',
+    pathname: '/automation/v4/flows/batch/read',
+    endpointId: 'automation.flows.batch_read',
+    body: { inputs: [{ type: 'FLOW_ID', flowId: '1' }, { type: 'FLOW_ID', flowId: '2' }] }
+  });
+
+  await expectShowRequest(['automation', 'flows', 'update', '12345', '--body', '{"revisionId":"9","name":"Renamed"}'], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/automation/v4/flows/12345',
+    endpointId: 'automation.flows.update',
+    body: { revisionId: '9', name: 'Renamed' }
+  });
+
+  const blockedCreate = await run(['automation', 'flows', 'create', '--body', '{"name":"x"}'], env);
+  assert.strictEqual(blockedCreate.status, 2, 'flows create without --yes must be a blocked preview');
+
+  const deleteWithoutDanger = await run(['automation', 'flows', 'delete', '12345', '--yes'], env);
+  assert.notStrictEqual(deleteWithoutDanger.status, 0);
+  assert.match(deleteWithoutDanger.stderr, /--danger-delete-flow/);
+
+  const flowsHelp = parseJsonOutput(await run(['help', 'automation', 'flows', 'update'], env));
+  assert.strictEqual(flowsHelp.endpointId, 'automation.flows.update');
+  assert.strictEqual(flowsHelp.argsDocumented, true);
+
+  const typo = await run(['automation', 'flows', 'list', '--limt', '5'], env);
+  assert.notStrictEqual(typo.status, 0);
+  assert.match(typo.stderr, /Unknown flag --limt/);
+});
