@@ -160,3 +160,11 @@ These are encoded via `tokenAudience` so the CLI can tell a teammate *before* ca
 - Loopback redirect handling: HubSpot requires an **exact** registered `redirect_uri`, so
   register a fixed `http://localhost:<PORT>/callback` (and decide fixed port vs a small
   pre-registered range) on the app.
+
+## Provisioning findings (2026-06-17)
+
+App **created + deployed** as a user-level app (`hubspot-api-cli-mcp`, display name "HubSpot API CLI/MCP") in the isolated developer **test account `246523489`** via `hs project upload` (build #3, redirect `http://localhost:5123/callback`). Confirmed the test account hosts a user-level app fine — **no separate developer account needed**. (Mechanics gotcha: write the `*-hsmeta.json` as UTF-8 **without BOM** — PowerShell `Set-Content -Encoding utf8` adds a BOM that fails HubSpot's "Invalid JSON" validation.)
+
+**⚠️ User-level app scope constraint (HubSpot-enforced).** On upload HubSpot flags these as "not fully supported for user-level apps" (and `crm.objects.custom.read` is outright *unrecognized*, which fails the deploy): **custom objects (`crm.objects.custom.*`), `crm.lists.*`, `crm.schemas.*`, `crm.hubsql.execute`, `marketing.campaigns.read`, `cms.*`.** So the per-user OAuth surface ≈ HubSpot's MCP-server object set: **standard CRM objects + engagements** (contacts, companies, deals, tickets, line_items, products, quotes, owners, carts/orders/invoices/subscriptions, tasks/notes/calls/meetings/emails) — **read+write**. Everything else — notably **custom objects** (Product Subscription, Customer Story), plus lists, schema writes, HubSQL, marketing, CMS — **falls back to the service-key/admin tier.** This widens the "irreducible service-key set" beyond the original auth-sensitive list and is a key input to the resolver design (#80).
+
+**Still to validate:** per-user enforcement + writes, by authorizing as an admin vs a non-admin test user (pending Client ID/Secret + the `hsapi auth login` flow or a manual code exchange).
