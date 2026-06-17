@@ -213,7 +213,7 @@ function startServer() {
         res.writeHead(200, headers);
         res.end(JSON.stringify({
           access_token: 'refreshed-access-token',
-          refresh_token: 'server-refresh-token-should-not-cache',
+          refresh_token: 'server-rotated-refresh-token',
           token_type: 'bearer',
           expires_in: 1800
         }));
@@ -2484,7 +2484,7 @@ test('38 block (21)', async () => {
       assert.strictEqual(result.status, 0, result.stderr || result.stdout);
       assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1, 'developer client-credentials cache must not satisfy OAuth endpoints');
       assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer refreshed-access-token');
-      assert.strictEqual(JSON.parse(fs.readFileSync(oauthCachePath, 'utf8')).schema, 'hsapi.oauthTokenCache.v1');
+      assert.strictEqual(JSON.parse(fs.readFileSync(oauthCachePath, 'utf8')).schema, 'hsapi.oauthTokenCache.v2');
       assert.strictEqual(JSON.parse(fs.readFileSync(developerCachePath, 'utf8')).schema, DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA);
       assert(!result.stdout.includes('developer-cache-should-not-satisfy-oauth'), 'OAuth output must not leak or reuse developer cache tokens');
     }
@@ -3483,15 +3483,21 @@ test('73 127.0.0.1\');', async () => {
       assert.strictEqual(tokenBody.get('grant_type'), 'refresh_token');
       assert.strictEqual(tokenBody.get('refresh_token'), 'refresh-token');
       const cache = JSON.parse(fs.readFileSync(refreshCachePath, 'utf8'));
-      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v1');
+      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v2');
       assert.strictEqual(cache.accessToken, 'refreshed-access-token');
       assert.strictEqual(cache.source.refreshTokenEnv, 'HSAPI_OAUTH_REFRESH_TOKEN');
-      assert(!JSON.stringify(cache).includes('server-refresh-token-should-not-cache'), 'refresh token responses must not be stored in the access-token cache');
+      // Issue #78: HubSpot may rotate the refresh token on a refresh grant. The
+      // rotated value must be persisted to the cache (so a future refresh works
+      // even without a refreshTokenEnv) but must never appear in stdout.
+      assert.strictEqual(cache.refreshToken, 'server-rotated-refresh-token', 'rotated refresh token must be persisted in the OAuth cache');
       assert(!result.stdout.includes('refreshed-access-token'), 'OAuth access token must not appear in command output');
+      assert(!result.stdout.includes('server-rotated-refresh-token'), 'rotated refresh token must not appear in command output');
       assert(!result.stdout.includes('refresh-token'), 'OAuth refresh token must not appear in command output');
     }
 
     {
+      // Missing client secret (env-sourced) must fail before any network call,
+      // citing the missing client secret env var.
       const missingEnvCachePath = path.join(oauthDir, 'missing-env-cache.json');
       const before = requests.length;
       const result = await run(['account', 'details'], {
@@ -3500,12 +3506,30 @@ test('73 127.0.0.1\');', async () => {
         HSAPI_CATALOG_FILE: oauthCatalog,
         HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
-        HSAPI_OAUTH_REFRESH_TOKEN: ''
+        HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token'
       });
       assert.notStrictEqual(result.status, 0);
       assert.match(result.stderr, /HSAPI_OAUTH_CLIENT_SECRET/);
-      assert.match(result.stderr, /HSAPI_OAUTH_REFRESH_TOKEN/);
       assert.strictEqual(requests.length, before, 'missing OAuth env vars must fail before refresh or endpoint execution');
+    }
+
+    {
+      // Issue #78: no cached refresh token and no refreshTokenEnv value -> a
+      // clear, actionable error pointing at `hsapi auth login`, before network.
+      const noRefreshCachePath = path.join(oauthDir, 'no-refresh-source-cache.json');
+      const before = requests.length;
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: oauthConfigForCache(noRefreshCachePath),
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
+        HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+        HSAPI_OAUTH_REFRESH_TOKEN: ''
+      });
+      assert.notStrictEqual(result.status, 0);
+      assert.match(result.stderr, /No refresh token available for portal "test"/);
+      assert.match(result.stderr, /hsapi auth login --portal test/);
+      assert.strictEqual(requests.length, before, 'missing refresh token must fail before refresh or endpoint execution');
     }
 
     {
@@ -3526,6 +3550,89 @@ test('73 127.0.0.1\');', async () => {
       assert(!result.stderr.includes('server-refresh-token-should-redact'), 'failed refresh error must not print response token fields');
       assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1);
       assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount, 'failed refresh must not call the target endpoint');
+    }
+
+    {
+      // Issue #78: a legacy v1 cache (no refreshToken field) with a still-usable
+      // access token must remain readable and be used without a refresh.
+      const v1CachePath = path.join(oauthDir, 'v1-backcompat-cache.json');
+      fs.writeFileSync(v1CachePath, JSON.stringify({
+        schema: 'hsapi.oauthTokenCache.v1',
+        family: AUTH_FAMILIES.OAUTH,
+        tokenType: 'bearer',
+        accessToken: 'v1-cached-access-token',
+        expiresIn: 1800,
+        expiresAt: '2999-01-01T00:00:00.000Z',
+        refreshedAt: '2026-05-15T00:00:00.000Z'
+      }, null, 2));
+      const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+      const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: oauthConfigForCache(v1CachePath),
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_SECRET: '',
+        HSAPI_OAUTH_REFRESH_TOKEN: ''
+      });
+      assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+      assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken, 'usable v1 cache must not refresh');
+      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount + 1);
+      assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer v1-cached-access-token');
+    }
+
+    {
+      // Issue #78: with refreshTokenEnv absent from config, an expired access
+      // token must refresh using the refresh token persisted in the cache. The
+      // new access token + rotated refresh token are written back as v2.
+      const cachedRefreshConfig = writeTempConfig(baseUrl, {
+        tokenEnv: null,
+        auth: {
+          defaultFamily: AUTH_FAMILIES.OAUTH,
+          oauth: {
+            clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+            clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+            tokenCachePath: path.join(oauthDir, 'cached-refresh-no-env-cache.json')
+          }
+        }
+      });
+      const cachedRefreshCachePath = path.join(oauthDir, 'cached-refresh-no-env-cache.json');
+      fs.writeFileSync(cachedRefreshCachePath, JSON.stringify({
+        schema: 'hsapi.oauthTokenCache.v2',
+        family: AUTH_FAMILIES.OAUTH,
+        tokenType: 'bearer',
+        accessToken: 'expired-access-token',
+        refreshToken: 'cache-stored-refresh-token',
+        expiresIn: 1800,
+        expiresAt: '2000-01-01T00:00:00.000Z',
+        refreshedAt: '1999-12-31T23:30:00.000Z'
+      }, null, 2));
+      const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+      const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: cachedRefreshConfig,
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
+        HSAPI_OAUTH_CLIENT_SECRET: 'client-secret'
+      });
+      assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+      assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1, 'expired cache with cached refresh token must refresh once');
+      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount + 1);
+      assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer refreshed-access-token');
+      const tokenRequest = requests.filter((request) => {
+        const url = new URL(request.url, 'http://127.0.0.1');
+        return request.method === 'POST' && url.pathname === '/oauth/2026-03/token';
+      }).at(-1);
+      const tokenBody = new URLSearchParams(tokenRequest.body);
+      assert.strictEqual(tokenBody.get('grant_type'), 'refresh_token');
+      assert.strictEqual(tokenBody.get('refresh_token'), 'cache-stored-refresh-token', 'refresh must use the cache-stored refresh token');
+      const cache = JSON.parse(fs.readFileSync(cachedRefreshCachePath, 'utf8'));
+      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v2');
+      assert.strictEqual(cache.accessToken, 'refreshed-access-token');
+      assert.strictEqual(cache.refreshToken, 'server-rotated-refresh-token', 'rotated refresh token must replace the cached one');
+      assert(!result.stdout.includes('cache-stored-refresh-token'), 'cached refresh token must not appear in output');
+      assert(!result.stdout.includes('server-rotated-refresh-token'), 'rotated refresh token must not appear in output');
     }
 
 });

@@ -17,6 +17,7 @@ const {
   AUTH_FAMILIES,
   DEVELOPER_AUTH_SUBTYPES,
   endpointAuthRequirement,
+  optionalStringArray,
 } = require('./auth');
 
 function loadConfig() {
@@ -28,7 +29,15 @@ function loadConfig() {
   return { configPath, config };
 }
 
-const OAUTH_TOKEN_CACHE_SCHEMA = 'hsapi.oauthTokenCache.v1';
+const OAUTH_TOKEN_CACHE_SCHEMA = 'hsapi.oauthTokenCache.v2';
+// v1 caches predate persisted refresh tokens (issue #78). They are still
+// readable: oauthCacheHasExpectedSchema accepts both so an existing access
+// token keeps working until the next refresh rewrites the cache as v2.
+const OAUTH_TOKEN_CACHE_SCHEMA_V1 = 'hsapi.oauthTokenCache.v1';
+const SUPPORTED_OAUTH_TOKEN_CACHE_SCHEMAS = new Set([
+  OAUTH_TOKEN_CACHE_SCHEMA,
+  OAUTH_TOKEN_CACHE_SCHEMA_V1
+]);
 const DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA = 'hsapi.developerClientCredentialsTokenCache.v1';
 const OAUTH_TOKEN_REFRESH_SKEW_MS = 60 * 1000;
 
@@ -85,21 +94,33 @@ function resolveOAuthProfile(portal, portalName) {
   const oauth = assertConfigObject(rawOAuth, `Portal "${portalName}" auth.oauth`);
   const clientIdEnv = configString(oauth.clientIdEnv);
   const clientSecretEnv = configString(oauth.clientSecretEnv);
+  // refreshTokenEnv is optional (issue #78): login-based profiles persist the
+  // refresh token to the per-user token cache, so an env var is not required.
   const refreshTokenEnv = configString(oauth.refreshTokenEnv);
   const tokenCachePath = configString(oauth.tokenCachePath);
   if (!clientIdEnv) fail(`Portal "${portalName}" auth.oauth.clientIdEnv must be a non-empty environment variable name.`);
   if (!clientSecretEnv) fail(`Portal "${portalName}" auth.oauth.clientSecretEnv must be a non-empty environment variable name.`);
-  if (!refreshTokenEnv) fail(`Portal "${portalName}" auth.oauth.refreshTokenEnv must be a non-empty environment variable name.`);
   if (!tokenCachePath) fail(`Portal "${portalName}" auth.oauth.tokenCachePath must be a non-empty cache path outside the package.`);
+
+  // Optional interactive-login fields (issue #77). Only required when running
+  // `hsapi auth login`; absence here is fine for refresh-token-only profiles.
+  const redirectUrl = configString(oauth.redirectUrl);
+  const scopes = optionalStringArray(oauth.scopes, 'auth.oauth.scopes', `Portal "${portalName}"`);
+  const optionalScopes = optionalStringArray(oauth.optionalScopes, 'auth.oauth.optionalScopes', `Portal "${portalName}"`);
+  const authorizeUrlBase = configString(oauth.authorizeUrlBase) || 'https://app.hubspot.com';
 
   return {
     family: AUTH_FAMILIES.OAUTH,
     clientIdEnv,
     clientSecretEnv,
-    refreshTokenEnv,
+    refreshTokenEnv: refreshTokenEnv || null,
     tokenCachePath: expandUserPath(tokenCachePath),
     tokenCachePathDisplay: tokenCachePath,
     tokenUrlPath: configString(oauth.tokenUrlPath) || '/oauth/2026-03/token',
+    redirectUrl: redirectUrl || null,
+    scopes,
+    optionalScopes,
+    authorizeUrlBase,
     profileField: 'auth.oauth',
     provenance: 'explicit_profile'
   };
@@ -220,9 +241,14 @@ function oauthCacheTokenType(cache) {
   return configString(cache.tokenType) || configString(cache.token_type);
 }
 
+function oauthCacheRefreshToken(cache) {
+  if (!cache || typeof cache !== 'object') return null;
+  return configString(cache.refreshToken) || configString(cache.refresh_token);
+}
+
 function oauthCacheHasExpectedSchema(cache) {
   if (!cache || typeof cache !== 'object') return false;
-  if (cache.schema !== OAUTH_TOKEN_CACHE_SCHEMA) return false;
+  if (!SUPPORTED_OAUTH_TOKEN_CACHE_SCHEMAS.has(cache.schema)) return false;
   return cache.family === undefined || cache.family === AUTH_FAMILIES.OAUTH;
 }
 
@@ -249,6 +275,7 @@ function redactedOAuthTokenCacheContract(source, cacheRead = readOAuthTokenCache
     status: oauthCacheStatus(cacheRead, nowMs),
     redacted: true,
     accessToken: oauthCacheAccessToken(cache) ? 'REDACTED' : null,
+    refreshToken: oauthCacheRefreshToken(cache) ? 'REDACTED' : null,
     tokenType: oauthCacheTokenType(cache),
     expiresAt,
     expiresInSeconds: Number.isFinite(expiresAtMs) ? Math.max(Math.floor((expiresAtMs - nowMs) / 1000), 0) : null,
@@ -360,18 +387,28 @@ function usableDeveloperClientCredentialsCacheToken(source, portal, cacheRead) {
     : null;
 }
 
-function oauthEnvValues(source, portalName) {
+function oauthEnvValues(source, portalName, cacheRead = null) {
   const missing = [];
   const clientId = process.env[source.clientIdEnv];
   const clientSecret = process.env[source.clientSecretEnv];
-  const refreshToken = process.env[source.refreshTokenEnv];
   if (!clientId) missing.push(source.clientIdEnv);
   if (!clientSecret) missing.push(source.clientSecretEnv);
-  if (!refreshToken) missing.push(source.refreshTokenEnv);
+  // The refresh token comes from the persisted cache first (issue #78), then
+  // falls back to the configured refreshTokenEnv. client_id/client_secret are
+  // always env-sourced.
+  const resolvedCacheRead = cacheRead || readOAuthTokenCache(source.tokenCachePath);
+  const cachedRefreshToken = oauthCacheRefreshToken(resolvedCacheRead && resolvedCacheRead.cache);
+  const envRefreshToken = source.refreshTokenEnv ? configString(process.env[source.refreshTokenEnv]) : null;
+  const refreshToken = cachedRefreshToken || envRefreshToken;
+  const refreshTokenSource = cachedRefreshToken ? 'cache' : (envRefreshToken ? 'env' : null);
+
   if (missing.length) {
     fail(`Missing OAuth refresh environment variable${missing.length === 1 ? '' : 's'} for portal "${portalName}": ${missing.join(', ')}.`);
   }
-  return { clientId, clientSecret, refreshToken };
+  if (!refreshToken) {
+    fail(`No refresh token available for portal "${portalName}". Run: hsapi auth login --portal ${portalName}`);
+  }
+  return { clientId, clientSecret, refreshToken, refreshTokenSource };
 }
 
 function hubSpotResponseClass(status) {
@@ -389,7 +426,7 @@ function hubSpotResponseCategory(payload) {
     || configString(payload.status);
 }
 
-function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date.now()) {
+function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date.now(), priorRefreshToken = null) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     fail('OAuth refresh failed: HubSpot token response was not a JSON object.');
   }
@@ -402,7 +439,12 @@ function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date
   if (!Number.isFinite(expiresIn) || expiresIn <= 0) {
     fail('OAuth refresh failed: HubSpot token response did not include a positive expires_in value.');
   }
-  return {
+  // HubSpot returns a refresh_token on the authorization_code exchange. On a
+  // refresh_token grant it may omit it, so fall back to the prior refresh
+  // token (rotation: prefer the response's value when present). Issue #78.
+  const responseRefreshToken = configString(payload.refresh_token) || configString(payload.refreshToken);
+  const refreshToken = responseRefreshToken || configString(priorRefreshToken) || null;
+  const cache = {
     schema: OAUTH_TOKEN_CACHE_SCHEMA,
     family: AUTH_FAMILIES.OAUTH,
     tokenType: configString(payload.token_type) || configString(payload.tokenType) || 'bearer',
@@ -412,9 +454,11 @@ function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date
     refreshedAt: new Date(refreshedAtMs).toISOString(),
     source: {
       clientIdEnv: source.clientIdEnv,
-      refreshTokenEnv: source.refreshTokenEnv
+      refreshTokenEnv: source.refreshTokenEnv || null
     }
   };
+  if (refreshToken) cache.refreshToken = refreshToken;
+  return cache;
 }
 
 function writeOAuthTokenCache(tokenCachePath, cache) {
@@ -443,8 +487,9 @@ function writeDeveloperClientCredentialsTokenCache(tokenCachePath, cache) {
   }
 }
 
-async function refreshOAuthCredential(portal, source) {
-  const env = oauthEnvValues(source, portal.name);
+async function refreshOAuthCredential(portal, source, priorCacheRead = null) {
+  const cacheRead = priorCacheRead || readOAuthTokenCache(source.tokenCachePath);
+  const env = oauthEnvValues(source, portal.name, cacheRead);
   const tokenUrl = new URL(source.tokenUrlPath, portal.baseUrl);
   let response;
   try {
@@ -482,7 +527,9 @@ async function refreshOAuthCredential(portal, source) {
     fail(`OAuth refresh failed for portal "${portal.name}": HubSpot ${responseClass} response${categoryText} (${response.status} ${response.statusText || 'HTTP error'}).`);
   }
 
-  const cache = oauthTokenCacheFromRefreshPayload(payload, source);
+  // Preserve the refresh token across refreshes: HubSpot may rotate it (use the
+  // new value) or omit it (keep the one we used). Issue #78.
+  const cache = oauthTokenCacheFromRefreshPayload(payload, source, Date.now(), env.refreshToken);
   writeOAuthTokenCache(source.tokenCachePath, cache);
   return {
     token: cache.accessToken,
@@ -500,7 +547,7 @@ async function resolveOAuthCredential(portal, auth) {
     fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${auth.family || '<none>'}; OAuth credentials can only satisfy ${AUTH_FAMILIES.OAUTH} endpoints.`);
   }
   if (!portal.oauth) {
-    fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, refreshTokenEnv, and tokenCachePath.`);
+    fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, and tokenCachePath.`);
   }
 
   const cacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
@@ -513,7 +560,7 @@ async function resolveOAuthCredential(portal, auth) {
       cacheStatus: 'cache_hit'
     };
   }
-  return refreshOAuthCredential(portal, portal.oauth);
+  return refreshOAuthCredential(portal, portal.oauth, cacheRead);
 }
 
 function developerAuthLabel(auth) {
@@ -900,17 +947,26 @@ function credentialSourceForAuth(portal, auth) {
       };
     }
     if (!portal.oauth) {
-      fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, refreshTokenEnv, and tokenCachePath.`);
+      fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, and tokenCachePath.`);
     }
+    const oauthCacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
+    const cacheHasRefreshToken = Boolean(oauthCacheRefreshToken(oauthCacheRead.cache));
+    const refreshTokenEnv = portal.oauth.refreshTokenEnv || null;
+    // Reflect where the refresh token comes from without emitting undefined for
+    // login-based profiles (refreshTokenEnv === null). Issue #78.
+    const refreshTokenSource = cacheHasRefreshToken
+      ? 'cache'
+      : (refreshTokenEnv && process.env[refreshTokenEnv] ? 'env' : 'none');
     return {
       type: 'oauth_refresh_token',
-      name: portal.oauth.refreshTokenEnv,
+      name: refreshTokenEnv || 'oauth_token_cache',
       profileField: portal.oauth.profileField,
       provenance: portal.oauth.provenance,
       clientIdEnv: portal.oauth.clientIdEnv,
       clientSecretEnv: portal.oauth.clientSecretEnv,
-      refreshTokenEnv: portal.oauth.refreshTokenEnv,
-      tokenCache: redactedOAuthTokenCacheContract(portal.oauth),
+      refreshTokenEnv,
+      refreshTokenSource,
+      tokenCache: redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead),
       redacted: true
     };
   }
@@ -963,6 +1019,7 @@ module.exports = {
   loadConfig,
   DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA,
   OAUTH_TOKEN_CACHE_SCHEMA,
+  OAUTH_TOKEN_CACHE_SCHEMA_V1,
   OAUTH_TOKEN_REFRESH_SKEW_MS,
   authQueryParams,
   credentialSourceForAuth,
@@ -981,6 +1038,7 @@ module.exports = {
   oauthCacheAccessToken,
   oauthCacheExpiresAt,
   oauthCacheHasExpectedSchema,
+  oauthCacheRefreshToken,
   oauthCacheRefreshedAt,
   oauthCacheStatus,
   oauthCacheTokenType,

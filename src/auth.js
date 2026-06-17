@@ -129,5 +129,6 @@ module.exports = {
   VALID_DEVELOPER_AUTH_SUBTYPES,
   endpointAuthRequirement,
   normalizeEndpointAuth,
+  optionalStringArray,
   requireAuthFamily
 };

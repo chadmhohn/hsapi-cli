@@ -151,11 +151,29 @@ function profileDoctor(name, rawPortal, options) {
       family: AUTH_FAMILIES.OAUTH,
       profileField: 'auth.oauth.clientSecretEnv'
     });
-    doctorEnvCheck(checks, oauth.refreshTokenEnv, 'oauth refresh token', options, {
-      id: 'oauth.refresh_token_env',
-      family: AUTH_FAMILIES.OAUTH,
-      profileField: 'auth.oauth.refreshTokenEnv'
-    });
+    // refreshTokenEnv is optional (issue #78): login-based profiles persist the
+    // refresh token to the token cache, so a missing env var is a pass, not a
+    // fail. When configured, the usual env presence check applies.
+    if (oauth.refreshTokenEnv) {
+      doctorEnvCheck(checks, oauth.refreshTokenEnv, 'oauth refresh token', options, {
+        id: 'oauth.refresh_token_env',
+        family: AUTH_FAMILIES.OAUTH,
+        profileField: 'auth.oauth.refreshTokenEnv'
+      });
+    } else {
+      doctorCheck(
+        checks,
+        'pass',
+        'oauth.refresh_token_env',
+        'auth.oauth.refreshTokenEnv is not set; this profile gets its refresh token from the token cache. Run: hsapi auth login --portal ' + name,
+        {
+          family: AUTH_FAMILIES.OAUTH,
+          profileField: 'auth.oauth.refreshTokenEnv',
+          present: false,
+          refreshTokenSource: 'cache'
+        }
+      );
+    }
     doctorCachePathCheck(checks, oauth.tokenCachePath, oauth.tokenCachePathDisplay, 'auth.oauth.tokenCachePath');
   }
 
