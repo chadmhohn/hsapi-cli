@@ -6272,3 +6272,155 @@ test('86 Issue #66: tranche-2 backfill - docs-discoverable surfaces are catalog-
   });
   assert.strictEqual(typedWins.endpoint.id, 'objects.get');
 });
+
+test('87 Issue #77: buildAuthorizeUrl + parseOAuthCallback pure helpers', () => {
+  const { buildAuthorizeUrl, parseOAuthCallback } = require('../src/command-inputs');
+
+  // buildAuthorizeUrl: scope + optional_scope + state present, correct base/path.
+  const url = buildAuthorizeUrl({
+    authorizeUrlBase: 'https://app.hubspot.com',
+    clientId: 'client-abc',
+    redirectUrl: 'http://localhost:5123/callback',
+    scopes: ['crm.objects.contacts.read', 'oauth'],
+    optionalScopes: ['crm.objects.deals.read'],
+    state: 'state-xyz'
+  });
+  assert.strictEqual(url.origin, 'https://app.hubspot.com');
+  assert.strictEqual(url.pathname, '/oauth/authorize');
+  assert.strictEqual(url.searchParams.get('client_id'), 'client-abc');
+  assert.strictEqual(url.searchParams.get('redirect_uri'), 'http://localhost:5123/callback');
+  assert.strictEqual(url.searchParams.get('scope'), 'crm.objects.contacts.read oauth');
+  assert.strictEqual(url.searchParams.get('optional_scope'), 'crm.objects.deals.read');
+  assert.strictEqual(url.searchParams.get('state'), 'state-xyz');
+
+  // optional_scope omitted when there are no optional scopes; default base used.
+  const minimal = buildAuthorizeUrl({
+    clientId: 'c',
+    redirectUrl: 'http://127.0.0.1:9000/cb',
+    scopes: ['oauth'],
+    state: 's'
+  });
+  assert.strictEqual(minimal.origin, 'https://app.hubspot.com');
+  assert.strictEqual(minimal.searchParams.has('optional_scope'), false);
+
+  // parseOAuthCallback: success path returns the code.
+  const ok = parseOAuthCallback('/callback?code=auth-code-123&state=state-xyz', 'state-xyz', '/callback');
+  assert.deepStrictEqual(ok, { ok: true, code: 'auth-code-123' });
+
+  // state mismatch is rejected.
+  const mismatch = parseOAuthCallback('/callback?code=auth-code-123&state=wrong', 'state-xyz', '/callback');
+  assert.strictEqual(mismatch.ok, false);
+  assert.strictEqual(mismatch.error, 'state_mismatch');
+
+  // error query param is surfaced (with description when present).
+  const errored = parseOAuthCallback('/callback?error=access_denied&error_description=user%20declined&state=state-xyz', 'state-xyz', '/callback');
+  assert.strictEqual(errored.ok, false);
+  assert.match(errored.error, /access_denied/);
+  assert.match(errored.error, /user declined/);
+
+  // wrong path is ignored (so the loopback server can 404 it).
+  const wrongPath = parseOAuthCallback('/favicon.ico', 'state-xyz', '/callback');
+  assert.strictEqual(wrongPath.ok, false);
+  assert.strictEqual(wrongPath.ignore, true);
+
+  // missing code (even with matching state) is rejected.
+  const noCode = parseOAuthCallback('/callback?state=state-xyz', 'state-xyz', '/callback');
+  assert.strictEqual(noCode.ok, false);
+  assert.strictEqual(noCode.error, 'missing_code');
+});
+
+test('88 Issue #77: auth login prerequisite validation + auth logout (no sockets/browser)', async () => {
+  const loginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-login-'));
+  const loginConfig = (tokenCachePath) => writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        clientIdEnv: 'HSAPI_LOGIN_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_LOGIN_CLIENT_SECRET',
+        tokenCachePath,
+        redirectUrl: 'http://localhost:5123/callback',
+        scopes: ['crm.objects.contacts.read', 'oauth']
+      }
+    }
+  });
+
+  // auth login --help must not crash (local action, falls back to usage).
+  const help = await run(['auth', 'login', '--help'], baseEnv);
+  assert.strictEqual(help.status, 0, help.stderr || help.stdout);
+
+  // Missing client id/secret env values -> clear failure listing what's missing,
+  // before any socket bind or browser launch.
+  {
+    const missingCachePath = path.join(loginDir, 'missing-cache.json');
+    const result = await run(['auth', 'login', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(missingCachePath),
+      HSAPI_LOGIN_CLIENT_ID: '',
+      HSAPI_LOGIN_CLIENT_SECRET: ''
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /missing required login configuration/);
+    assert.match(result.stderr, /HSAPI_LOGIN_CLIENT_ID/);
+    assert.match(result.stderr, /HSAPI_LOGIN_CLIENT_SECRET/);
+    assert.strictEqual(fs.existsSync(missingCachePath), false, 'failed login must not write a token cache');
+  }
+
+  // Missing redirectUrl/scopes -> failure naming the config fields.
+  {
+    const noLoginFieldsConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          clientIdEnv: 'HSAPI_LOGIN_CLIENT_ID',
+          clientSecretEnv: 'HSAPI_LOGIN_CLIENT_SECRET',
+          tokenCachePath: path.join(loginDir, 'no-fields-cache.json')
+        }
+      }
+    });
+    const result = await run(['auth', 'login', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: noLoginFieldsConfig,
+      HSAPI_LOGIN_CLIENT_ID: 'client-id',
+      HSAPI_LOGIN_CLIENT_SECRET: 'client-secret'
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /auth\.oauth\.redirectUrl/);
+    assert.match(result.stderr, /auth\.oauth\.scopes/);
+  }
+
+  // auth logout removes the cache when present and reports removed:true.
+  {
+    const cachePath = path.join(loginDir, 'logout-cache.json');
+    fs.writeFileSync(cachePath, JSON.stringify({
+      schema: 'hsapi.oauthTokenCache.v2',
+      family: AUTH_FAMILIES.OAUTH,
+      accessToken: 'logout-access-token',
+      refreshToken: 'logout-refresh-token'
+    }));
+    const result = await run(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(cachePath)
+    });
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    const output = parseJsonOutput(result);
+    assert.strictEqual(output.ok, true);
+    assert.strictEqual(output.action, 'logout');
+    assert.strictEqual(output.removed, true);
+    assert.strictEqual(fs.existsSync(cachePath), false, 'logout must delete the token cache file');
+    assert(!result.stdout.includes('logout-access-token'), 'logout must not print token values');
+    assert(!result.stdout.includes('logout-refresh-token'), 'logout must not print refresh token values');
+  }
+
+  // auth logout on a missing cache reports removed:false (idempotent).
+  {
+    const absentCachePath = path.join(loginDir, 'absent-cache.json');
+    const result = await run(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(absentCachePath)
+    });
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    assert.strictEqual(parseJsonOutput(result).removed, false);
+  }
+});

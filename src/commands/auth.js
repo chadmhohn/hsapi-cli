@@ -1,11 +1,18 @@
-// hsapi auth: doctor (profile/cache diagnostics) and the OAuth token commands.
+// hsapi auth: doctor (profile/cache diagnostics), the OAuth token commands, and
+// the interactive `auth login`/`auth logout` per-user loopback flow (issue #77).
+const fs = require('fs');
+const http = require('http');
+const crypto = require('crypto');
+const { spawn } = require('child_process');
 const path = require('path');
 const {
   exitCli,
   fail,
+  writeStderr,
 } = require('../runtime');
 const {
   boolFlag,
+  optionalNumber,
 } = require('../flags');
 const {
   printJson,
@@ -17,6 +24,8 @@ const {
   authRevokeBodyFromFlags,
   authTokenExchangeBodyFromFlags,
   authUrlFromFlags,
+  buildAuthorizeUrl,
+  parseOAuthCallback,
 } = require('../command-inputs');
 const {
   endpointDefinitionById,
@@ -27,10 +36,17 @@ const {
   DEVELOPER_AUTH_SUBTYPES,
 } = require('../auth');
 const {
+  hubSpotResponseCategory,
+  hubSpotResponseClass,
   maybeResolvePortalBearerProfile,
+  oauthTokenCacheFromRefreshPayload,
+  readOAuthTokenCache,
+  redactedOAuthTokenCacheContract,
   resolveDeveloperProfile,
   resolveOAuthProfile,
+  resolvePortal,
   resolveProfileDefaultFamily,
+  writeOAuthTokenCache,
 } = require('../auth-resolvers');
 const {
   guardedExternalNoAuthFormFetch,
@@ -38,6 +54,11 @@ const {
 const {
   PACKAGE_ROOT,
 } = require('../config-paths');
+
+const DEFAULT_LOGIN_TIMEOUT_MS = 300000;
+const LOGIN_SUCCESS_HTML = '<!doctype html><html><head><meta charset="utf-8"><title>hsapi login</title></head>'
+  + '<body style="font-family:system-ui,sans-serif;padding:2rem"><h1>Login complete</h1>'
+  + '<p>You can close this tab and return to your terminal.</p></body></html>';
 
 function isInsidePath(parentPath, childPath) {
   const relative = path.relative(parentPath, childPath);
@@ -332,12 +353,252 @@ function runAuthDoctor(flags) {
   if (!ok) exitCli(1);
 }
 
+// ---------------------------------------------------------------------------
+// Interactive per-user OAuth login (issue #77).
+//
+// SECURITY: the loopback server binds 127.0.0.1 only, validates the `state`
+// nonce, ignores non-callback paths, enforces a timeout, and always closes the
+// socket in a finally. Secrets (client_secret), the authorization code, and the
+// access/refresh tokens are never logged or printed.
+// ---------------------------------------------------------------------------
+
+// Parse + validate the loopback redirect URL. Host must be localhost/127.0.0.1.
+function parseLoopbackRedirect(redirectUrl, portalName) {
+  let parsed;
+  try {
+    parsed = new URL(String(redirectUrl));
+  } catch (error) {
+    fail(`auth login: portal "${portalName}" auth.oauth.redirectUrl is not a valid URL: ${error.message}`);
+  }
+  const host = parsed.hostname;
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    fail(`auth login: portal "${portalName}" auth.oauth.redirectUrl host must be localhost or 127.0.0.1 (got "${host}"). Loopback redirect required.`);
+  }
+  const port = parsed.port ? Number(parsed.port) : (parsed.protocol === 'https:' ? 443 : 80);
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    fail(`auth login: portal "${portalName}" auth.oauth.redirectUrl must include a valid port.`);
+  }
+  return { port, path: parsed.pathname || '/' };
+}
+
+// Best-effort: open the system browser. On failure, the caller still prints the
+// URL so the user can open it manually.
+function openBrowser(url) {
+  try {
+    const target = url.toString();
+    let command;
+    let args;
+    if (process.platform === 'win32') {
+      command = 'cmd';
+      // The empty "" is the window title arg start expects.
+      args = ['/c', 'start', '', target];
+    } else if (process.platform === 'darwin') {
+      command = 'open';
+      args = [target];
+    } else {
+      command = 'xdg-open';
+      args = [target];
+    }
+    const child = spawn(command, args, { stdio: 'ignore', detached: true });
+    child.on('error', () => {});
+    child.unref();
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+// Bind the loopback server and resolve with the captured authorization code, or
+// reject on state mismatch / OAuth error / timeout. Always closes the server.
+function awaitOAuthCallback({ port, path: callbackPath, expectedState, timeoutMs }) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let timer = null;
+    const server = http.createServer((req, res) => {
+      const result = parseOAuthCallback(req.url, expectedState, callbackPath);
+      if (!result.ok && result.ignore) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not found');
+        return;
+      }
+      if (!result.ok) {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Login failed. Return to your terminal.');
+        finish(() => reject(new Error(`auth login failed: ${result.error}`)));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(LOGIN_SUCCESS_HTML);
+      finish(() => resolve(result.code));
+    });
+
+    function finish(action) {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      // Close in a finally-equivalent: always tear the socket down.
+      try {
+        server.close();
+      } finally {
+        action();
+      }
+    }
+
+    server.on('error', (error) => {
+      finish(() => reject(new Error(`auth login: could not bind loopback server on 127.0.0.1:${port}: ${error.message}`)));
+    });
+
+    timer = setTimeout(() => {
+      finish(() => reject(new Error(`auth login: timed out after ${timeoutMs}ms waiting for the OAuth callback.`)));
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
+
+    server.listen(port, '127.0.0.1');
+  });
+}
+
+// Exchange the authorization code for tokens. Mirrors refreshOAuthCredential's
+// fetch + HubSpot error handling style. Secrets are never surfaced.
+async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code) {
+  const tokenUrl = new URL(oauth.tokenUrlPath, portal.baseUrl);
+  let response;
+  try {
+    response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: env.clientId,
+        client_secret: env.clientSecret,
+        redirect_uri: redirectUrl,
+        code
+      })
+    });
+  } catch (error) {
+    fail(`auth login token exchange failed for portal "${portal.name}": network_error ${error.message}`);
+  }
+
+  const text = await response.text();
+  let payload = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch (_error) {
+      payload = text;
+    }
+  }
+
+  if (!response.ok) {
+    const responseClass = hubSpotResponseClass(response.status);
+    const category = hubSpotResponseCategory(payload);
+    const categoryText = category ? ` category ${category}` : '';
+    fail(`auth login token exchange failed for portal "${portal.name}": HubSpot ${responseClass} response${categoryText} (${response.status} ${response.statusText || 'HTTP error'}).`);
+  }
+  return payload;
+}
+
+function requireLoginPrerequisites(portal, oauth) {
+  if (!oauth) {
+    fail(`auth login: portal "${portal.name}" has no auth.oauth profile. Add auth.oauth with clientIdEnv, clientSecretEnv, tokenCachePath, redirectUrl, and scopes.`);
+  }
+  const missing = [];
+  const clientId = process.env[oauth.clientIdEnv];
+  const clientSecret = process.env[oauth.clientSecretEnv];
+  if (!clientId) missing.push(`${oauth.clientIdEnv} (auth.oauth.clientIdEnv)`);
+  if (!clientSecret) missing.push(`${oauth.clientSecretEnv} (auth.oauth.clientSecretEnv)`);
+  if (!oauth.redirectUrl) missing.push('auth.oauth.redirectUrl');
+  if (!Array.isArray(oauth.scopes) || !oauth.scopes.length) missing.push('auth.oauth.scopes');
+  if (missing.length) {
+    fail(`auth login: portal "${portal.name}" is missing required login configuration: ${missing.join(', ')}.`);
+  }
+  return { clientId, clientSecret };
+}
+
+async function runAuthLogin(flags) {
+  const { config } = loadConfig();
+  const portal = resolvePortal(config, flags);
+  const oauth = portal.oauth;
+  const env = requireLoginPrerequisites(portal, oauth);
+  const { port, path: callbackPath } = parseLoopbackRedirect(oauth.redirectUrl, portal.name);
+
+  const timeoutMs = flags.timeout !== undefined
+    ? (optionalNumber(flags.timeout) || DEFAULT_LOGIN_TIMEOUT_MS)
+    : DEFAULT_LOGIN_TIMEOUT_MS;
+
+  const state = crypto.randomBytes(16).toString('hex');
+  const authorizeUrl = buildAuthorizeUrl({
+    authorizeUrlBase: oauth.authorizeUrlBase,
+    clientId: env.clientId,
+    redirectUrl: oauth.redirectUrl,
+    scopes: oauth.scopes,
+    optionalScopes: oauth.optionalScopes,
+    state
+  });
+
+  // Always print the URL so the user can open it manually if the browser does
+  // not launch. stderr keeps stdout reserved for the JSON result.
+  writeStderr(`Opening browser for HubSpot login (portal "${portal.name}").\nIf it does not open, visit:\n${authorizeUrl.toString()}\n`);
+  openBrowser(authorizeUrl);
+
+  const code = await awaitOAuthCallback({ port, path: callbackPath, expectedState: state, timeoutMs });
+  const payload = await exchangeAuthorizationCode(portal, oauth, env, oauth.redirectUrl, code);
+  const cache = oauthTokenCacheFromRefreshPayload(payload, oauth);
+  writeOAuthTokenCache(oauth.tokenCachePath, cache);
+
+  printJson({
+    ok: true,
+    portal: portal.name,
+    action: 'login',
+    tokenCache: redactedOAuthTokenCacheContract(oauth, { status: 'read', cache, error: null }),
+    scopesRequested: [...oauth.scopes],
+    optionalScopesRequested: oauth.optionalScopes && oauth.optionalScopes.length ? [...oauth.optionalScopes] : undefined
+  });
+}
+
+function runAuthLogout(flags) {
+  const { config } = loadConfig();
+  const portal = resolvePortal(config, flags);
+  const oauth = portal.oauth;
+  if (!oauth) {
+    fail(`auth logout: portal "${portal.name}" has no auth.oauth profile with a tokenCachePath.`);
+  }
+  const cachePath = oauth.tokenCachePath;
+  let removed = false;
+  if (cachePath && fs.existsSync(cachePath)) {
+    fs.rmSync(cachePath);
+    removed = true;
+  }
+  printJson({
+    ok: true,
+    portal: portal.name,
+    action: 'logout',
+    removed,
+    path: oauth.tokenCachePathDisplay || cachePath
+  });
+}
+
 // All command JSON flows through this small output layer so generic requests
 // and typed helpers share projection, compact mode, and agent-safe budgets.
 
 async function runAuth(action, rest, flags) {
   if (action === 'doctor' || action === 'validate') {
     runAuthDoctor(flags);
+    return;
+  }
+
+  // Local, per-user loopback flows (issue #77). These resolve a real configured
+  // portal (not the synthetic auth base portal) and never call a HubSpot
+  // endpoint via the catalog, so they have no catalog entry.
+  if (action === 'login') {
+    await runAuthLogin(flags);
+    return;
+  }
+
+  if (action === 'logout') {
+    runAuthLogout(flags);
     return;
   }
 
