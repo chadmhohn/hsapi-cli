@@ -74,9 +74,13 @@ flow pure-OAuth; neither asks a teammate for a private-app token.
 
 ## Target architecture
 
-1. **One HubSpot user-level developer app** = the team's auth service. Requests a
-   **superset of scopes**; HubSpot intersects with each user's real permissions at consent.
-   (Some scopes need super-admin app approval before teammates can consent — App Governance.)
+1. **One HubSpot user-level app** = the team's auth service (validated 2026-06-16: must be a
+   *user-level app*, not a classic public app — the latter grants app-scoped tokens). Defined
+   via a `*-hsmeta.json` config deployed with the `hs` CLI (`hubspotdev/user-level-app-template`);
+   standard auth-code + `client_secret` (no PKCE); the issued token is enforced at the
+   authorizing user's permissions against the REST API. Requests a **superset of scopes**;
+   HubSpot intersects with each user's real permissions at runtime. (New scopes need the
+   super-admin **App Marketplace Access** permission to approve — App Install Governance.)
 2. **`hsapi auth login`** — new interactive flow: start a localhost loopback listener →
    open the browser to `app.hubspot.com/oauth/authorize?...` → user consents with their
    own HubSpot login → capture `code` on the loopback → exchange
@@ -146,8 +150,10 @@ These are encoded via `tokenAudience` so the CLI can tell a teammate *before* ca
 
 ## Open questions / risks
 
-- Confirm the dev app must be "user-level" on platform v2026.03 to yield user-scoped tokens
-  (vs a classic public app that grants app scopes). Verify in the developer portal (workstream 6).
+- ~~Confirm the dev app must be "user-level"...~~ **RESOLVED 2026-06-16:** must be a
+  **user-level app** (not a classic public app, which grants app-scoped tokens) — defined via
+  `*-hsmeta.json` + `hs project upload` (`hubspotdev/user-level-app-template`), standard
+  auth-code + `client_secret`, token enforced at the user's permissions against REST. Steps in #82.
 - Decide the exact requested scope superset (and which scopes require super-admin app approval).
 - Model A secret-distribution mechanism for the team (env vs `HSAPI_SECRET_LOOKUP_CMD` wrapper
   vs an internal secrets manager).
