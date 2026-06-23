@@ -30,12 +30,49 @@ const {
   hubspotFetch,
 } = require('../request');
 const {
+  AUTH_FAMILIES,
+} = require('../auth');
+const {
+  findEndpointDefinition,
+} = require('../catalog');
+const {
   CRM_OBJECT_TYPE_CATALOG,
   crmObjectCatalogEntryForOutput,
+  crmObjectTokenAudience,
   resolveCrmObjectType,
   resolveCrmObjectTypeWithCustomFallback,
-  resolvedCrmPathObjectType,
 } = require('../crm-object-types');
+
+// Build the per-request endpoint metadata for a CRM CRUD data op, carrying the
+// object's tokenAudience so the least-privilege resolver (issue #80) routes it
+// correctly. The audience follows the OBJECT (user-capable standard object ->
+// 'user'; custom / non-capable standard / unresolved -> 'admin'), not the verb.
+//
+// The CRM object CRUD endpoints are cataloged generically (path template
+// {objectType}, declared portal_bearer + admin), so per-object audience can't
+// live in the catalog and must be injected here. We resolve the real catalog
+// endpoint and override only auth.tokenAudience - preserving its id, risk, and
+// readOnlyPost so --show-request, history, and retry policy stay accurate.
+// family stays portal_bearer: that is the non-user credential used when the
+// portal has no OAuth identity, so portal_bearer-only profiles are unaffected.
+function crmAudienceEndpoint(resolution, method, path) {
+  const tokenAudience = crmObjectTokenAudience(resolution);
+  const catalogEndpoint = findEndpointDefinition(method, path);
+  if (catalogEndpoint && catalogEndpoint.auth) {
+    return {
+      ...catalogEndpoint,
+      auth: { ...catalogEndpoint.auth, tokenAudience }
+    };
+  }
+  return {
+    auth: {
+      required: true,
+      family: AUTH_FAMILIES.PORTAL_BEARER,
+      tokenAudience,
+      fallback: 'none'
+    }
+  };
+}
 
 const CRM_FILTER_NO_VALUE_OPERATORS = new Set(['HAS_PROPERTY', 'NOT_HAS_PROPERTY']);
 
@@ -284,7 +321,12 @@ async function runCrm(portal, action, rest, flags) {
 
   const objectTypeInput = rest[0];
   if (!objectTypeInput) fail('Missing CRM object type.');
-  const objectType = resolvedCrmPathObjectType(objectTypeInput);
+  const objectResolution = resolveCrmObjectType(objectTypeInput);
+  const objectType = objectResolution.pathObjectType;
+  // Per-op endpoint metadata carrying the object's tokenAudience, threaded into
+  // every data op so the resolver routes user-capable objects to OAuth (when the
+  // portal has it) and everything else to the admin credential. Issue #80.
+  const audienceEndpointFor = (method, path) => crmAudienceEndpoint(objectResolution, method, path);
 
   if (action === 'list') {
     const queryFlags = { ...flags };
@@ -297,8 +339,8 @@ async function runCrm(portal, action, rest, flags) {
       }
     }
     const result = boolFlag(flags, 'paginate') && !boolFlag(flags, 'count-only')
-      ? await collectPages(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}`, queryFlags)
-      : await hubspotFetch(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}`, queryFlags);
+      ? await collectPages(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}`, queryFlags, undefined, audienceEndpointFor('GET', `/crm/objects/2026-03/${pathPart(objectType)}`))
+      : await hubspotFetch(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}`, queryFlags, undefined, audienceEndpointFor('GET', `/crm/objects/2026-03/${pathPart(objectType)}`));
     printJson(boolFlag(flags, 'count-only')
       ? crmCountOutput(portal, objectType, 'crm.list', crmQuerySummaryFromListFlags(flags), result.data, 1)
       : result);
@@ -316,7 +358,7 @@ async function runCrm(portal, action, rest, flags) {
       queryFlags.query.push(`propertiesWithHistory=${property}`);
     }
     if (flags['id-property']) queryFlags.query.push(`idProperty=${flags['id-property']}`);
-    const result = await hubspotFetch(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, queryFlags);
+    const result = await hubspotFetch(portal, 'GET', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, queryFlags, undefined, audienceEndpointFor('GET', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`));
     printJson(result);
     return;
   }
@@ -331,9 +373,10 @@ async function runCrm(portal, action, rest, flags) {
       }
       const body = assertObjectBody(parseBody(flags['search-body']), 'crm search --search-body');
       if (body.limit === undefined && flags.limit !== undefined) body.limit = optionalNumber(flags.limit);
+      const searchBodyEndpoint = audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`);
       printJson(boolFlag(flags, 'paginate')
-        ? await collectSearchPages(portal, objectType, flags, body)
-        : await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body));
+        ? await collectSearchPages(portal, objectType, flags, body, searchBodyEndpoint)
+        : await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body, searchBodyEndpoint));
       return;
     }
     const countOnly = boolFlag(flags, 'count-only');
@@ -341,11 +384,12 @@ async function runCrm(portal, action, rest, flags) {
       countOnly ? { ...flags, limit: 1 } : flags,
       countOnly ? { defaultLimit: 1, includeProperties: false, includePropertiesWithHistory: false } : {}
     );
+    const searchEndpoint = audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`);
     if (boolFlag(flags, 'paginate') && !countOnly) {
-      printJson(await collectSearchPages(portal, objectType, flags, body));
+      printJson(await collectSearchPages(portal, objectType, flags, body, searchEndpoint));
       return;
     }
-    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body);
+    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body, searchEndpoint);
     printJson(countOnly
       ? crmCountOutput(portal, objectType, 'crm.search', crmQuerySummaryFromSearchCriteria(criteria), result.data, 1)
       : result);
@@ -360,7 +404,7 @@ async function runCrm(portal, action, rest, flags) {
       defaultLimit: 1,
       includeProperties: false
     });
-    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body);
+    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body, audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`));
     printJson(crmCountOutput(portal, objectType, 'crm.search', crmQuerySummaryFromSearchCriteria(criteria), result.data, 1));
     return;
   }
@@ -372,7 +416,7 @@ async function runCrm(portal, action, rest, flags) {
       defaultLimit: 1,
       includeProperties: false
     });
-    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body);
+    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body, audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`));
     const countOutput = crmCountOutput(portal, objectType, 'crm.search', crmQuerySummaryFromSearchCriteria(criteria), result.data, 1);
     printJson({
       ok: true,
@@ -394,7 +438,7 @@ async function runCrm(portal, action, rest, flags) {
       commandName: 'crm find-one',
       defaultLimit: 1
     });
-    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body);
+    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`, flags, body, audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/search`));
     const countOutput = crmCountOutput(portal, objectType, 'crm.search', crmQuerySummaryFromSearchCriteria(criteria), result.data, 1);
     const properties = parsePropertiesList(flags.properties);
     const output = {
@@ -416,38 +460,38 @@ async function runCrm(portal, action, rest, flags) {
 
   if (action === 'create') {
     const body = recordCreateBodyFromFlags(flags);
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}`) }));
     return;
   }
 
   if (action === 'batch-read') {
     const body = batchReadBodyFromFlags(flags);
-    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/read`, flags, body);
+    const result = await hubspotFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/read`, flags, body, audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/read`));
     printJson(result);
     return;
   }
 
   if (action === 'batch-create') {
     const body = batchWriteBodyFromFlags(flags, 'crm batch-create');
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/create`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/create`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/create`) }));
     return;
   }
 
   if (action === 'batch-update') {
     const body = batchWriteBodyFromFlags(flags, 'crm batch-update', { allowIdProperty: true });
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/update`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/update`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/update`) }));
     return;
   }
 
   if (action === 'batch-upsert') {
     const body = batchWriteBodyFromFlags(flags, 'crm batch-upsert', { allowIdProperty: true });
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/upsert`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/upsert`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/upsert`) }));
     return;
   }
 
   if (action === 'batch-archive') {
     const body = batchArchiveBodyFromFlags(flags);
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/archive`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/archive`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/batch/archive`) }));
     return;
   }
 
@@ -456,14 +500,17 @@ async function runCrm(portal, action, rest, flags) {
     if (!id) fail('crm update requires object id.');
     const properties = assertObjectBody(parseBody(flags.properties), 'crm update --properties');
     const body = { properties };
-    printJson(await guardedFetch(portal, 'PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, body));
+    printJson(await guardedFetch(portal, 'PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, body, { endpoint: audienceEndpointFor('PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`) }));
     return;
   }
 
   if (action === 'archive') {
     const id = rest[1];
     if (!id) fail('crm archive requires object id.');
-    printJson(await guardedFetch(portal, 'DELETE', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags));
+    // Audience follows the OBJECT, not the verb: archiving a user-capable object
+    // is still a user-permitted write. Deletes remain gated by guardedFetch's
+    // --yes confirmation, independent of audience. Issue #80.
+    printJson(await guardedFetch(portal, 'DELETE', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, undefined, { endpoint: audienceEndpointFor('DELETE', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`) }));
     return;
   }
 
@@ -472,7 +519,7 @@ async function runCrm(portal, action, rest, flags) {
       fail('crm merge requires --danger-merge plus --yes.');
     }
     const body = mergeBodyFromFlags(flags, rest[1], rest[2]);
-    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/merge`, flags, body));
+    printJson(await guardedFetch(portal, 'POST', `/crm/objects/2026-03/${pathPart(objectType)}/merge`, flags, body, { endpoint: audienceEndpointFor('POST', `/crm/objects/2026-03/${pathPart(objectType)}/merge`) }));
     return;
   }
 

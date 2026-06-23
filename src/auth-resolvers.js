@@ -16,6 +16,8 @@ const { DEFAULT_CONFIG } = require('./config-paths');
 const {
   AUTH_FAMILIES,
   DEVELOPER_AUTH_SUBTYPES,
+  TOKEN_AUDIENCES,
+  DEFAULT_TOKEN_AUDIENCE,
   endpointAuthRequirement,
   optionalStringArray,
 } = require('./auth');
@@ -914,23 +916,84 @@ async function resolveDeveloperCredential(portal, auth) {
   fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.DEVELOPER}; auth.subtype "${auth.subtype || '<missing>'}" is not supported.`);
 }
 
+// Least-privilege credential routing (issue #80). The chosen credential follows
+// the endpoint's tokenAudience and the portal's configured identities:
+//   1. auth.required === false              -> no credential.
+//   2. user audience + portal has OAuth     -> ALWAYS OAuth. Once a portal has
+//      an OAuth identity, user-audience endpoints use it; if the OAuth token is
+//      missing/expired/unrefreshable, resolveOAuthCredential fails loudly with
+//      the `hsapi auth login` message - we never silently fall back to a
+//      higher-privilege (portal_bearer/developer) credential.
+//   3. admin audience + portal has OAuth but NO portal_bearer and NO developer
+//      -> hard-fail with an actionable "configure auth.portalBearer" message,
+//      rather than over-privileging an admin call onto the user identity.
+//   4. otherwise                            -> dispatch by auth.family exactly
+//      as before. A portal_bearer-only profile (no OAuth) therefore behaves
+//      identically to pre-#80 in every case.
+function requestTokenAudience(auth) {
+  return auth.tokenAudience || DEFAULT_TOKEN_AUDIENCE;
+}
+
+// Resolve the credential family that will actually satisfy this request, after
+// applying the least-privilege routing. Returns one of AUTH_FAMILIES, or throws
+// the admin-only-oauth hard-fail. Shared by resolveRequestCredential (execution)
+// and credentialSourceForAuth (previews/--show-request) so both agree on the
+// chosen identity. Issue #80.
+function effectiveCredentialFamily(portal, auth) {
+  const tokenAudience = requestTokenAudience(auth);
+
+  // Once a portal has an OAuth identity, user-audience endpoints ALWAYS use it,
+  // regardless of the endpoint's declared family, and never fall back.
+  if (tokenAudience === TOKEN_AUDIENCES.USER && portal.oauth) {
+    return AUTH_FAMILIES.OAUTH;
+  }
+
+  // Admin-audience endpoints must not be over-privileged onto a user identity:
+  // an OAuth-only portal with no non-user credential is a hard failure.
+  if (
+    tokenAudience === TOKEN_AUDIENCES.ADMIN
+    && portal.oauth
+    && !portal.portalBearer
+    && !portal.developer
+  ) {
+    fail(`Endpoint ${auth.endpointId || '<unknown>'} requires a non-user (admin) token; portal "${portal.name}" only has an OAuth identity. Configure auth.portalBearer (a private-app/service-key token) to run admin operations (custom objects, schemas, owners, pipelines, deletes, etc.).`);
+  }
+
+  return auth.family;
+}
+
 async function resolveRequestCredential(portal, auth) {
   if (auth.required === false) return null;
-  if (auth.family === AUTH_FAMILIES.PORTAL_BEARER) return resolvePortalBearerCredential(portal, auth);
-  if (auth.family === AUTH_FAMILIES.OAUTH) return resolveOAuthCredential(portal, auth);
-  if (auth.family === AUTH_FAMILIES.DEVELOPER) return resolveDeveloperCredential(portal, auth);
+
+  const family = effectiveCredentialFamily(portal, auth);
+
+  if (family === AUTH_FAMILIES.PORTAL_BEARER) return resolvePortalBearerCredential(portal, auth);
+  if (family === AUTH_FAMILIES.OAUTH) {
+    // Force the OAuth resolver's family check to pass even when the endpoint's
+    // declared family was portal_bearer (user-audience promotion).
+    return resolveOAuthCredential(portal, { ...auth, family: AUTH_FAMILIES.OAUTH });
+  }
+  if (family === AUTH_FAMILIES.DEVELOPER) return resolveDeveloperCredential(portal, auth);
   fail(`Endpoint ${auth.endpointId || '<unknown>'} requires unsupported auth family ${auth.family || '<none>'}.`);
 }
 
 function credentialSourceForAuth(portal, auth) {
   if (auth.required === false) return null;
-  if (auth.family === AUTH_FAMILIES.PORTAL_BEARER) {
+  // Mirror the execution-time routing so --show-request / previews report the
+  // identity a call will actually use, including user-audience OAuth promotion
+  // and the admin-only-oauth hard-fail. Issue #80.
+  const tokenAudience = requestTokenAudience(auth);
+  const family = effectiveCredentialFamily(portal, auth);
+  const promoted = family !== auth.family;
+  if (family === AUTH_FAMILIES.PORTAL_BEARER) {
     if (!portal.portalBearer) {
       fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.PORTAL_BEARER}; portal "${portal.name}" is missing auth.portalBearer.tokenEnv or legacy tokenEnv.`);
     }
     const source = portal.portalBearer;
     const credentialSource = {
       type: 'env',
+      identity: 'admin',
+      tokenAudience,
       name: source.tokenEnv,
       profileField: source.profileField,
       provenance: source.provenance
@@ -938,10 +1001,12 @@ function credentialSourceForAuth(portal, auth) {
     if (source.kind) credentialSource.kind = source.kind;
     return credentialSource;
   }
-  if (auth.family === AUTH_FAMILIES.OAUTH) {
+  if (family === AUTH_FAMILIES.OAUTH) {
     if (portal.oauthCommandCredentials) {
       return {
         type: 'command_flags_or_env',
+        identity: 'user',
+        tokenAudience,
         name: 'oauth_command_credentials',
         redacted: true
       };
@@ -957,8 +1022,10 @@ function credentialSourceForAuth(portal, auth) {
     const refreshTokenSource = cacheHasRefreshToken
       ? 'cache'
       : (refreshTokenEnv && process.env[refreshTokenEnv] ? 'env' : 'none');
-    return {
+    const credentialSource = {
       type: 'oauth_refresh_token',
+      identity: 'user',
+      tokenAudience,
       name: refreshTokenEnv || 'oauth_token_cache',
       profileField: portal.oauth.profileField,
       provenance: portal.oauth.provenance,
@@ -969,9 +1036,17 @@ function credentialSourceForAuth(portal, auth) {
       tokenCache: redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead),
       redacted: true
     };
+    // Flag when a user-audience endpoint declared portal_bearer but was routed
+    // to the portal's OAuth identity, so the preview is unambiguous.
+    if (promoted) credentialSource.routedFromFamily = auth.family;
+    return credentialSource;
   }
-  if (auth.family === AUTH_FAMILIES.DEVELOPER) {
-    return developerCredentialSourceForAuth(portal, auth);
+  if (family === AUTH_FAMILIES.DEVELOPER) {
+    return {
+      ...developerCredentialSourceForAuth(portal, auth),
+      identity: 'admin',
+      tokenAudience
+    };
   }
   return null;
 }
@@ -987,6 +1062,7 @@ function requestAuthMetadata(portal, endpoint) {
     family: auth.family,
     subtype: auth.subtype || null,
     fallback: auth.fallback,
+    tokenAudience: auth.required === false ? auth.tokenAudience : requestTokenAudience(auth),
     provenance: auth.provenance,
     endpointId: auth.endpointId,
     queryParams: auth.queryParams,
@@ -1032,6 +1108,7 @@ module.exports = {
   developerClientCredentialsFailureMessage,
   developerClientCredentialsTokenCacheFromPayload,
   developerCredentialSourceForAuth,
+  effectiveCredentialFamily,
   hubSpotResponseCategory,
   hubSpotResponseClass,
   maybeResolvePortalBearerProfile,
@@ -1053,6 +1130,7 @@ module.exports = {
   refreshDeveloperClientCredentialsCredential,
   refreshOAuthCredential,
   requestAuthMetadata,
+  requestTokenAudience,
   requireDeveloperApiKeyQueryMetadata,
   requireDeveloperClientCredentialsScopes,
   requireDeveloperClientCredentialsSource,

@@ -3355,6 +3355,12 @@ test('73 127.0.0.1\');', async () => {
         catalog.endpoints.find((endpoint) => endpoint.name === name).auth = {
           family: AUTH_FAMILIES.OAUTH,
           subtype: 'installed_app',
+          // Issue #80: OAuth is the per-user identity. A user-audience endpoint on
+          // this OAuth-only portal resolves to OAuth; without tokenAudience it would
+          // default to 'admin' and hit the admin-only-oauth hard-fail (no
+          // portalBearer/developer to fall back to). Mark these user-scoped, as a
+          // real catalog entry for a user-OAuth endpoint would.
+          tokenAudience: 'user',
           fallback: 'none'
         };
       }
@@ -6422,5 +6428,259 @@ test('88 Issue #77: auth login prerequisite validation + auth logout (no sockets
     });
     assert.strictEqual(result.status, 0, result.stderr || result.stdout);
     assert.strictEqual(parseJsonOutput(result).removed, false);
+  }
+});
+
+test('89 Issue #80: least-privilege credential routing matrix', async () => {
+  const {
+    credentialSourceForAuth,
+    effectiveCredentialFamily,
+    requestAuthMetadata,
+  } = require('../src/auth-resolvers');
+
+  // Synthetic portal identities. effectiveCredentialFamily / credentialSourceForAuth
+  // only read portal.oauth / portal.portalBearer / portal.developer / portal.name,
+  // so these minimal shapes exercise the routing decision directly - simpler than a
+  // full CLI run for the pure-decision cases.
+  const portalBearerProfile = {
+    family: AUTH_FAMILIES.PORTAL_BEARER,
+    tokenEnv: 'HSAPI_TEST_TOKEN',
+    profileField: 'auth.portalBearer.tokenEnv',
+    provenance: 'explicit_profile',
+    kind: 'private_app'
+  };
+  const oauthProfile = {
+    family: AUTH_FAMILIES.OAUTH,
+    clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+    clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+    refreshTokenEnv: null,
+    tokenCachePath: path.join(os.tmpdir(), `hsapi-80-nonexistent-${process.pid}.json`),
+    tokenCachePathDisplay: '~/hsapi-80-nonexistent.json',
+    profileField: 'auth.oauth',
+    provenance: 'explicit_profile'
+  };
+  const bearerOnlyPortal = { name: 'test', baseUrl: baseUrl, portalBearer: portalBearerProfile, oauth: null, developer: null };
+  const bothPortal = { name: 'test', baseUrl: baseUrl, portalBearer: portalBearerProfile, oauth: oauthProfile, developer: null };
+  const oauthOnlyPortal = { name: 'test', baseUrl: baseUrl, portalBearer: null, oauth: oauthProfile, developer: null };
+
+  // The auth metadata a CRM data op carries: declared portal_bearer (the non-user
+  // credential) with the object's tokenAudience injected (issue #80).
+  const userAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'user', endpointId: 'objects.get' };
+  const adminAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'admin', endpointId: 'objects.get' };
+
+  // 1. portal_bearer-only profile: a CRM read/write resolves to portal_bearer
+  //    exactly as before, for BOTH audiences (unchanged / pre-#80 regression).
+  assert.strictEqual(effectiveCredentialFamily(bearerOnlyPortal, userAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  assert.strictEqual(effectiveCredentialFamily(bearerOnlyPortal, adminAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  {
+    const cs = credentialSourceForAuth(bearerOnlyPortal, adminAudienceAuth);
+    assert.strictEqual(cs.type, 'env');
+    assert.strictEqual(cs.identity, 'admin');
+    assert.strictEqual(cs.name, 'HSAPI_TEST_TOKEN');
+    // No OAuth identity, so even a user-audience op stays on the portal bearer.
+    const userCs = credentialSourceForAuth(bearerOnlyPortal, userAudienceAuth);
+    assert.strictEqual(userCs.type, 'env');
+    assert.strictEqual(userCs.tokenAudience, 'user');
+  }
+
+  // 2. user-audience + portal has oauth -> OAuth chosen (never falls back).
+  assert.strictEqual(effectiveCredentialFamily(bothPortal, userAudienceAuth), AUTH_FAMILIES.OAUTH);
+  assert.strictEqual(effectiveCredentialFamily(oauthOnlyPortal, userAudienceAuth), AUTH_FAMILIES.OAUTH);
+  {
+    const cs = credentialSourceForAuth(bothPortal, userAudienceAuth);
+    assert.strictEqual(cs.type, 'oauth_refresh_token');
+    assert.strictEqual(cs.identity, 'user');
+    assert.strictEqual(cs.tokenAudience, 'user');
+    // Promotion flag: declared portal_bearer was routed to the OAuth identity.
+    assert.strictEqual(cs.routedFromFamily, AUTH_FAMILIES.PORTAL_BEARER);
+  }
+
+  // 3. admin-audience + portal has BOTH oauth and portal_bearer -> portal_bearer.
+  assert.strictEqual(effectiveCredentialFamily(bothPortal, adminAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  {
+    const cs = credentialSourceForAuth(bothPortal, adminAudienceAuth);
+    assert.strictEqual(cs.type, 'env');
+    assert.strictEqual(cs.identity, 'admin');
+    assert.strictEqual(cs.name, 'HSAPI_TEST_TOKEN');
+  }
+
+  // 4. admin-audience + portal has ONLY oauth -> hard-fail (no over-privileging
+  //    an admin op onto the user identity). effectiveCredentialFamily /
+  //    credentialSourceForAuth signal this via runtime fail() (which exits the
+  //    process), so it cannot be asserted in-process here - the CLI sub-block at
+  //    the end of this test drives the same hard-fail end-to-end and asserts the
+  //    "configure auth.portalBearer" message.
+
+  // requestAuthMetadata (the full metadata builder) reports the routed identity
+  // for a user-audience endpoint on the both-credential portal.
+  {
+    const meta = requestAuthMetadata(bothPortal, {
+      id: 'objects.get',
+      method: 'GET',
+      pathTemplate: '/crm/objects/2026-03/{objectType}/{id}',
+      auth: { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'user', fallback: 'none' }
+    });
+    assert.strictEqual(meta.tokenAudience, 'user');
+    assert.strictEqual(meta.credentialSource.identity, 'user');
+    assert.strictEqual(meta.credentialSource.type, 'oauth_refresh_token');
+  }
+
+  // --- CLI object-classification via --show-request (audience follows the OBJECT) ---
+
+  // A capable standard object ("deals") is user-audience; a custom object
+  // ("2-12345") is admin-audience. Assert on the resolved catalog endpoint id
+  // (preserved) plus the injected tokenAudience.
+  const dealsShow = await expectShowRequest(['crm', 'get', 'deals', '101'], baseEnv, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/deals/101',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(dealsShow.auth.tokenAudience, 'user', 'deals is a user-capable standard object');
+  assert.strictEqual(dealsShow.auth.credentialSource.tokenAudience, 'user');
+
+  const customShow = await expectShowRequest(['crm', 'get', '2-12345', '101'], baseEnv, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/2-12345/101',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(customShow.auth.tokenAudience, 'admin', 'custom object types are admin-audience');
+  assert.strictEqual(customShow.auth.credentialSource.tokenAudience, 'admin');
+
+  // Same classification holds for a write verb: archiving a capable standard
+  // object stays user-audience (audience follows the object, not the verb).
+  const dealsArchiveShow = await expectShowRequest(['crm', 'archive', 'deals', '101'], baseEnv, {
+    requests,
+    method: 'DELETE',
+    pathname: '/crm/objects/2026-03/deals/101'
+  });
+  assert.strictEqual(dealsArchiveShow.auth.tokenAudience, 'user');
+
+  // --- CLI credential-selection on an OAuth-capable portal (oauth + portal_bearer) ---
+  const routingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-80-'));
+  const freshOauthCachePath = path.join(routingDir, 'fresh-oauth-cache.json');
+  fs.writeFileSync(freshOauthCachePath, JSON.stringify({
+    schema: 'hsapi.oauthTokenCache.v2',
+    family: AUTH_FAMILIES.OAUTH,
+    tokenType: 'bearer',
+    accessToken: 'routing-cached-access-token',
+    refreshToken: 'routing-cached-refresh-token',
+    expiresIn: 1800,
+    expiresAt: '2999-01-01T00:00:00.000Z',
+    refreshedAt: '2026-05-15T00:00:00.000Z'
+  }, null, 2));
+  const dualConfig = (tokenCachePath) => writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+      oauth: {
+        clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+        refreshTokenEnv: 'HSAPI_OAUTH_REFRESH_TOKEN',
+        tokenCachePath
+      },
+      portalBearer: {
+        tokenEnv: 'HSAPI_TEST_EXPLICIT_TOKEN',
+        kind: 'private_app'
+      }
+    }
+  });
+  const dualEnv = (tokenCachePath, overrides = {}) => ({
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: dualConfig(tokenCachePath),
+    HSAPI_TEST_EXPLICIT_TOKEN: 'explicit-portal-bearer-token',
+    HSAPI_OAUTH_CLIENT_ID: 'client-id',
+    HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+    HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token',
+    ...overrides
+  });
+
+  // deals (user-audience) on a dual portal -> the OAuth user identity, with the
+  // promotion flagged. Custom object (admin) on the SAME portal -> portal_bearer.
+  {
+    const dealsCs = await expectShowRequest(['crm', 'get', 'deals', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/crm/objects/2026-03/deals/101',
+      endpointId: 'objects.get'
+    });
+    assert.strictEqual(dealsCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(dealsCs.auth.credentialSource.identity, 'user');
+    assert.strictEqual(dealsCs.auth.credentialSource.routedFromFamily, AUTH_FAMILIES.PORTAL_BEARER);
+    assert(!JSON.stringify(dealsCs).includes('routing-cached-access-token'), 'show-request must not leak cached token values');
+
+    const customCs = await expectShowRequest(['crm', 'get', '2-12345', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/crm/objects/2026-03/2-12345/101',
+      endpointId: 'objects.get'
+    });
+    assert.strictEqual(customCs.auth.credentialSource.type, 'env');
+    assert.strictEqual(customCs.auth.credentialSource.identity, 'admin');
+    assert.strictEqual(customCs.auth.credentialSource.name, 'HSAPI_TEST_EXPLICIT_TOKEN');
+  }
+
+  // A real (non-show-request) user-audience read on a dual portal uses the cached
+  // OAuth access token - NOT the portal bearer - confirming OAuth is chosen at
+  // execution time and the portal bearer is never sent for a user-audience op.
+  {
+    const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+    const beforeContacts = requestCount(requests, 'GET', '/crm/objects/2026-03/contacts');
+    const result = await run(['crm', 'list', 'contacts', '--limit', '1'], dualEnv(freshOauthCachePath, {
+      // No env for portal bearer value either, to prove it is not used.
+      HSAPI_TEST_EXPLICIT_TOKEN: 'explicit-portal-bearer-token'
+    }));
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    assert.strictEqual(requestCount(requests, 'GET', '/crm/objects/2026-03/contacts'), beforeContacts + 1);
+    assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken, 'fresh OAuth cache must not refresh');
+    assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer routing-cached-access-token', 'user-audience read must use the OAuth user token, not the portal bearer');
+    assert.notStrictEqual(requests.at(-1).headers.authorization, 'Bearer explicit-portal-bearer-token');
+  }
+
+  // user-audience + portal has oauth but the OAuth cache is empty AND
+  // unrefreshable (no cached refresh token, no refreshTokenEnv value) -> hard
+  // FAIL with the `hsapi auth login` message, before any network call. It must
+  // NOT silently fall back to the portal bearer.
+  {
+    const emptyCachePath = path.join(routingDir, 'empty-oauth-cache.json');
+    const before = requests.length;
+    const result = await run(['crm', 'list', 'deals', '--limit', '1'], dualEnv(emptyCachePath, {
+      HSAPI_OAUTH_REFRESH_TOKEN: ''
+    }));
+    assert.notStrictEqual(result.status, 0, 'user-audience op with no usable OAuth credential must fail');
+    assert.match(result.stderr, /No refresh token available for portal "test"/);
+    assert.match(result.stderr, /hsapi auth login --portal test/);
+    assert.strictEqual(requests.length, before, 'failed OAuth resolution must not fall back to the portal bearer or call any endpoint');
+    assert(!result.stderr.includes('explicit-portal-bearer-token'), 'failure must not leak or use the portal bearer token');
+  }
+
+  // admin-audience op (custom object) on an OAuth-ONLY portal via the CLI ->
+  // hard-fail with the actionable "configure auth.portalBearer" message.
+  {
+    const oauthOnlyConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+          clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+          refreshTokenEnv: 'HSAPI_OAUTH_REFRESH_TOKEN',
+          tokenCachePath: freshOauthCachePath
+        }
+      }
+    });
+    const before = requests.length;
+    const result = await run(['crm', 'get', '2-12345', '101'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: oauthOnlyConfig,
+      HSAPI_OAUTH_CLIENT_ID: 'client-id',
+      HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+      HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token'
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /only has an OAuth identity/);
+    assert.match(result.stderr, /Configure auth\.portalBearer/);
+    assert.strictEqual(requests.length, before, 'admin-only-oauth hard-fail must happen before any network call');
   }
 });
