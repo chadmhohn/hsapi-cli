@@ -881,7 +881,9 @@ test('07 block (7)', async () => {
     assert(toolNames.includes('hsapi_catalog_commands'));
     assert(toolNames.includes('hsapi_auth_doctor'));
     assert(toolNames.includes('hsapi_command_execute'));
+    assert(toolNames.includes('hsapi_command_execute_read'));
     assert(toolNames.includes('hsapi_request_execute'));
+    assert(toolNames.includes('hsapi_request_execute_read'));
     const profiles = mcpStructuredContent(mcp.responses[2]);
     assert.strictEqual(profiles.ok, true);
     assert.strictEqual(profiles.profiles[0].name, 'test');
@@ -1615,6 +1617,11 @@ test('19 Issue #19: tool annotations + initialize instructions for modern MCP cl
       assert.strictEqual(byName[executeTool].annotations.readOnlyHint, false, executeTool);
       assert.strictEqual(byName[executeTool].annotations.destructiveHint, true, executeTool);
       assert.strictEqual(byName[executeTool].annotations.openWorldHint, true, executeTool);
+    }
+    for (const readTool of ['hsapi_command_execute_read', 'hsapi_request_execute_read']) {
+      assert.strictEqual(byName[readTool].annotations.readOnlyHint, true, readTool);
+      assert.strictEqual(byName[readTool].annotations.destructiveHint, false, readTool);
+      assert.strictEqual(byName[readTool].annotations.openWorldHint, true, readTool);
     }
 
 });
@@ -6767,4 +6774,76 @@ test('90 Issue #81: auth whoami — portal identity + OAuth cache status', async
   assert.strictEqual(freshOut.oauth.status, 'usable');
   assert(!freshOut.oauth.hint, 'hint should be absent when token is usable');
   assert(!JSON.stringify(freshOut).includes('whoami-access-token'), 'whoami must not print raw token values');
+});
+
+test('91 Issue #85: hsapi_command_execute_read and hsapi_request_execute_read — read-only', async () => {
+  // Issue #85: read-only MCP execute variants carry readOnlyHint: true so Co-Work
+  // can always-approve them. Reads execute; mutations return mutation_not_allowed
+  // (not mutation_blocked) so there is no confirmMutation escape hatch.
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const mcp = await runMcpConversation([
+    {
+      jsonrpc: '2.0', id: 1, method: 'initialize',
+      params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'hsapi-test-ro', version: '0.0.0' } }
+    },
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    // 1: read command (crm list contacts) via execute_read → executes
+    {
+      jsonrpc: '2.0', id: 2, method: 'tools/call',
+      params: { name: 'hsapi_command_execute_read', arguments: { portal: 'test', argv: ['crm', 'list', 'contacts', '--limit', '1'] } }
+    },
+    // 2: mutation command (crm create) via execute_read → mutation_not_allowed
+    {
+      jsonrpc: '2.0', id: 3, method: 'tools/call',
+      params: { name: 'hsapi_command_execute_read', arguments: { portal: 'test', argv: ['crm', 'create', 'contacts', '--properties', '{"email":"x@test.com"}'] } }
+    },
+    // 3: GET request via request_execute_read → executes
+    {
+      jsonrpc: '2.0', id: 4, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'GET', path: '/crm/objects/2026-03/contacts' } }
+    },
+    // 4: DELETE request via request_execute_read → mutation_not_allowed (no preview needed)
+    {
+      jsonrpc: '2.0', id: 5, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'DELETE', path: '/crm/v3/objects/contacts/1' } }
+    },
+    // 5: POST without readOnly via request_execute_read → mutation_not_allowed
+    {
+      jsonrpc: '2.0', id: 6, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'POST', path: '/crm/v3/objects/contacts' } }
+    }
+  ], env, 6);
+
+  assert.strictEqual(mcp.stderr, '');
+
+  // 1: read command executed successfully
+  const readCmd = mcpStructuredContent(mcp.responses[1]);
+  assert.strictEqual(readCmd.ok, true, 'execute_read: crm list should succeed');
+  assert.strictEqual(readCmd.executed, true, 'execute_read: crm list should be executed');
+  assert(!readCmd.blocked, 'execute_read: read must not be blocked');
+
+  // 2: mutation command blocked with mutation_not_allowed
+  const mutateCmd = mcpStructuredContent(mcp.responses[2]);
+  assert.strictEqual(mutateCmd.ok, false, 'execute_read: crm create must be blocked');
+  assert.strictEqual(mutateCmd.executed, false, 'execute_read: crm create must not execute');
+  assert.strictEqual(mutateCmd.blocked, true, 'execute_read: crm create must set blocked');
+  assert.strictEqual(mutateCmd.error.code, 'mutation_not_allowed', 'execute_read: must use mutation_not_allowed code');
+
+  // 3: GET request executed successfully
+  const getReq = mcpStructuredContent(mcp.responses[3]);
+  assert.strictEqual(getReq.ok, true, 'request_execute_read: GET should succeed');
+  assert.strictEqual(getReq.executed, true, 'request_execute_read: GET should be executed');
+
+  // 4: DELETE blocked immediately (no preview round-trip)
+  const deleteReq = mcpStructuredContent(mcp.responses[4]);
+  assert.strictEqual(deleteReq.ok, false, 'request_execute_read: DELETE must be blocked');
+  assert.strictEqual(deleteReq.blocked, true, 'request_execute_read: DELETE must set blocked');
+  assert.strictEqual(deleteReq.error.code, 'mutation_not_allowed', 'request_execute_read: DELETE must use mutation_not_allowed');
+  assert(!deleteReq.preview, 'request_execute_read: DELETE must not run a preview round-trip');
+
+  // 5: POST without readOnly blocked immediately
+  const postReq = mcpStructuredContent(mcp.responses[5]);
+  assert.strictEqual(postReq.ok, false, 'request_execute_read: unsafe POST must be blocked');
+  assert.strictEqual(postReq.error.code, 'mutation_not_allowed', 'request_execute_read: unsafe POST must use mutation_not_allowed');
 });

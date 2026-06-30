@@ -44,6 +44,9 @@ const SERVER_INSTRUCTIONS = [
   'hsapi exposes HubSpot through a catalog-gated CLI core. Reads execute directly;',
   'mutations always return a blocked preview until you re-call with confirmMutation: true',
   '(danger flags like --danger-merge are still required inside argv where hsapi demands them).',
+  'Use hsapi_command_execute_read / hsapi_request_execute_read for all read operations —',
+  'these are pre-approved for reads and will hard-block any mutation attempt.',
+  'Use hsapi_command_execute / hsapi_request_execute only when you need to mutate data.',
   'Prefer hsapi_command_execute (typed catalog commands - discover them with',
   'hsapi_catalog_commands) over hsapi_request_execute for writes: named commands read',
   'better in audit logs and avoid raw-body encoding mistakes. Use showRequest: true to',
@@ -166,6 +169,43 @@ const TOOLS = [
     }
   },
   {
+    name: 'hsapi_command_execute_read',
+    description: 'Run a read-only portal-aware catalog-backed hsapi command. Executes immediately without a mutation gate — any command that would modify data is permanently blocked with mutation_not_allowed. Use this for all reads so they can be auto-approved in Co-Work; use hsapi_command_execute for mutations.',
+    annotations: { title: 'Execute read-only hsapi command', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        argv: {
+          type: 'array',
+          minItems: 1,
+          maxItems: 80,
+          items: { type: 'string' },
+          description: 'hsapi arguments after the binary name, for example ["crm","list","contacts","--properties","email"]. Do not include hsapi itself.'
+        },
+        portal: { type: 'string', description: 'Optional portal profile name.' },
+        showRequest: { type: 'boolean', description: 'Return the redacted request/auth preview without executing.' },
+        compact: { type: 'boolean', description: 'Use hsapi --agent compact output. Defaults to true.' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500, description: 'Maximum obvious result rows to return. Defaults to 50.' },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000, description: 'Maximum serialized CLI payload chars before truncation summary. Defaults to 60000.' },
+        includeTruncated: { type: 'boolean', description: 'Emit truncation summaries instead of failing when maxChars is exceeded. Defaults to true.' },
+        select: { type: 'string', description: 'Optional hsapi --select dot path.' },
+        pick: {
+          type: 'array',
+          maxItems: 20,
+          items: { type: 'string' },
+          description: 'Optional hsapi --pick dot paths.'
+        },
+        discovery: {
+          type: 'string',
+          enum: ['ids-only', 'names-only', 'id-name-map'],
+          description: 'Optional discovery projection helper.'
+        }
+      },
+      required: ['argv'],
+      additionalProperties: false
+    }
+  },
+  {
     name: 'hsapi_request_execute',
     description: 'Run a portal-aware catalog-backed generic hsapi request. Safe methods execute; catalog read-only POST requires readOnly; mutations return a blocked preview unless confirmMutation is true.',
     annotations: { title: 'Execute generic HubSpot request', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
@@ -184,6 +224,46 @@ const TOOLS = [
         readOnly: { type: 'boolean', description: 'Allow catalog-marked read-only POST execution with hsapi --read-only.' },
         showRequest: { type: 'boolean', description: 'Return the redacted request/auth preview without executing.' },
         confirmMutation: { type: 'boolean', description: 'Explicitly allow mutation execution by adding --yes.' },
+        requireCatalog: { type: 'boolean', description: 'Require the request to match a catalog endpoint. Defaults to true.' },
+        compact: { type: 'boolean', description: 'Use hsapi --agent compact output. Defaults to true.' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500, description: 'Maximum obvious result rows to return. Defaults to 50.' },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000, description: 'Maximum serialized CLI payload chars before truncation summary. Defaults to 60000.' },
+        includeTruncated: { type: 'boolean', description: 'Emit truncation summaries instead of failing when maxChars is exceeded. Defaults to true.' },
+        select: { type: 'string', description: 'Optional hsapi --select dot path.' },
+        pick: {
+          type: 'array',
+          maxItems: 20,
+          items: { type: 'string' },
+          description: 'Optional hsapi --pick dot paths.'
+        },
+        discovery: {
+          type: 'string',
+          enum: ['ids-only', 'names-only', 'id-name-map'],
+          description: 'Optional discovery projection helper.'
+        }
+      },
+      required: ['method', 'path'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_request_execute_read',
+    description: 'Run a read-only portal-aware generic hsapi request. GET/HEAD/OPTIONS execute immediately; POST requires readOnly: true (catalog-marked read-only POST like search); any mutation method or non-readOnly POST is permanently blocked with mutation_not_allowed. Use this for all reads so they can be auto-approved in Co-Work; use hsapi_request_execute for mutations.',
+    annotations: { title: 'Execute read-only HubSpot request', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        method: { type: 'string', description: 'HTTP method. GET, HEAD, and OPTIONS always allowed; POST only with readOnly: true.' },
+        path: { type: 'string', description: 'HubSpot API path or URL on the selected portal baseUrl.' },
+        portal: { type: 'string', description: 'Optional portal profile name.' },
+        query: {
+          type: 'object',
+          description: 'Optional query parameters. Values may be strings, numbers, booleans, nulls, or arrays of those values.'
+        },
+        body: { description: 'Optional JSON request body.' },
+        paginate: { type: 'boolean', description: 'Use hsapi --paginate for paged read requests.' },
+        readOnly: { type: 'boolean', description: 'Allow catalog-marked read-only POST execution (e.g. CRM search) with hsapi --read-only.' },
+        showRequest: { type: 'boolean', description: 'Return the redacted request/auth preview without executing.' },
         requireCatalog: { type: 'boolean', description: 'Require the request to match a catalog endpoint. Defaults to true.' },
         compact: { type: 'boolean', description: 'Use hsapi --agent compact output. Defaults to true.' },
         maxResults: { type: 'integer', minimum: 0, maximum: 500, description: 'Maximum obvious result rows to return. Defaults to 50.' },
@@ -662,6 +742,57 @@ async function executeWithPreview(argv, args = {}, options = {}) {
   };
 }
 
+// Preview-based read-only enforcer used when the offline catalog lookup misses.
+// Like executeWithPreview but: no confirmMutation path, returns mutation_not_allowed
+// instead of mutation_blocked, and omits the preview from successful read responses.
+async function executeMustRead(argv, args, options) {
+  const showRequest = boolArg(args, 'showRequest', false);
+  const preview = await runHsapiEnvelope(previewArgv(argv, args));
+  const command = { argv };
+  const safety = safetySummary(preview, { confirmMutation: false, readOnlyPostAllowed: options.readOnlyPostAllowed });
+
+  if (!preview.ok) {
+    return {
+      ok: false, executed: false, command, safety,
+      error: { code: 'preview_failed', message: preview.error && preview.error.message || 'hsapi request preview failed.' },
+      preview: preview.output || preview
+    };
+  }
+
+  if (options.requireCatalog !== false && !safety.catalogBacked) {
+    return notCatalogBackedEnvelope(preview, argv);
+  }
+
+  if (showRequest) {
+    return { ok: true, executed: false, command, safety: { ...safety, showRequest: true }, preview: preview.output };
+  }
+
+  if (!isReadExecutionAllowed(preview, { readOnlyPostAllowed: options.readOnlyPostAllowed })) {
+    return {
+      ok: false, executed: false, blocked: true, command, safety,
+      error: {
+        code: 'mutation_not_allowed',
+        message: 'This command modifies data and cannot run through the read-only tool. Use hsapi_command_execute or hsapi_request_execute with confirmMutation: true after reviewing the preview.'
+      },
+      preview: preview.output
+    };
+  }
+
+  const result = await runHsapiEnvelope(executionArgv(argv, args), {
+    skipOutputRedaction: INTENDED_CREDENTIAL_ENDPOINTS.has(safety.endpointId)
+  });
+  return {
+    ok: result.ok, executed: result.status === 0, status: result.status,
+    command, safety,
+    result: result.output || null,
+    error: result.ok ? undefined : {
+      code: 'execution_failed',
+      message: result.error && result.error.message || result.stderr || 'hsapi execution failed.'
+    },
+    stderr: result.stderr
+  };
+}
+
 function normalizeLimit(raw) {
   if (raw === undefined || raw === null) return 50;
   const value = Number(raw);
@@ -788,6 +919,29 @@ async function callTool(name, args = {}) {
     return executeWithPreview(argv, args, options);
   }
 
+  if (name === 'hsapi_command_execute_read') {
+    const argv = normalizedCommandArgv(args);
+    const options = { requireCatalog: true, readOnlyPostAllowed: true };
+    if (!boolArg(args, 'showRequest', false)) {
+      const endpoint = offlineEndpointForCommand(argv);
+      if (endpoint) {
+        if (!offlineReadExecutionAllowed(endpoint, options)) {
+          return {
+            ok: false, executed: false, blocked: true,
+            error: {
+              code: 'mutation_not_allowed',
+              message: 'This command modifies data and cannot run through the read-only tool. Use hsapi_command_execute with confirmMutation: true after reviewing the preview.'
+            },
+            command: { argv },
+            safety: offlineSafetySummary(endpoint, options)
+          };
+        }
+        return executeOfflineRead(argv, args, endpoint, options);
+      }
+    }
+    return executeMustRead(argv, args, options);
+  }
+
   if (name === 'hsapi_request_execute') {
     const argv = requestArgv(args);
     const options = {
@@ -805,6 +959,47 @@ async function callTool(name, args = {}) {
       }
     }
     return executeWithPreview(argv, args, options);
+  }
+
+  if (name === 'hsapi_request_execute_read') {
+    const method = String(args.method || '').toUpperCase();
+    const readOnly = boolArg(args, 'readOnly', false);
+    if (!SAFE_METHODS.has(method) && !readOnly) {
+      return {
+        ok: false, executed: false, blocked: true,
+        error: {
+          code: 'mutation_not_allowed',
+          message: method + ' is not a safe read method. Use hsapi_request_execute with confirmMutation: true for mutations, or pass readOnly: true for catalog-marked read-only POSTs like CRM search.'
+        },
+        command: { method, path: args.path }
+      };
+    }
+    const argv = requestArgv(args);
+    const options = {
+      requireCatalog: args.requireCatalog !== false,
+      readOnlyPostAllowed: readOnly
+    };
+    if (!boolArg(args, 'showRequest', false)) {
+      const endpoint = offlineEndpointForRequest(args);
+      if (endpoint) {
+        if (!offlineReadExecutionAllowed(endpoint, options)) {
+          return {
+            ok: false, executed: false, blocked: true,
+            error: {
+              code: 'mutation_not_allowed',
+              message: 'This endpoint modifies data. Use hsapi_request_execute with confirmMutation: true after reviewing the preview.'
+            },
+            command: { argv },
+            safety: offlineSafetySummary(endpoint, options)
+          };
+        }
+        return executeOfflineRead(argv, args, endpoint, options);
+      }
+      if (!endpoint && options.requireCatalog === false && SAFE_METHODS.has(method)) {
+        return executeOfflineRead(argv, args, null, options);
+      }
+    }
+    return executeMustRead(argv, args, options);
   }
 
   throw new Error('Unknown tool: ' + name);
