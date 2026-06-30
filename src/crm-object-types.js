@@ -473,6 +473,8 @@ async function resolveCrmObjectTypeWithCustomFallback(portal, input, flags) {
 // listings, services, appointments, courses, leads, feedback_submissions,
 // goals), custom objects, and anything unresolved - stays 'admin'. This set is
 // generic to HubSpot's user-app support, not portal-specific.
+// 'contracts' is registered in our OAuth app scope but HubSpot warns it may 403
+// for user-level apps at runtime — included anyway so the OAuth token is tried.
 const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
   'contacts',
   'companies',
@@ -489,7 +491,8 @@ const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
   'notes',
   'calls',
   'meetings',
-  'emails'
+  'emails',
+  'contracts'
 ]);
 
 // Map a resolveCrmObjectType / resolveCrmObjectTypeWithCustomFallback result to
