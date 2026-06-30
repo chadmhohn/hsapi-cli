@@ -1244,7 +1244,7 @@ function authTokenExchangeBodyFromFlags(flags) {
 
 // Pure helper (issue #77): build the HubSpot OAuth authorize URL for the
 // interactive `hsapi auth login` loopback flow. No I/O — unit-testable.
-function buildAuthorizeUrl({ authorizeUrlBase, clientId, redirectUrl, scopes, optionalScopes, state }) {
+function buildAuthorizeUrl({ authorizeUrlBase, clientId, redirectUrl, scopes, optionalScopes, state, codeChallenge }) {
   const base = authorizeUrlBase || 'https://app.hubspot.com';
   const url = new URL('/oauth/authorize', base);
   // URLSearchParams handles encoding. HubSpot expects space-joined scope and
@@ -1258,6 +1258,12 @@ function buildAuthorizeUrl({ authorizeUrlBase, clientId, redirectUrl, scopes, op
     : [];
   if (optionalScopeList.length) url.searchParams.set('optional_scope', optionalScopeList.join(' '));
   if (state) url.searchParams.set('state', String(state));
+  // PKCE (RFC 7636): HubSpot user-level apps require an S256 code challenge on the
+  // authorize request; the matching code_verifier is sent at token exchange.
+  if (codeChallenge) {
+    url.searchParams.set('code_challenge', String(codeChallenge));
+    url.searchParams.set('code_challenge_method', 'S256');
+  }
   return url;
 }
 

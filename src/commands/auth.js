@@ -389,9 +389,13 @@ function openBrowser(url) {
     let command;
     let args;
     if (process.platform === 'win32') {
-      command = 'cmd';
-      // The empty "" is the window title arg start expects.
-      args = ['/c', 'start', '', target];
+      // Open via PowerShell Start-Process rather than `cmd /c start "" <url>`:
+      // cmd treats `&` in the URL as a command separator (even when the URL is
+      // quoted), which truncates the OAuth authorize URL at the first query
+      // parameter — dropping redirect_uri, scope, and state. PowerShell receives
+      // the URL as a single-quoted literal, so `&` is preserved.
+      command = 'powershell.exe';
+      args = ['-NoProfile', '-NonInteractive', '-Command', `Start-Process '${target.replace(/'/g, "''")}'`];
     } else if (process.platform === 'darwin') {
       command = 'open';
       args = [target];
@@ -459,8 +463,20 @@ function awaitOAuthCallback({ port, path: callbackPath, expectedState, timeoutMs
 
 // Exchange the authorization code for tokens. Mirrors refreshOAuthCredential's
 // fetch + HubSpot error handling style. Secrets are never surfaced.
-async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code) {
+async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code, codeVerifier) {
   const tokenUrl = new URL(oauth.tokenUrlPath, portal.baseUrl);
+  // PKCE: send the code_verifier matching the authorize request's S256 challenge.
+  // client_secret is included only when configured — HubSpot user-level apps may
+  // accept a confidential client + PKCE; if the exchange is later found to reject
+  // a secret on this public-client flow, drop client_secret here.
+  const exchangeBody = {
+    grant_type: 'authorization_code',
+    client_id: env.clientId,
+    redirect_uri: redirectUrl,
+    code
+  };
+  if (codeVerifier) exchangeBody.code_verifier = codeVerifier;
+  if (env.clientSecret) exchangeBody.client_secret = env.clientSecret;
   let response;
   try {
     response = await fetch(tokenUrl, {
@@ -469,13 +485,7 @@ async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code) 
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: env.clientId,
-        client_secret: env.clientSecret,
-        redirect_uri: redirectUrl,
-        code
-      })
+      body: new URLSearchParams(exchangeBody)
     });
   } catch (error) {
     fail(`auth login token exchange failed for portal "${portal.name}": network_error ${error.message}`);
@@ -529,13 +539,18 @@ async function runAuthLogin(flags) {
     : DEFAULT_LOGIN_TIMEOUT_MS;
 
   const state = crypto.randomBytes(16).toString('hex');
+  // PKCE (RFC 7636, S256): HubSpot user-level apps require a code challenge on the
+  // authorize request; the matching verifier is sent at token exchange.
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   const authorizeUrl = buildAuthorizeUrl({
     authorizeUrlBase: oauth.authorizeUrlBase,
     clientId: env.clientId,
     redirectUrl: oauth.redirectUrl,
     scopes: oauth.scopes,
     optionalScopes: oauth.optionalScopes,
-    state
+    state,
+    codeChallenge
   });
 
   // Always print the URL so the user can open it manually if the browser does
@@ -544,7 +559,7 @@ async function runAuthLogin(flags) {
   openBrowser(authorizeUrl);
 
   const code = await awaitOAuthCallback({ port, path: callbackPath, expectedState: state, timeoutMs });
-  const payload = await exchangeAuthorizationCode(portal, oauth, env, oauth.redirectUrl, code);
+  const payload = await exchangeAuthorizationCode(portal, oauth, env, oauth.redirectUrl, code, codeVerifier);
   const cache = oauthTokenCacheFromRefreshPayload(payload, oauth);
   writeOAuthTokenCache(oauth.tokenCachePath, cache);
 

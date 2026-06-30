@@ -6298,6 +6298,21 @@ test('87 Issue #77: buildAuthorizeUrl + parseOAuthCallback pure helpers', () => 
   assert.strictEqual(url.searchParams.get('scope'), 'crm.objects.contacts.read oauth');
   assert.strictEqual(url.searchParams.get('optional_scope'), 'crm.objects.deals.read');
   assert.strictEqual(url.searchParams.get('state'), 'state-xyz');
+  // no PKCE params when codeChallenge is omitted
+  assert.strictEqual(url.searchParams.has('code_challenge'), false);
+  assert.strictEqual(url.searchParams.has('code_challenge_method'), false);
+
+  // PKCE S256: codeChallenge present → both params emitted.
+  const urlWithPkce = buildAuthorizeUrl({
+    authorizeUrlBase: 'https://app.hubspot.com',
+    clientId: 'client-abc',
+    redirectUrl: 'http://localhost:5123/callback',
+    scopes: ['oauth'],
+    state: 'state-xyz',
+    codeChallenge: 'testchallenge'
+  });
+  assert.strictEqual(urlWithPkce.searchParams.get('code_challenge'), 'testchallenge');
+  assert.strictEqual(urlWithPkce.searchParams.get('code_challenge_method'), 'S256');
 
   // optional_scope omitted when there are no optional scopes; default base used.
   const minimal = buildAuthorizeUrl({
