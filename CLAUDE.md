@@ -28,3 +28,14 @@ Rules:
 - Keep real portal config outside the package and point to it with `HSAPI_PORTALS_CONFIG`.
 - Use `--show-request` before live HubSpot calls.
 - Mutations require `--yes`; dangerous schema operations may require an additional danger flag.
+
+## MCP Tool Selection (for agents using the MCP server)
+
+**Default to the read-only execute variants** — they are annotated `readOnlyHint: true` and can be always-approved by the MCP client without exposing mutations:
+
+- `hsapi_command_execute_read` for typed commands (list, get, search, etc.)
+- `hsapi_request_execute_read` for raw GET/HEAD/OPTIONS requests or catalog-marked read-only POSTs (search)
+
+Switch to `hsapi_command_execute` / `hsapi_request_execute` **only when you need to write data** (create, update, delete). Those require `confirmMutation: true` and always show a blocked preview first.
+
+The six catalog/meta tools (`hsapi_profiles_list`, `hsapi_catalog_coverage`, `hsapi_catalog_commands`, `hsapi_auth_doctor`, `hsapi_context_doc`, `hsapi_command_help`) are also `readOnlyHint: true`. Full tool surface and Co-Work always-approve setup: `docs/MCP.md`.
