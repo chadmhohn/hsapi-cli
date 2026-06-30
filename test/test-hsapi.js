@@ -213,7 +213,7 @@ function startServer() {
         res.writeHead(200, headers);
         res.end(JSON.stringify({
           access_token: 'refreshed-access-token',
-          refresh_token: 'server-refresh-token-should-not-cache',
+          refresh_token: 'server-rotated-refresh-token',
           token_type: 'bearer',
           expires_in: 1800
         }));
@@ -881,7 +881,9 @@ test('07 block (7)', async () => {
     assert(toolNames.includes('hsapi_catalog_commands'));
     assert(toolNames.includes('hsapi_auth_doctor'));
     assert(toolNames.includes('hsapi_command_execute'));
+    assert(toolNames.includes('hsapi_command_execute_read'));
     assert(toolNames.includes('hsapi_request_execute'));
+    assert(toolNames.includes('hsapi_request_execute_read'));
     const profiles = mcpStructuredContent(mcp.responses[2]);
     assert.strictEqual(profiles.ok, true);
     assert.strictEqual(profiles.profiles[0].name, 'test');
@@ -1615,6 +1617,11 @@ test('19 Issue #19: tool annotations + initialize instructions for modern MCP cl
       assert.strictEqual(byName[executeTool].annotations.readOnlyHint, false, executeTool);
       assert.strictEqual(byName[executeTool].annotations.destructiveHint, true, executeTool);
       assert.strictEqual(byName[executeTool].annotations.openWorldHint, true, executeTool);
+    }
+    for (const readTool of ['hsapi_command_execute_read', 'hsapi_request_execute_read']) {
+      assert.strictEqual(byName[readTool].annotations.readOnlyHint, true, readTool);
+      assert.strictEqual(byName[readTool].annotations.destructiveHint, false, readTool);
+      assert.strictEqual(byName[readTool].annotations.openWorldHint, true, readTool);
     }
 
 });
@@ -2484,7 +2491,7 @@ test('38 block (21)', async () => {
       assert.strictEqual(result.status, 0, result.stderr || result.stdout);
       assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1, 'developer client-credentials cache must not satisfy OAuth endpoints');
       assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer refreshed-access-token');
-      assert.strictEqual(JSON.parse(fs.readFileSync(oauthCachePath, 'utf8')).schema, 'hsapi.oauthTokenCache.v1');
+      assert.strictEqual(JSON.parse(fs.readFileSync(oauthCachePath, 'utf8')).schema, 'hsapi.oauthTokenCache.v2');
       assert.strictEqual(JSON.parse(fs.readFileSync(developerCachePath, 'utf8')).schema, DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA);
       assert(!result.stdout.includes('developer-cache-should-not-satisfy-oauth'), 'OAuth output must not leak or reuse developer cache tokens');
     }
@@ -3355,6 +3362,12 @@ test('73 127.0.0.1\');', async () => {
         catalog.endpoints.find((endpoint) => endpoint.name === name).auth = {
           family: AUTH_FAMILIES.OAUTH,
           subtype: 'installed_app',
+          // Issue #80: OAuth is the per-user identity. A user-audience endpoint on
+          // this OAuth-only portal resolves to OAuth; without tokenAudience it would
+          // default to 'admin' and hit the admin-only-oauth hard-fail (no
+          // portalBearer/developer to fall back to). Mark these user-scoped, as a
+          // real catalog entry for a user-OAuth endpoint would.
+          tokenAudience: 'user',
           fallback: 'none'
         };
       }
@@ -3483,15 +3496,21 @@ test('73 127.0.0.1\');', async () => {
       assert.strictEqual(tokenBody.get('grant_type'), 'refresh_token');
       assert.strictEqual(tokenBody.get('refresh_token'), 'refresh-token');
       const cache = JSON.parse(fs.readFileSync(refreshCachePath, 'utf8'));
-      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v1');
+      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v2');
       assert.strictEqual(cache.accessToken, 'refreshed-access-token');
       assert.strictEqual(cache.source.refreshTokenEnv, 'HSAPI_OAUTH_REFRESH_TOKEN');
-      assert(!JSON.stringify(cache).includes('server-refresh-token-should-not-cache'), 'refresh token responses must not be stored in the access-token cache');
+      // Issue #78: HubSpot may rotate the refresh token on a refresh grant. The
+      // rotated value must be persisted to the cache (so a future refresh works
+      // even without a refreshTokenEnv) but must never appear in stdout.
+      assert.strictEqual(cache.refreshToken, 'server-rotated-refresh-token', 'rotated refresh token must be persisted in the OAuth cache');
       assert(!result.stdout.includes('refreshed-access-token'), 'OAuth access token must not appear in command output');
+      assert(!result.stdout.includes('server-rotated-refresh-token'), 'rotated refresh token must not appear in command output');
       assert(!result.stdout.includes('refresh-token'), 'OAuth refresh token must not appear in command output');
     }
 
     {
+      // Missing client secret (env-sourced) must fail before any network call,
+      // citing the missing client secret env var.
       const missingEnvCachePath = path.join(oauthDir, 'missing-env-cache.json');
       const before = requests.length;
       const result = await run(['account', 'details'], {
@@ -3500,12 +3519,30 @@ test('73 127.0.0.1\');', async () => {
         HSAPI_CATALOG_FILE: oauthCatalog,
         HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
-        HSAPI_OAUTH_REFRESH_TOKEN: ''
+        HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token'
       });
       assert.notStrictEqual(result.status, 0);
       assert.match(result.stderr, /HSAPI_OAUTH_CLIENT_SECRET/);
-      assert.match(result.stderr, /HSAPI_OAUTH_REFRESH_TOKEN/);
       assert.strictEqual(requests.length, before, 'missing OAuth env vars must fail before refresh or endpoint execution');
+    }
+
+    {
+      // Issue #78: no cached refresh token and no refreshTokenEnv value -> a
+      // clear, actionable error pointing at `hsapi auth login`, before network.
+      const noRefreshCachePath = path.join(oauthDir, 'no-refresh-source-cache.json');
+      const before = requests.length;
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: oauthConfigForCache(noRefreshCachePath),
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
+        HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+        HSAPI_OAUTH_REFRESH_TOKEN: ''
+      });
+      assert.notStrictEqual(result.status, 0);
+      assert.match(result.stderr, /No refresh token available for portal "test"/);
+      assert.match(result.stderr, /hsapi auth login --portal test/);
+      assert.strictEqual(requests.length, before, 'missing refresh token must fail before refresh or endpoint execution');
     }
 
     {
@@ -3526,6 +3563,89 @@ test('73 127.0.0.1\');', async () => {
       assert(!result.stderr.includes('server-refresh-token-should-redact'), 'failed refresh error must not print response token fields');
       assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1);
       assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount, 'failed refresh must not call the target endpoint');
+    }
+
+    {
+      // Issue #78: a legacy v1 cache (no refreshToken field) with a still-usable
+      // access token must remain readable and be used without a refresh.
+      const v1CachePath = path.join(oauthDir, 'v1-backcompat-cache.json');
+      fs.writeFileSync(v1CachePath, JSON.stringify({
+        schema: 'hsapi.oauthTokenCache.v1',
+        family: AUTH_FAMILIES.OAUTH,
+        tokenType: 'bearer',
+        accessToken: 'v1-cached-access-token',
+        expiresIn: 1800,
+        expiresAt: '2999-01-01T00:00:00.000Z',
+        refreshedAt: '2026-05-15T00:00:00.000Z'
+      }, null, 2));
+      const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+      const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: oauthConfigForCache(v1CachePath),
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_SECRET: '',
+        HSAPI_OAUTH_REFRESH_TOKEN: ''
+      });
+      assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+      assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken, 'usable v1 cache must not refresh');
+      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount + 1);
+      assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer v1-cached-access-token');
+    }
+
+    {
+      // Issue #78: with refreshTokenEnv absent from config, an expired access
+      // token must refresh using the refresh token persisted in the cache. The
+      // new access token + rotated refresh token are written back as v2.
+      const cachedRefreshConfig = writeTempConfig(baseUrl, {
+        tokenEnv: null,
+        auth: {
+          defaultFamily: AUTH_FAMILIES.OAUTH,
+          oauth: {
+            clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+            clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+            tokenCachePath: path.join(oauthDir, 'cached-refresh-no-env-cache.json')
+          }
+        }
+      });
+      const cachedRefreshCachePath = path.join(oauthDir, 'cached-refresh-no-env-cache.json');
+      fs.writeFileSync(cachedRefreshCachePath, JSON.stringify({
+        schema: 'hsapi.oauthTokenCache.v2',
+        family: AUTH_FAMILIES.OAUTH,
+        tokenType: 'bearer',
+        accessToken: 'expired-access-token',
+        refreshToken: 'cache-stored-refresh-token',
+        expiresIn: 1800,
+        expiresAt: '2000-01-01T00:00:00.000Z',
+        refreshedAt: '1999-12-31T23:30:00.000Z'
+      }, null, 2));
+      const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+      const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
+      const result = await run(['account', 'details'], {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: cachedRefreshConfig,
+        HSAPI_CATALOG_FILE: oauthCatalog,
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
+        HSAPI_OAUTH_CLIENT_SECRET: 'client-secret'
+      });
+      assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+      assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken + 1, 'expired cache with cached refresh token must refresh once');
+      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount + 1);
+      assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer refreshed-access-token');
+      const tokenRequest = requests.filter((request) => {
+        const url = new URL(request.url, 'http://127.0.0.1');
+        return request.method === 'POST' && url.pathname === '/oauth/2026-03/token';
+      }).at(-1);
+      const tokenBody = new URLSearchParams(tokenRequest.body);
+      assert.strictEqual(tokenBody.get('grant_type'), 'refresh_token');
+      assert.strictEqual(tokenBody.get('refresh_token'), 'cache-stored-refresh-token', 'refresh must use the cache-stored refresh token');
+      const cache = JSON.parse(fs.readFileSync(cachedRefreshCachePath, 'utf8'));
+      assert.strictEqual(cache.schema, 'hsapi.oauthTokenCache.v2');
+      assert.strictEqual(cache.accessToken, 'refreshed-access-token');
+      assert.strictEqual(cache.refreshToken, 'server-rotated-refresh-token', 'rotated refresh token must replace the cached one');
+      assert(!result.stdout.includes('cache-stored-refresh-token'), 'cached refresh token must not appear in output');
+      assert(!result.stdout.includes('server-rotated-refresh-token'), 'rotated refresh token must not appear in output');
     }
 
 });
@@ -6164,4 +6284,566 @@ test('86 Issue #66: tranche-2 backfill - docs-discoverable surfaces are catalog-
     endpointId: 'objects.get'
   });
   assert.strictEqual(typedWins.endpoint.id, 'objects.get');
+});
+
+test('87 Issue #77: buildAuthorizeUrl + parseOAuthCallback pure helpers', () => {
+  const { buildAuthorizeUrl, parseOAuthCallback } = require('../src/command-inputs');
+
+  // buildAuthorizeUrl: scope + optional_scope + state present, correct base/path.
+  const url = buildAuthorizeUrl({
+    authorizeUrlBase: 'https://app.hubspot.com',
+    clientId: 'client-abc',
+    redirectUrl: 'http://localhost:5123/callback',
+    scopes: ['crm.objects.contacts.read', 'oauth'],
+    optionalScopes: ['crm.objects.deals.read'],
+    state: 'state-xyz'
+  });
+  assert.strictEqual(url.origin, 'https://app.hubspot.com');
+  assert.strictEqual(url.pathname, '/oauth/authorize');
+  assert.strictEqual(url.searchParams.get('client_id'), 'client-abc');
+  assert.strictEqual(url.searchParams.get('redirect_uri'), 'http://localhost:5123/callback');
+  assert.strictEqual(url.searchParams.get('scope'), 'crm.objects.contacts.read oauth');
+  assert.strictEqual(url.searchParams.get('optional_scope'), 'crm.objects.deals.read');
+  assert.strictEqual(url.searchParams.get('state'), 'state-xyz');
+  // no PKCE params when codeChallenge is omitted
+  assert.strictEqual(url.searchParams.has('code_challenge'), false);
+  assert.strictEqual(url.searchParams.has('code_challenge_method'), false);
+
+  // PKCE S256: codeChallenge present → both params emitted.
+  const urlWithPkce = buildAuthorizeUrl({
+    authorizeUrlBase: 'https://app.hubspot.com',
+    clientId: 'client-abc',
+    redirectUrl: 'http://localhost:5123/callback',
+    scopes: ['oauth'],
+    state: 'state-xyz',
+    codeChallenge: 'testchallenge'
+  });
+  assert.strictEqual(urlWithPkce.searchParams.get('code_challenge'), 'testchallenge');
+  assert.strictEqual(urlWithPkce.searchParams.get('code_challenge_method'), 'S256');
+
+  // optional_scope omitted when there are no optional scopes; default base used.
+  const minimal = buildAuthorizeUrl({
+    clientId: 'c',
+    redirectUrl: 'http://127.0.0.1:9000/cb',
+    scopes: ['oauth'],
+    state: 's'
+  });
+  assert.strictEqual(minimal.origin, 'https://app.hubspot.com');
+  assert.strictEqual(minimal.searchParams.has('optional_scope'), false);
+
+  // parseOAuthCallback: success path returns the code.
+  const ok = parseOAuthCallback('/callback?code=auth-code-123&state=state-xyz', 'state-xyz', '/callback');
+  assert.deepStrictEqual(ok, { ok: true, code: 'auth-code-123' });
+
+  // state mismatch is rejected.
+  const mismatch = parseOAuthCallback('/callback?code=auth-code-123&state=wrong', 'state-xyz', '/callback');
+  assert.strictEqual(mismatch.ok, false);
+  assert.strictEqual(mismatch.error, 'state_mismatch');
+
+  // error query param is surfaced (with description when present).
+  const errored = parseOAuthCallback('/callback?error=access_denied&error_description=user%20declined&state=state-xyz', 'state-xyz', '/callback');
+  assert.strictEqual(errored.ok, false);
+  assert.match(errored.error, /access_denied/);
+  assert.match(errored.error, /user declined/);
+
+  // wrong path is ignored (so the loopback server can 404 it).
+  const wrongPath = parseOAuthCallback('/favicon.ico', 'state-xyz', '/callback');
+  assert.strictEqual(wrongPath.ok, false);
+  assert.strictEqual(wrongPath.ignore, true);
+
+  // missing code (even with matching state) is rejected.
+  const noCode = parseOAuthCallback('/callback?state=state-xyz', 'state-xyz', '/callback');
+  assert.strictEqual(noCode.ok, false);
+  assert.strictEqual(noCode.error, 'missing_code');
+});
+
+test('88 Issue #77: auth login prerequisite validation + auth logout (no sockets/browser)', async () => {
+  const loginDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-login-'));
+  const loginConfig = (tokenCachePath) => writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        clientIdEnv: 'HSAPI_LOGIN_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_LOGIN_CLIENT_SECRET',
+        tokenCachePath,
+        redirectUrl: 'http://localhost:5123/callback',
+        scopes: ['crm.objects.contacts.read', 'oauth']
+      }
+    }
+  });
+
+  // auth login --help must not crash (local action, falls back to usage).
+  const help = await run(['auth', 'login', '--help'], baseEnv);
+  assert.strictEqual(help.status, 0, help.stderr || help.stdout);
+
+  // Missing client id/secret env values -> clear failure listing what's missing,
+  // before any socket bind or browser launch.
+  {
+    const missingCachePath = path.join(loginDir, 'missing-cache.json');
+    const result = await run(['auth', 'login', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(missingCachePath),
+      HSAPI_LOGIN_CLIENT_ID: '',
+      HSAPI_LOGIN_CLIENT_SECRET: ''
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /missing required login configuration/);
+    assert.match(result.stderr, /HSAPI_LOGIN_CLIENT_ID/);
+    assert.match(result.stderr, /HSAPI_LOGIN_CLIENT_SECRET/);
+    assert.strictEqual(fs.existsSync(missingCachePath), false, 'failed login must not write a token cache');
+  }
+
+  // Missing redirectUrl/scopes -> failure naming the config fields.
+  {
+    const noLoginFieldsConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          clientIdEnv: 'HSAPI_LOGIN_CLIENT_ID',
+          clientSecretEnv: 'HSAPI_LOGIN_CLIENT_SECRET',
+          tokenCachePath: path.join(loginDir, 'no-fields-cache.json')
+        }
+      }
+    });
+    const result = await run(['auth', 'login', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: noLoginFieldsConfig,
+      HSAPI_LOGIN_CLIENT_ID: 'client-id',
+      HSAPI_LOGIN_CLIENT_SECRET: 'client-secret'
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /auth\.oauth\.redirectUrl/);
+    assert.match(result.stderr, /auth\.oauth\.scopes/);
+  }
+
+  // auth logout removes the cache when present and reports removed:true.
+  {
+    const cachePath = path.join(loginDir, 'logout-cache.json');
+    fs.writeFileSync(cachePath, JSON.stringify({
+      schema: 'hsapi.oauthTokenCache.v2',
+      family: AUTH_FAMILIES.OAUTH,
+      accessToken: 'logout-access-token',
+      refreshToken: 'logout-refresh-token'
+    }));
+    const result = await run(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(cachePath)
+    });
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    const output = parseJsonOutput(result);
+    assert.strictEqual(output.ok, true);
+    assert.strictEqual(output.action, 'logout');
+    assert.strictEqual(output.removed, true);
+    assert.strictEqual(fs.existsSync(cachePath), false, 'logout must delete the token cache file');
+    assert(!result.stdout.includes('logout-access-token'), 'logout must not print token values');
+    assert(!result.stdout.includes('logout-refresh-token'), 'logout must not print refresh token values');
+  }
+
+  // auth logout on a missing cache reports removed:false (idempotent).
+  {
+    const absentCachePath = path.join(loginDir, 'absent-cache.json');
+    const result = await run(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: loginConfig(absentCachePath)
+    });
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    assert.strictEqual(parseJsonOutput(result).removed, false);
+  }
+});
+
+test('89 Issue #80: least-privilege credential routing matrix', async () => {
+  const {
+    credentialSourceForAuth,
+    effectiveCredentialFamily,
+    requestAuthMetadata,
+  } = require('../src/auth-resolvers');
+
+  // Synthetic portal identities. effectiveCredentialFamily / credentialSourceForAuth
+  // only read portal.oauth / portal.portalBearer / portal.developer / portal.name,
+  // so these minimal shapes exercise the routing decision directly - simpler than a
+  // full CLI run for the pure-decision cases.
+  const portalBearerProfile = {
+    family: AUTH_FAMILIES.PORTAL_BEARER,
+    tokenEnv: 'HSAPI_TEST_TOKEN',
+    profileField: 'auth.portalBearer.tokenEnv',
+    provenance: 'explicit_profile',
+    kind: 'private_app'
+  };
+  const oauthProfile = {
+    family: AUTH_FAMILIES.OAUTH,
+    clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+    clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+    refreshTokenEnv: null,
+    tokenCachePath: path.join(os.tmpdir(), `hsapi-80-nonexistent-${process.pid}.json`),
+    tokenCachePathDisplay: '~/hsapi-80-nonexistent.json',
+    profileField: 'auth.oauth',
+    provenance: 'explicit_profile'
+  };
+  const bearerOnlyPortal = { name: 'test', baseUrl: baseUrl, portalBearer: portalBearerProfile, oauth: null, developer: null };
+  const bothPortal = { name: 'test', baseUrl: baseUrl, portalBearer: portalBearerProfile, oauth: oauthProfile, developer: null };
+  const oauthOnlyPortal = { name: 'test', baseUrl: baseUrl, portalBearer: null, oauth: oauthProfile, developer: null };
+
+  // The auth metadata a CRM data op carries: declared portal_bearer (the non-user
+  // credential) with the object's tokenAudience injected (issue #80).
+  const userAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'user', endpointId: 'objects.get' };
+  const adminAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'admin', endpointId: 'objects.get' };
+
+  // 1. portal_bearer-only profile: a CRM read/write resolves to portal_bearer
+  //    exactly as before, for BOTH audiences (unchanged / pre-#80 regression).
+  assert.strictEqual(effectiveCredentialFamily(bearerOnlyPortal, userAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  assert.strictEqual(effectiveCredentialFamily(bearerOnlyPortal, adminAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  {
+    const cs = credentialSourceForAuth(bearerOnlyPortal, adminAudienceAuth);
+    assert.strictEqual(cs.type, 'env');
+    assert.strictEqual(cs.identity, 'admin');
+    assert.strictEqual(cs.name, 'HSAPI_TEST_TOKEN');
+    // No OAuth identity, so even a user-audience op stays on the portal bearer.
+    const userCs = credentialSourceForAuth(bearerOnlyPortal, userAudienceAuth);
+    assert.strictEqual(userCs.type, 'env');
+    assert.strictEqual(userCs.tokenAudience, 'user');
+  }
+
+  // 2. user-audience + portal has oauth -> OAuth chosen (never falls back).
+  assert.strictEqual(effectiveCredentialFamily(bothPortal, userAudienceAuth), AUTH_FAMILIES.OAUTH);
+  assert.strictEqual(effectiveCredentialFamily(oauthOnlyPortal, userAudienceAuth), AUTH_FAMILIES.OAUTH);
+  {
+    const cs = credentialSourceForAuth(bothPortal, userAudienceAuth);
+    assert.strictEqual(cs.type, 'oauth_refresh_token');
+    assert.strictEqual(cs.identity, 'user');
+    assert.strictEqual(cs.tokenAudience, 'user');
+    // Promotion flag: declared portal_bearer was routed to the OAuth identity.
+    assert.strictEqual(cs.routedFromFamily, AUTH_FAMILIES.PORTAL_BEARER);
+  }
+
+  // 3. admin-audience + portal has BOTH oauth and portal_bearer -> portal_bearer.
+  assert.strictEqual(effectiveCredentialFamily(bothPortal, adminAudienceAuth), AUTH_FAMILIES.PORTAL_BEARER);
+  {
+    const cs = credentialSourceForAuth(bothPortal, adminAudienceAuth);
+    assert.strictEqual(cs.type, 'env');
+    assert.strictEqual(cs.identity, 'admin');
+    assert.strictEqual(cs.name, 'HSAPI_TEST_TOKEN');
+  }
+
+  // 4. admin-audience + portal has ONLY oauth -> hard-fail (no over-privileging
+  //    an admin op onto the user identity). effectiveCredentialFamily /
+  //    credentialSourceForAuth signal this via runtime fail() (which exits the
+  //    process), so it cannot be asserted in-process here - the CLI sub-block at
+  //    the end of this test drives the same hard-fail end-to-end and asserts the
+  //    "configure auth.portalBearer" message.
+
+  // requestAuthMetadata (the full metadata builder) reports the routed identity
+  // for a user-audience endpoint on the both-credential portal.
+  {
+    const meta = requestAuthMetadata(bothPortal, {
+      id: 'objects.get',
+      method: 'GET',
+      pathTemplate: '/crm/objects/2026-03/{objectType}/{id}',
+      auth: { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'user', fallback: 'none' }
+    });
+    assert.strictEqual(meta.tokenAudience, 'user');
+    assert.strictEqual(meta.credentialSource.identity, 'user');
+    assert.strictEqual(meta.credentialSource.type, 'oauth_refresh_token');
+  }
+
+  // --- CLI object-classification via --show-request (audience follows the OBJECT) ---
+
+  // A capable standard object ("deals") is user-audience; a custom object
+  // ("2-12345") is admin-audience. Assert on the resolved catalog endpoint id
+  // (preserved) plus the injected tokenAudience.
+  const dealsShow = await expectShowRequest(['crm', 'get', 'deals', '101'], baseEnv, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/deals/101',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(dealsShow.auth.tokenAudience, 'user', 'deals is a user-capable standard object');
+  assert.strictEqual(dealsShow.auth.credentialSource.tokenAudience, 'user');
+
+  const customShow = await expectShowRequest(['crm', 'get', '2-12345', '101'], baseEnv, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/2-12345/101',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(customShow.auth.tokenAudience, 'admin', 'custom object types are admin-audience');
+  assert.strictEqual(customShow.auth.credentialSource.tokenAudience, 'admin');
+
+  // DELETE is always admin-audience regardless of object type: HubSpot user-level
+  // OAuth apps return 403 on any CRM delete (live-validated 2026-06-30, issue #80).
+  const dealsArchiveShow = await expectShowRequest(['crm', 'archive', 'deals', '101'], baseEnv, {
+    requests,
+    method: 'DELETE',
+    pathname: '/crm/objects/2026-03/deals/101'
+  });
+  assert.strictEqual(dealsArchiveShow.auth.tokenAudience, 'admin');
+
+  // --- CLI credential-selection on an OAuth-capable portal (oauth + portal_bearer) ---
+  const routingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-80-'));
+  const freshOauthCachePath = path.join(routingDir, 'fresh-oauth-cache.json');
+  fs.writeFileSync(freshOauthCachePath, JSON.stringify({
+    schema: 'hsapi.oauthTokenCache.v2',
+    family: AUTH_FAMILIES.OAUTH,
+    tokenType: 'bearer',
+    accessToken: 'routing-cached-access-token',
+    refreshToken: 'routing-cached-refresh-token',
+    expiresIn: 1800,
+    expiresAt: '2999-01-01T00:00:00.000Z',
+    refreshedAt: '2026-05-15T00:00:00.000Z'
+  }, null, 2));
+  const dualConfig = (tokenCachePath) => writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+      oauth: {
+        clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+        refreshTokenEnv: 'HSAPI_OAUTH_REFRESH_TOKEN',
+        tokenCachePath
+      },
+      portalBearer: {
+        tokenEnv: 'HSAPI_TEST_EXPLICIT_TOKEN',
+        kind: 'private_app'
+      }
+    }
+  });
+  const dualEnv = (tokenCachePath, overrides = {}) => ({
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: dualConfig(tokenCachePath),
+    HSAPI_TEST_EXPLICIT_TOKEN: 'explicit-portal-bearer-token',
+    HSAPI_OAUTH_CLIENT_ID: 'client-id',
+    HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+    HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token',
+    ...overrides
+  });
+
+  // deals (user-audience) on a dual portal -> the OAuth user identity, with the
+  // promotion flagged. Custom object (admin) on the SAME portal -> portal_bearer.
+  {
+    const dealsCs = await expectShowRequest(['crm', 'get', 'deals', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/crm/objects/2026-03/deals/101',
+      endpointId: 'objects.get'
+    });
+    assert.strictEqual(dealsCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(dealsCs.auth.credentialSource.identity, 'user');
+    assert.strictEqual(dealsCs.auth.credentialSource.routedFromFamily, AUTH_FAMILIES.PORTAL_BEARER);
+    assert(!JSON.stringify(dealsCs).includes('routing-cached-access-token'), 'show-request must not leak cached token values');
+
+    const customCs = await expectShowRequest(['crm', 'get', '2-12345', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/crm/objects/2026-03/2-12345/101',
+      endpointId: 'objects.get'
+    });
+    assert.strictEqual(customCs.auth.credentialSource.type, 'env');
+    assert.strictEqual(customCs.auth.credentialSource.identity, 'admin');
+    assert.strictEqual(customCs.auth.credentialSource.name, 'HSAPI_TEST_EXPLICIT_TOKEN');
+  }
+
+  // A real (non-show-request) user-audience read on a dual portal uses the cached
+  // OAuth access token - NOT the portal bearer - confirming OAuth is chosen at
+  // execution time and the portal bearer is never sent for a user-audience op.
+  {
+    const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
+    const beforeContacts = requestCount(requests, 'GET', '/crm/objects/2026-03/contacts');
+    const result = await run(['crm', 'list', 'contacts', '--limit', '1'], dualEnv(freshOauthCachePath, {
+      // No env for portal bearer value either, to prove it is not used.
+      HSAPI_TEST_EXPLICIT_TOKEN: 'explicit-portal-bearer-token'
+    }));
+    assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+    assert.strictEqual(requestCount(requests, 'GET', '/crm/objects/2026-03/contacts'), beforeContacts + 1);
+    assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken, 'fresh OAuth cache must not refresh');
+    assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer routing-cached-access-token', 'user-audience read must use the OAuth user token, not the portal bearer');
+    assert.notStrictEqual(requests.at(-1).headers.authorization, 'Bearer explicit-portal-bearer-token');
+  }
+
+  // user-audience + portal has oauth but the OAuth cache is empty AND
+  // unrefreshable (no cached refresh token, no refreshTokenEnv value) -> hard
+  // FAIL with the `hsapi auth login` message, before any network call. It must
+  // NOT silently fall back to the portal bearer.
+  {
+    const emptyCachePath = path.join(routingDir, 'empty-oauth-cache.json');
+    const before = requests.length;
+    const result = await run(['crm', 'list', 'deals', '--limit', '1'], dualEnv(emptyCachePath, {
+      HSAPI_OAUTH_REFRESH_TOKEN: ''
+    }));
+    assert.notStrictEqual(result.status, 0, 'user-audience op with no usable OAuth credential must fail');
+    assert.match(result.stderr, /No refresh token available for portal "test"/);
+    assert.match(result.stderr, /hsapi auth login --portal test/);
+    assert.strictEqual(requests.length, before, 'failed OAuth resolution must not fall back to the portal bearer or call any endpoint');
+    assert(!result.stderr.includes('explicit-portal-bearer-token'), 'failure must not leak or use the portal bearer token');
+  }
+
+  // admin-audience op (custom object) on an OAuth-ONLY portal via the CLI ->
+  // hard-fail with the actionable "configure auth.portalBearer" message.
+  {
+    const oauthOnlyConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          clientIdEnv: 'HSAPI_OAUTH_CLIENT_ID',
+          clientSecretEnv: 'HSAPI_OAUTH_CLIENT_SECRET',
+          refreshTokenEnv: 'HSAPI_OAUTH_REFRESH_TOKEN',
+          tokenCachePath: freshOauthCachePath
+        }
+      }
+    });
+    const before = requests.length;
+    const result = await run(['crm', 'get', '2-12345', '101'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: oauthOnlyConfig,
+      HSAPI_OAUTH_CLIENT_ID: 'client-id',
+      HSAPI_OAUTH_CLIENT_SECRET: 'client-secret',
+      HSAPI_OAUTH_REFRESH_TOKEN: 'refresh-token'
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /only has an OAuth identity/);
+    assert.match(result.stderr, /Configure auth\.portalBearer/);
+    assert.strictEqual(requests.length, before, 'admin-only-oauth hard-fail must happen before any network call');
+  }
+});
+
+test('90 Issue #81: auth whoami — portal identity + OAuth cache status', async () => {
+  const whoamiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-whoami-'));
+  const missingCachePath = path.join(whoamiDir, 'oauth-cache.json');
+  const whoamiConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+      portalBearer: { tokenEnv: 'HSAPI_WHOAMI_TOKEN', kind: 'private_app' },
+      oauth: {
+        clientIdEnv: 'HSAPI_WHOAMI_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_WHOAMI_CLIENT_SECRET',
+        tokenCachePath: missingCachePath
+      }
+    }
+  });
+  const whoamiEnv = {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: whoamiConfig,
+    HSAPI_WHOAMI_TOKEN: 'whoami-portal-token',
+    HSAPI_WHOAMI_CLIENT_ID: 'whoami-client-id',
+    HSAPI_WHOAMI_CLIENT_SECRET: 'whoami-client-secret'
+  };
+
+  // Missing cache → status 'missing', hint present, no network call.
+  const before = requests.length;
+  const out = parseJsonOutput(await run(['auth', 'whoami', '--portal', 'test'], whoamiEnv));
+  assert.strictEqual(out.ok, true);
+  assert.strictEqual(out.portal, 'test');
+  assert(out.authFamilies.includes(AUTH_FAMILIES.PORTAL_BEARER));
+  assert(out.authFamilies.includes(AUTH_FAMILIES.OAUTH));
+  assert.strictEqual(out.oauth.status, 'missing');
+  assert(typeof out.oauth.hint === 'string' && out.oauth.hint.includes('auth login'));
+  assert(out.portalBearer.envSet, 'portalBearer.envSet should be true when env var is set');
+  assert(Array.isArray(out.adminOnlyOperations) && out.adminOnlyOperations.length > 0);
+  assert.strictEqual(requests.length, before, 'auth whoami must not make a network request');
+  assert(!JSON.stringify(out).includes('whoami-portal-token'), 'whoami must not print token values');
+
+  // Usable cache → status 'usable', no hint.
+  const freshCachePath = path.join(whoamiDir, 'fresh-cache.json');
+  fs.writeFileSync(freshCachePath, JSON.stringify({
+    schema: 'hsapi.oauthTokenCache.v2',
+    family: AUTH_FAMILIES.OAUTH,
+    tokenType: 'bearer',
+    accessToken: 'whoami-access-token',
+    refreshToken: 'whoami-refresh-token',
+    expiresIn: 1800,
+    expiresAt: '2999-01-01T00:00:00.000Z',
+    refreshedAt: '2026-06-30T00:00:00.000Z'
+  }, null, 2));
+  const freshConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      oauth: {
+        clientIdEnv: 'HSAPI_WHOAMI_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_WHOAMI_CLIENT_SECRET',
+        tokenCachePath: freshCachePath
+      }
+    }
+  });
+  const freshOut = parseJsonOutput(await run(['auth', 'whoami', '--portal', 'test'], {
+    ...whoamiEnv,
+    HSAPI_PORTALS_CONFIG: freshConfig
+  }));
+  assert.strictEqual(freshOut.ok, true);
+  assert.strictEqual(freshOut.oauth.status, 'usable');
+  assert(!freshOut.oauth.hint, 'hint should be absent when token is usable');
+  assert(!JSON.stringify(freshOut).includes('whoami-access-token'), 'whoami must not print raw token values');
+});
+
+test('91 Issue #85: hsapi_command_execute_read and hsapi_request_execute_read — read-only', async () => {
+  // Issue #85: read-only MCP execute variants carry readOnlyHint: true so Co-Work
+  // can always-approve them. Reads execute; mutations return mutation_not_allowed
+  // (not mutation_blocked) so there is no confirmMutation escape hatch.
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  const mcp = await runMcpConversation([
+    {
+      jsonrpc: '2.0', id: 1, method: 'initialize',
+      params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'hsapi-test-ro', version: '0.0.0' } }
+    },
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    // 1: read command (crm list contacts) via execute_read → executes
+    {
+      jsonrpc: '2.0', id: 2, method: 'tools/call',
+      params: { name: 'hsapi_command_execute_read', arguments: { portal: 'test', argv: ['crm', 'list', 'contacts', '--limit', '1'] } }
+    },
+    // 2: mutation command (crm create) via execute_read → mutation_not_allowed
+    {
+      jsonrpc: '2.0', id: 3, method: 'tools/call',
+      params: { name: 'hsapi_command_execute_read', arguments: { portal: 'test', argv: ['crm', 'create', 'contacts', '--properties', '{"email":"x@test.com"}'] } }
+    },
+    // 3: GET request via request_execute_read → executes
+    {
+      jsonrpc: '2.0', id: 4, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'GET', path: '/crm/objects/2026-03/contacts' } }
+    },
+    // 4: DELETE request via request_execute_read → mutation_not_allowed (no preview needed)
+    {
+      jsonrpc: '2.0', id: 5, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'DELETE', path: '/crm/v3/objects/contacts/1' } }
+    },
+    // 5: POST without readOnly via request_execute_read → mutation_not_allowed
+    {
+      jsonrpc: '2.0', id: 6, method: 'tools/call',
+      params: { name: 'hsapi_request_execute_read', arguments: { portal: 'test', method: 'POST', path: '/crm/v3/objects/contacts' } }
+    }
+  ], env, 6);
+
+  assert.strictEqual(mcp.stderr, '');
+
+  // 1: read command executed successfully
+  const readCmd = mcpStructuredContent(mcp.responses[1]);
+  assert.strictEqual(readCmd.ok, true, 'execute_read: crm list should succeed');
+  assert.strictEqual(readCmd.executed, true, 'execute_read: crm list should be executed');
+  assert(!readCmd.blocked, 'execute_read: read must not be blocked');
+
+  // 2: mutation command blocked with mutation_not_allowed
+  const mutateCmd = mcpStructuredContent(mcp.responses[2]);
+  assert.strictEqual(mutateCmd.ok, false, 'execute_read: crm create must be blocked');
+  assert.strictEqual(mutateCmd.executed, false, 'execute_read: crm create must not execute');
+  assert.strictEqual(mutateCmd.blocked, true, 'execute_read: crm create must set blocked');
+  assert.strictEqual(mutateCmd.error.code, 'mutation_not_allowed', 'execute_read: must use mutation_not_allowed code');
+
+  // 3: GET request executed successfully
+  const getReq = mcpStructuredContent(mcp.responses[3]);
+  assert.strictEqual(getReq.ok, true, 'request_execute_read: GET should succeed');
+  assert.strictEqual(getReq.executed, true, 'request_execute_read: GET should be executed');
+
+  // 4: DELETE blocked immediately (no preview round-trip)
+  const deleteReq = mcpStructuredContent(mcp.responses[4]);
+  assert.strictEqual(deleteReq.ok, false, 'request_execute_read: DELETE must be blocked');
+  assert.strictEqual(deleteReq.blocked, true, 'request_execute_read: DELETE must set blocked');
+  assert.strictEqual(deleteReq.error.code, 'mutation_not_allowed', 'request_execute_read: DELETE must use mutation_not_allowed');
+  assert(!deleteReq.preview, 'request_execute_read: DELETE must not run a preview round-trip');
+
+  // 5: POST without readOnly blocked immediately
+  const postReq = mcpStructuredContent(mcp.responses[5]);
+  assert.strictEqual(postReq.ok, false, 'request_execute_read: unsafe POST must be blocked');
+  assert.strictEqual(postReq.error.code, 'mutation_not_allowed', 'request_execute_read: unsafe POST must use mutation_not_allowed');
 });

@@ -20,7 +20,15 @@
           "clientIdEnv": "HUBSPOT_CLIENT_ID_EXAMPLE",
           "clientSecretEnv": "HUBSPOT_CLIENT_SECRET_EXAMPLE",
           "refreshTokenEnv": "HUBSPOT_REFRESH_TOKEN_EXAMPLE",
-          "tokenCachePath": "~/.config/hsapi/oauth/example-token-cache.json"
+          "tokenCachePath": "~/.config/hsapi/oauth/example-token-cache.json",
+          "redirectUrl": "http://localhost:5123/callback",
+          "scopes": [
+            "oauth",
+            "crm.objects.contacts.read"
+          ],
+          "optionalScopes": [
+            "crm.objects.deals.read"
+          ]
         },
         "developer": {
           "personalAccessKeyEnv": "HUBSPOT_PERSONAL_ACCESS_KEY_EXAMPLE",

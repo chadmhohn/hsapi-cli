@@ -1242,6 +1242,62 @@ function authTokenExchangeBodyFromFlags(flags) {
   };
 }
 
+// Pure helper (issue #77): build the HubSpot OAuth authorize URL for the
+// interactive `hsapi auth login` loopback flow. No I/O — unit-testable.
+function buildAuthorizeUrl({ authorizeUrlBase, clientId, redirectUrl, scopes, optionalScopes, state, codeChallenge }) {
+  const base = authorizeUrlBase || 'https://app.hubspot.com';
+  const url = new URL('/oauth/authorize', base);
+  // URLSearchParams handles encoding. HubSpot expects space-joined scope and
+  // optional_scope params.
+  url.searchParams.set('client_id', String(clientId));
+  url.searchParams.set('redirect_uri', String(redirectUrl));
+  const scopeList = Array.isArray(scopes) ? scopes.filter((scope) => typeof scope === 'string' && scope.trim()) : [];
+  url.searchParams.set('scope', scopeList.join(' '));
+  const optionalScopeList = Array.isArray(optionalScopes)
+    ? optionalScopes.filter((scope) => typeof scope === 'string' && scope.trim())
+    : [];
+  if (optionalScopeList.length) url.searchParams.set('optional_scope', optionalScopeList.join(' '));
+  if (state) url.searchParams.set('state', String(state));
+  // PKCE (RFC 7636): HubSpot user-level apps require an S256 code challenge on the
+  // authorize request; the matching code_verifier is sent at token exchange.
+  if (codeChallenge) {
+    url.searchParams.set('code_challenge', String(codeChallenge));
+    url.searchParams.set('code_challenge_method', 'S256');
+  }
+  return url;
+}
+
+// Pure helper (issue #77): interpret a loopback callback request URL. Returns
+// { ok:true, code } on success, or { ok:false, error } on a wrong path, state
+// mismatch, missing code, or an OAuth error query param. No I/O.
+function parseOAuthCallback(requestUrl, expectedState, callbackPath) {
+  let url;
+  try {
+    // requestUrl is the server request path (e.g. "/callback?code=..."); resolve
+    // against a fixed loopback base so URL parsing succeeds.
+    url = new URL(String(requestUrl), 'http://127.0.0.1');
+  } catch (error) {
+    return { ok: false, error: `invalid_callback_url: ${error.message}` };
+  }
+  if (callbackPath && url.pathname !== callbackPath) {
+    return { ok: false, error: 'wrong_path', ignore: true };
+  }
+  const errorParam = url.searchParams.get('error');
+  if (errorParam) {
+    const description = url.searchParams.get('error_description');
+    return { ok: false, error: description ? `${errorParam}: ${description}` : errorParam };
+  }
+  const state = url.searchParams.get('state');
+  if (expectedState !== undefined && expectedState !== null && state !== expectedState) {
+    return { ok: false, error: 'state_mismatch' };
+  }
+  const code = url.searchParams.get('code');
+  if (!code) {
+    return { ok: false, error: 'missing_code' };
+  }
+  return { ok: true, code };
+}
+
 function authRefreshBodyFromFlags(flags) {
   return {
     grant_type: 'refresh_token',
@@ -1520,6 +1576,8 @@ module.exports = {
   authTokenExchangeBodyFromFlags,
   authTokenTypeHint,
   authUrlFromFlags,
+  buildAuthorizeUrl,
+  parseOAuthCallback,
   batchArchiveBodyFromFlags,
   batchReadBodyFromFlags,
   batchWriteBodyFromFlags,

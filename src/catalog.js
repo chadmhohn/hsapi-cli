@@ -222,7 +222,11 @@ function endpointDefinitions(filePath) {
     auth: endpoint.auth ? {
       ...endpoint.auth,
       queryParams: [...endpoint.auth.queryParams],
-      scopes: [...endpoint.auth.scopes]
+      scopes: [...endpoint.auth.scopes],
+      // tokenAudience is set by normalizeEndpointAuth (defaults to 'admin');
+      // re-emit it explicitly so the field survives the catalog round-trip even
+      // if the spread source ever changes shape. Issue #79.
+      tokenAudience: endpoint.auth.tokenAudience
     } : null
   }));
 }

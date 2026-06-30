@@ -476,7 +476,11 @@ function buildEndpointProposal(reference, docsUrl) {
     auth: {
       family: 'portal_bearer',
       subtype: 'private_app_or_static_app',
-      fallback: 'none'
+      fallback: 'none',
+      // Default proposed endpoints to the non-user (admin) audience so generated
+      // proposals stay valid and least-privilege-by-default. Flip to 'user' only
+      // after confirming the endpoint is user-OAuth-capable. Issue #79.
+      tokenAudience: 'admin'
     },
     docsUrl,
     command: null,

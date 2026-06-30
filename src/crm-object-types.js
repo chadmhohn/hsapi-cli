@@ -466,11 +466,60 @@ async function resolveCrmObjectTypeWithCustomFallback(portal, input, flags) {
   };
 }
 
+// Standard CRM objects HubSpot's user-level (per-user) OAuth apps can act on.
+// A resolved STANDARD object in this set routes to the 'user' token audience
+// (issue #80); everything else - non-capable standard objects (owners/users,
+// communications, postal_mail, projects, payments, fees, discounts, taxes,
+// listings, services, appointments, courses, leads, feedback_submissions,
+// goals), custom objects, and anything unresolved - stays 'admin'. This set is
+// generic to HubSpot's user-app support, not portal-specific.
+// 'contracts' is registered in our OAuth app scope but HubSpot warns it may 403
+// for user-level apps at runtime — included anyway so the OAuth token is tried.
+const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
+  'contacts',
+  'companies',
+  'deals',
+  'tickets',
+  'line_items',
+  'products',
+  'quotes',
+  'invoices',
+  'subscriptions',
+  'orders',
+  'carts',
+  'tasks',
+  'notes',
+  'calls',
+  'meetings',
+  'emails',
+  'contracts',
+  'marketing_events'
+]);
+
+// Map a resolveCrmObjectType / resolveCrmObjectTypeWithCustomFallback result to
+// a tokenAudience. Only a resolved STANDARD object in the user-capable set is
+// 'user'; non-capable standard objects, custom objects (custom-object-type-id /
+// fully-qualified / custom-schema), and unresolved inputs are 'admin'. Audience
+// follows the OBJECT, not the verb. Issue #80.
+function crmObjectTokenAudience(resolution) {
+  if (
+    resolution
+    && resolution.resolved === true
+    && resolution.standard === true
+    && USER_OAUTH_CAPABLE_OBJECT_TYPES.has(resolution.objectType)
+  ) {
+    return 'user';
+  }
+  return 'admin';
+}
+
 module.exports = {
   CRM_OBJECT_TYPE_CATALOG,
   CRM_OBJECT_TYPE_RESOLUTION_CACHE,
   STANDARD_CRM_OBJECT_TYPE_INDEX,
+  USER_OAUTH_CAPABLE_OBJECT_TYPES,
   crmObjectCatalogEntryForOutput,
+  crmObjectTokenAudience,
   crmObjectLookupKeys,
   customSchemaMatchesInput,
   looksLikeCustomObjectTypeId,

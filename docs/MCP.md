@@ -37,16 +37,36 @@ The equivalent long form is:
 hsapi mcp serve
 ```
 
-The server uses stdio transport. Clients own the process lifetime and pass config through environment variables. The current tool surface is intentionally small:
+The server uses stdio transport. Clients own the process lifetime and pass config through environment variables. ## Tool Surface
+
+### Meta / catalog tools (`readOnlyHint: true` — always-approvable)
+
+These tools are stateless and never call HubSpot:
 
 - `hsapi_profiles_list`: list configured profiles with redacted credential metadata.
 - `hsapi_catalog_coverage`: summarize endpoint coverage and auth-family coverage.
 - `hsapi_catalog_commands`: inspect command metadata with bounded filters.
 - `hsapi_auth_doctor`: validate profile wiring without printing secrets.
-- `hsapi_command_execute`: run catalog-backed typed commands through the shared CLI core.
-- `hsapi_request_execute`: run catalog-backed generic requests through the shared CLI core.
+- `hsapi_context_doc`: fetch a named context document from the local docs library.
+- `hsapi_command_help`: return help text for a catalog command without executing it.
 
-MCP execution previews every request through the CLI core first. Safe reads can execute with bounded output. Mutations return a blocked preview unless `confirmMutation` is true, and hsapi still enforces any command-specific danger flags. MCP input uses top-level fields for `portal`, `showRequest`, `confirmMutation`, compact output, projection, and limits; those flags are rejected if they are smuggled inside the raw command argv.
+### Execute tools — read-only variants (`readOnlyHint: true` — always-approvable)
+
+Use these for all read operations. They permanently block mutations and are safe to always-approve in any MCP client that respects `readOnlyHint`:
+
+- `hsapi_command_execute_read`: run a catalog-backed typed command. Mutations are blocked with `mutation_not_allowed` — there is no `confirmMutation` escape hatch. An offline catalog fast path skips the preview round-trip for known-read commands.
+- `hsapi_request_execute_read`: run a catalog-backed generic request. DELETE/PUT/PATCH and unsafe POST are blocked before any network call. GET/HEAD/OPTIONS always proceed; POST requires the endpoint to be catalog-marked `readOnly: true` (e.g. search endpoints).
+
+### Execute tools — write variants (`readOnlyHint: false` — require per-call approval)
+
+Use these only when you need to mutate data:
+
+- `hsapi_command_execute`: run catalog-backed typed commands. Mutations return a blocked preview until `confirmMutation: true` is passed. Command-specific danger flags (e.g. `--danger-merge`) must still appear in `argv`.
+- `hsapi_request_execute`: run catalog-backed generic requests. Same `confirmMutation` gate as above.
+
+MCP input uses top-level fields for `portal`, `showRequest`, `confirmMutation`, compact output, projection, and limits; those flags are rejected if they are smuggled inside the raw command argv.
+
+**Rule for agents:** default to the `_read` variants. Switch to the write variants only when you specifically need to create, update, or delete data — and always review the blocked preview before passing `confirmMutation: true`.
 
 ## OpenClaw Config
 

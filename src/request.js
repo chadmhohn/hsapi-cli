@@ -711,7 +711,7 @@ function paginationBudgetFromFlags(flags) {
   return { maxResults: raw, defaultCap: false };
 }
 
-async function collectPages(portal, method, inputPath, flags, body) {
+async function collectPages(portal, method, inputPath, flags, body, endpointOverride = null) {
   const stream = jsonlStreamFromFlags(flags);
   const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
   const firstUrl = buildUrl(portal, inputPath, flags);
@@ -727,7 +727,7 @@ async function collectPages(portal, method, inputPath, flags, body) {
     const pageFlags = { ...flags, query: [] };
     const url = new URL(firstUrl.toString());
     if (after) url.searchParams.set('after', after);
-    last = await hubspotFetch(portal, method, url.toString(), pageFlags, body);
+    last = await hubspotFetch(portal, method, url.toString(), pageFlags, body, endpointOverride);
     pageCount += 1;
 
     const data = last.data;
@@ -799,7 +799,7 @@ function jsonlStreamSummary(collected, pageCount, truncated, truncation) {
   return `${base} (stopped at --max-results ${truncation.maxResults}${truncation.defaultCap ? ' default cap; pass --max-results 0 for unlimited' : ''}; nextAfter ${truncation.nextAfter || 'n/a'})`;
 }
 
-async function collectSearchPages(portal, objectType, flags, baseBody) {
+async function collectSearchPages(portal, objectType, flags, baseBody, endpointOverride = null) {
   const stream = jsonlStreamFromFlags(flags);
   const { maxResults, defaultCap } = paginationBudgetFromFlags(flags);
   const target = `/crm/objects/2026-03/${pathPart(objectType)}/search`;
@@ -818,7 +818,7 @@ async function collectSearchPages(portal, objectType, flags, baseBody) {
     } else {
       body.after = String(after);
     }
-    last = await hubspotFetch(portal, 'POST', target, flags, body);
+    last = await hubspotFetch(portal, 'POST', target, flags, body, endpointOverride);
     pageCount += 1;
 
     const data = last.data;
