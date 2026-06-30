@@ -45,8 +45,10 @@ const {
 
 // Build the per-request endpoint metadata for a CRM CRUD data op, carrying the
 // object's tokenAudience so the least-privilege resolver (issue #80) routes it
-// correctly. The audience follows the OBJECT (user-capable standard object ->
-// 'user'; custom / non-capable standard / unresolved -> 'admin'), not the verb.
+// correctly. For reads and writes the audience follows the OBJECT (user-capable
+// standard object -> 'user'; custom / non-capable standard / unresolved ->
+// 'admin'). DELETE is always 'admin': HubSpot user-level OAuth apps return 403
+// on any CRM delete regardless of object type (live-validated 2026-06-30).
 //
 // The CRM object CRUD endpoints are cataloged generically (path template
 // {objectType}, declared portal_bearer + admin), so per-object audience can't
@@ -56,7 +58,7 @@ const {
 // family stays portal_bearer: that is the non-user credential used when the
 // portal has no OAuth identity, so portal_bearer-only profiles are unaffected.
 function crmAudienceEndpoint(resolution, method, path) {
-  const tokenAudience = crmObjectTokenAudience(resolution);
+  const tokenAudience = method === 'DELETE' ? 'admin' : crmObjectTokenAudience(resolution);
   const catalogEndpoint = findEndpointDefinition(method, path);
   if (catalogEndpoint && catalogEndpoint.auth) {
     return {
@@ -507,9 +509,6 @@ async function runCrm(portal, action, rest, flags) {
   if (action === 'archive') {
     const id = rest[1];
     if (!id) fail('crm archive requires object id.');
-    // Audience follows the OBJECT, not the verb: archiving a user-capable object
-    // is still a user-permitted write. Deletes remain gated by guardedFetch's
-    // --yes confirmation, independent of audience. Issue #80.
     printJson(await guardedFetch(portal, 'DELETE', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, undefined, { endpoint: audienceEndpointFor('DELETE', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`) }));
     return;
   }

@@ -6563,14 +6563,14 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
   assert.strictEqual(customShow.auth.tokenAudience, 'admin', 'custom object types are admin-audience');
   assert.strictEqual(customShow.auth.credentialSource.tokenAudience, 'admin');
 
-  // Same classification holds for a write verb: archiving a capable standard
-  // object stays user-audience (audience follows the object, not the verb).
+  // DELETE is always admin-audience regardless of object type: HubSpot user-level
+  // OAuth apps return 403 on any CRM delete (live-validated 2026-06-30, issue #80).
   const dealsArchiveShow = await expectShowRequest(['crm', 'archive', 'deals', '101'], baseEnv, {
     requests,
     method: 'DELETE',
     pathname: '/crm/objects/2026-03/deals/101'
   });
-  assert.strictEqual(dealsArchiveShow.auth.tokenAudience, 'user');
+  assert.strictEqual(dealsArchiveShow.auth.tokenAudience, 'admin');
 
   // --- CLI credential-selection on an OAuth-capable portal (oauth + portal_bearer) ---
   const routingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-80-'));
@@ -6698,4 +6698,73 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     assert.match(result.stderr, /Configure auth\.portalBearer/);
     assert.strictEqual(requests.length, before, 'admin-only-oauth hard-fail must happen before any network call');
   }
+});
+
+test('90 Issue #81: auth whoami — portal identity + OAuth cache status', async () => {
+  const whoamiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-whoami-'));
+  const missingCachePath = path.join(whoamiDir, 'oauth-cache.json');
+  const whoamiConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+      portalBearer: { tokenEnv: 'HSAPI_WHOAMI_TOKEN', kind: 'private_app' },
+      oauth: {
+        clientIdEnv: 'HSAPI_WHOAMI_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_WHOAMI_CLIENT_SECRET',
+        tokenCachePath: missingCachePath
+      }
+    }
+  });
+  const whoamiEnv = {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: whoamiConfig,
+    HSAPI_WHOAMI_TOKEN: 'whoami-portal-token',
+    HSAPI_WHOAMI_CLIENT_ID: 'whoami-client-id',
+    HSAPI_WHOAMI_CLIENT_SECRET: 'whoami-client-secret'
+  };
+
+  // Missing cache → status 'missing', hint present, no network call.
+  const before = requests.length;
+  const out = parseJsonOutput(await run(['auth', 'whoami', '--portal', 'test'], whoamiEnv));
+  assert.strictEqual(out.ok, true);
+  assert.strictEqual(out.portal, 'test');
+  assert(out.authFamilies.includes(AUTH_FAMILIES.PORTAL_BEARER));
+  assert(out.authFamilies.includes(AUTH_FAMILIES.OAUTH));
+  assert.strictEqual(out.oauth.status, 'missing');
+  assert(typeof out.oauth.hint === 'string' && out.oauth.hint.includes('auth login'));
+  assert(out.portalBearer.envSet, 'portalBearer.envSet should be true when env var is set');
+  assert(Array.isArray(out.adminOnlyOperations) && out.adminOnlyOperations.length > 0);
+  assert.strictEqual(requests.length, before, 'auth whoami must not make a network request');
+  assert(!JSON.stringify(out).includes('whoami-portal-token'), 'whoami must not print token values');
+
+  // Usable cache → status 'usable', no hint.
+  const freshCachePath = path.join(whoamiDir, 'fresh-cache.json');
+  fs.writeFileSync(freshCachePath, JSON.stringify({
+    schema: 'hsapi.oauthTokenCache.v2',
+    family: AUTH_FAMILIES.OAUTH,
+    tokenType: 'bearer',
+    accessToken: 'whoami-access-token',
+    refreshToken: 'whoami-refresh-token',
+    expiresIn: 1800,
+    expiresAt: '2999-01-01T00:00:00.000Z',
+    refreshedAt: '2026-06-30T00:00:00.000Z'
+  }, null, 2));
+  const freshConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      oauth: {
+        clientIdEnv: 'HSAPI_WHOAMI_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_WHOAMI_CLIENT_SECRET',
+        tokenCachePath: freshCachePath
+      }
+    }
+  });
+  const freshOut = parseJsonOutput(await run(['auth', 'whoami', '--portal', 'test'], {
+    ...whoamiEnv,
+    HSAPI_PORTALS_CONFIG: freshConfig
+  }));
+  assert.strictEqual(freshOut.ok, true);
+  assert.strictEqual(freshOut.oauth.status, 'usable');
+  assert(!freshOut.oauth.hint, 'hint should be absent when token is usable');
+  assert(!JSON.stringify(freshOut).includes('whoami-access-token'), 'whoami must not print raw token values');
 });

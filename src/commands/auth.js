@@ -196,6 +196,26 @@ function profileDoctor(name, rawPortal, options) {
       );
     }
     doctorCachePathCheck(checks, oauth.tokenCachePath, oauth.tokenCachePathDisplay, 'auth.oauth.tokenCachePath');
+
+    const oauthCacheRead = readOAuthTokenCache(oauth.tokenCachePath);
+    const oauthCacheContract = redactedOAuthTokenCacheContract(oauth, oauthCacheRead);
+    const cacheStatus = oauthCacheContract.status;
+    doctorCheck(
+      checks,
+      cacheStatus === 'usable' ? 'pass' : (cacheStatus === 'invalid' ? 'fail' : (cacheStatus === 'expired' ? 'warn' : 'pass')),
+      'oauth.token_cache.status',
+      cacheStatus === 'usable'
+        ? `OAuth token cache is present and usable (expires ${oauthCacheContract.expiresAt}).`
+        : cacheStatus === 'missing'
+          ? `OAuth token cache is not yet present. Run: hsapi auth login --portal ${name} to authenticate.`
+          : cacheStatus === 'expired'
+            ? `OAuth access token expired; will auto-refresh on next use if a refresh token is cached. Run: hsapi auth login --portal ${name} to re-authenticate.`
+            : `OAuth token cache is invalid. Run: hsapi auth login --portal ${name}`,
+      {
+        family: AUTH_FAMILIES.OAUTH,
+        tokenCache: oauthCacheContract
+      }
+    );
   }
 
   if (developer) {
@@ -598,7 +618,65 @@ function runAuthLogout(flags) {
 // All command JSON flows through this small output layer so generic requests
 // and typed helpers share projection, compact mode, and agent-safe budgets.
 
+// Static set of operations HubSpot blocks for user-level OAuth tokens.
+// Used by whoami so callers know what still requires an admin credential.
+const ADMIN_ONLY_OPERATIONS = [
+  'crm archive / batch-archive (DELETE) — blocked by HubSpot for user tokens',
+  'crm list/get owners',
+  'crm list/get pipelines and pipeline stages',
+  'crm schemas (custom object definitions)',
+  'any custom object read/write',
+  'auth introspect, revoke',
+];
+
+function runAuthWhoami(flags) {
+  const { configPath, config } = loadConfig();
+  const portal = resolvePortal(config, flags);
+
+  const authFamilies = [
+    portal.portalBearer && AUTH_FAMILIES.PORTAL_BEARER,
+    portal.oauth && AUTH_FAMILIES.OAUTH,
+    portal.developer && AUTH_FAMILIES.DEVELOPER,
+  ].filter(Boolean);
+
+  const result = {
+    ok: true,
+    portal: portal.name,
+    portalId: portal.portalId,
+    label: portal.label,
+    baseUrl: portal.baseUrl,
+    authFamilies,
+    authDefaultFamily: portal.authDefaultFamily || null,
+    configPath,
+  };
+
+  if (portal.oauth) {
+    const oauthCacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
+    const oauthCacheContract = redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead);
+    result.oauth = oauthCacheContract;
+    if (oauthCacheContract.status !== 'usable') {
+      result.oauth.hint = `Run: hsapi auth login --portal ${portal.name}`;
+    }
+  }
+
+  if (portal.portalBearer) {
+    result.portalBearer = {
+      tokenEnv: portal.portalBearer.tokenEnv,
+      kind: portal.portalBearer.kind || null,
+      envSet: Boolean(process.env[portal.portalBearer.tokenEnv]),
+    };
+  }
+
+  result.adminOnlyOperations = ADMIN_ONLY_OPERATIONS;
+  printJson(result);
+}
+
 async function runAuth(action, rest, flags) {
+  if (action === 'whoami') {
+    runAuthWhoami(flags);
+    return;
+  }
+
   if (action === 'doctor' || action === 'validate') {
     runAuthDoctor(flags);
     return;
@@ -670,6 +748,7 @@ async function runAuth(action, rest, flags) {
 }
 
 module.exports = {
+  ADMIN_ONLY_OPERATIONS,
   doctorCachePathCheck,
   doctorCheck,
   doctorEnvCheck,
@@ -677,4 +756,5 @@ module.exports = {
   profileDoctor,
   runAuth,
   runAuthDoctor,
+  runAuthWhoami,
 };
