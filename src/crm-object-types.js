@@ -492,7 +492,8 @@ const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
   'calls',
   'meetings',
   'emails',
-  'contracts'
+  'contracts',
+  'marketing_events'
 ]);
 
 // Map a resolveCrmObjectType / resolveCrmObjectTypeWithCustomFallback result to
