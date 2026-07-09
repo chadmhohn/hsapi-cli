@@ -1,0 +1,25 @@
+Copyright (c) 2026 Rad AI, Inc. All rights reserved.
+
+This repository is source-available for reference, review, and collaboration.
+No license is granted to use, copy, modify, merge, publish, distribute,
+sublicense, or sell copies of this software or its documentation, except
+as follows:
+
+1. Rad AI personnel and contractors are permitted to install, run, modify,
+   and distribute this software internally for Rad AI's business purposes,
+   including connecting it to Rad AI's own HubSpot portal(s) or other
+   portals they are authorized to access.
+
+2. Anyone may read, clone, and study this repository for reference,
+   evaluation, or contribution purposes. Contributions submitted via pull
+   request are welcome under the terms described in CONTRIBUTING.md.
+
+3. No warranty of any kind is provided. The software is provided "AS IS",
+   without warranty of any kind, express or implied, including but not
+   limited to the warranties of merchantability, fitness for a particular
+   purpose, and noninfringement. In no event shall the copyright holder be
+   liable for any claim, damages, or other liability arising from the use
+   of the software.
+
+All other rights are reserved. For licensing inquiries outside the scope
+above, contact the repository owner.
