@@ -131,10 +131,14 @@ describe("hsapi OAuth broker", () => {
 
   it("exchanges once, refreshes with an HMAC credential, and revokes", async () => {
     const upstreamRequests: URLSearchParams[] = [];
+    const upstreamTargets: string[] = [];
+    const upstreamRedirectModes: Array<RequestInit["redirect"]> = [];
     vi.spyOn(globalThis, "fetch").mockImplementation(
-      async (_input: RequestInfo | URL, init?: RequestInit) => {
+      async (input: RequestInfo | URL, init?: RequestInit) => {
         const parameters = new URLSearchParams(String(init?.body ?? ""));
         upstreamRequests.push(parameters);
+        upstreamTargets.push(String(input));
+        upstreamRedirectModes.push(init?.redirect);
         if (parameters.get("token_type_hint") === "refresh_token") {
           return new Response(null, { status: 204 });
         }
@@ -227,6 +231,12 @@ describe("hsapi OAuth broker", () => {
       "refresh_token",
       null,
     ]);
+    expect(upstreamTargets).toEqual([
+      "https://api.hubspot.com/oauth/2026-03/token",
+      "https://api.hubspot.com/oauth/2026-03/token",
+      "https://api.hubspot.com/oauth/2026-03/token/revoke",
+    ]);
+    expect(upstreamRedirectModes).toEqual(["manual", "manual", "manual"]);
   });
 
   it("makes a failed upstream exchange terminal instead of replaying the code", async () => {
@@ -263,6 +273,75 @@ describe("hsapi OAuth broker", () => {
       error: "session_consumed",
     });
     expect(upstream).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects an upstream redirect without following it", async () => {
+    const upstream = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { Location: "https://redirect.example/token" },
+      }),
+    );
+    const start = await startSession();
+    expect(
+      (
+        await dispatch(
+          `https://broker.test/v1/oauth/callback?code=redirect-code&state=${start.sessionId}`,
+          { headers: { "CF-Connecting-IP": "192.0.2.27" } },
+        )
+      ).status,
+    ).toBe(303);
+
+    const failed = await exchange(
+      start.sessionId,
+      consumeSecret,
+      verifier,
+    );
+    expect(failed.status).toBe(502);
+    expect(await failed.json()).toEqual({
+      error: "hubspot_oauth_error",
+      oauthError: "upstream_redirect",
+      upstreamStatus: 502,
+    });
+    expect(upstream).toHaveBeenCalledTimes(1);
+    expect(upstream.mock.calls[0]?.[1]?.redirect).toBe("manual");
+  });
+
+  it("logs only structured metadata for an upstream network failure", async () => {
+    const sensitiveMessage = "network failure containing a token-like secret";
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(
+      new TypeError(sensitiveMessage),
+    );
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const start = await startSession();
+    expect(
+      (
+        await dispatch(
+          `https://broker.test/v1/oauth/callback?code=network-code&state=${start.sessionId}`,
+          { headers: { "CF-Connecting-IP": "192.0.2.28" } },
+        )
+      ).status,
+    ).toBe(303);
+
+    const failed = await exchange(
+      start.sessionId,
+      consumeSecret,
+      verifier,
+    );
+    expect(failed.status).toBe(502);
+    expect(await failed.json()).toEqual({
+      error: "hubspot_oauth_error",
+      oauthError: "upstream_network_error",
+      upstreamStatus: 502,
+    });
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(logged.mock.calls[0]?.[0]))).toEqual({
+      event: "hubspot_oauth_transport_failed",
+      phase: "fetch",
+      kind: "network",
+      errorName: "TypeError",
+    });
+    expect(String(logged.mock.calls[0]?.[0])).not.toContain(sensitiveMessage);
   });
 
   it("revokes a newly issued token when post-exchange validation fails", async () => {

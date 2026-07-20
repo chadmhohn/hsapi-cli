@@ -45,6 +45,14 @@ independently issued broker client credential.
 - Inbound JSON is capped at 64 KiB. HubSpot OAuth JSON is independently capped
   at 1 MiB so unusually large tokens remain supported without allowing an
   unbounded upstream response.
+- Token and revoke requests use HubSpot's canonical `api.hubspot.com` OAuth
+  endpoints. Redirects are handled manually and every upstream `3xx` is
+  rejected rather than followed, so a redirect cannot carry OAuth credentials
+  to another origin.
+- Upstream transport failures emit only a structured event, phase, failure
+  category, and JavaScript error class. The exception message, request URL,
+  request or response body, authorization code, and credentials are never
+  logged.
 - HubSpot necessarily sends the short-lived authorization code in the callback
   query string. `observability.logs.invocation_logs` is therefore disabled so
   Cloudflare does not automatically record the callback URL.

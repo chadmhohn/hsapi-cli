@@ -9,9 +9,9 @@ const RETRY_AFTER_SECONDS = 1;
 const MAX_REQUEST_JSON_BODY_BYTES = 64 * 1024;
 const MAX_UPSTREAM_JSON_BODY_BYTES = 1024 * 1024;
 const HUBSPOT_UPSTREAM_TIMEOUT_MS = 20 * 1_000;
-const HUBSPOT_TOKEN_URL = "https://api.hubapi.com/oauth/2026-03/token";
+const HUBSPOT_TOKEN_URL = "https://api.hubspot.com/oauth/2026-03/token";
 const HUBSPOT_REVOKE_URL =
-  "https://api.hubapi.com/oauth/2026-03/token/revoke";
+  "https://api.hubspot.com/oauth/2026-03/token/revoke";
 const BASE64URL_SHA256_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const PKCE_VERIFIER_PATTERN = /^[A-Za-z0-9\-._~]{43,128}$/;
@@ -920,19 +920,46 @@ async function withHubSpotOAuthResponse<T>(
     HUBSPOT_UPSTREAM_TIMEOUT_MS,
   );
   try {
-    const response = await fetch(input, {
-      ...init,
-      redirect: "error",
-      signal: controller.signal,
-    });
+    let response: Response;
+    try {
+      response = await fetch(input, {
+        ...init,
+        redirect: "manual",
+        signal: controller.signal,
+      });
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: "hubspot_oauth_transport_failed",
+          phase: "fetch",
+          kind: controller.signal.aborted ? "timeout" : "network",
+          errorName: error instanceof Error ? error.name : typeof error,
+        }),
+      );
+      throw new UpstreamOAuthError(
+        502,
+        controller.signal.aborted ? "upstream_timeout" : "upstream_network_error",
+      );
+    }
+    if (response.status >= 300 && response.status < 400) {
+      throw new UpstreamOAuthError(502, "upstream_redirect");
+    }
     return await consume(response);
   } catch (error) {
     if (error instanceof UpstreamOAuthError || error instanceof HttpError) {
       throw error;
     }
+    console.error(
+      JSON.stringify({
+        event: "hubspot_oauth_transport_failed",
+        phase: "consume",
+        kind: "unexpected",
+        errorName: error instanceof Error ? error.name : typeof error,
+      }),
+    );
     throw new UpstreamOAuthError(
       502,
-      controller.signal.aborted ? "upstream_timeout" : "upstream_network_error",
+      "upstream_response_error",
     );
   } finally {
     clearTimeout(timer);
