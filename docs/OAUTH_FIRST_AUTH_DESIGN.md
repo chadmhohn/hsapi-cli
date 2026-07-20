@@ -213,8 +213,10 @@ boundaries until they are added to catalog preflight metadata.
 - `src/crm-object-types.js` / `src/commands/crm.js` — operation-aware
   readable/writable CRM object routing.
 - `test/test-hsapi.js` — auth, redaction, routing, and concurrency coverage.
-- `examples/portals.sample.json` — separate legacy/multi-family and hosted
-  OAuth example profiles.
+- `examples/portals.sample.json` — minimal ServiceKey/private-app profile.
+- `examples/portals.oauth-hosted.sample.json` — minimal hosted OAuth profile.
+- `examples/portals.oauth-service-key.sample.json` — deliberately combined
+  OAuth plus ServiceKey profile.
 
 ## Open questions / risks
 

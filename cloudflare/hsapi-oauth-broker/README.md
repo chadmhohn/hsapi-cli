@@ -229,33 +229,35 @@ HubSpot app registration must match exactly.
 
 1. Run `npx wrangler login` and verify the intended account with
    `npx wrangler whoami`.
-2. Deploy once or determine the account's `workers.dev` subdomain.
-3. Replace the example staging `HUBSPOT_CLIENT_ID` and
-   `HUBSPOT_REDIRECT_URI` in `wrangler.jsonc`. The redirect must exactly match
-   the staging Worker callback URL.
-4. Add that exact HTTPS redirect URL to the HubSpot app's Auth configuration.
-5. Set secrets interactively so neither value appears in command history:
+2. Copy `wrangler.jsonc` to the gitignored `wrangler.operator.jsonc`. Never
+   commit that operator file.
+3. Deploy once or determine the account's `workers.dev` subdomain.
+4. In `wrangler.operator.jsonc`, replace the staging account ID, client ID,
+   redirect URI, and any account-local rate-limit namespace IDs. The redirect
+   must exactly match the staging Worker callback URL.
+5. Add that exact HTTPS redirect URL to the HubSpot app's Auth configuration.
+6. Set secrets interactively so neither value appears in command history:
 
 ```powershell
-npx wrangler secret put HUBSPOT_CLIENT_SECRET --env staging
-npx wrangler secret put BROKER_SIGNING_KEY --env staging
-npx wrangler secret put BROKER_SESSION_START_KEY --env staging
+npx wrangler secret put HUBSPOT_CLIENT_SECRET --config wrangler.operator.jsonc --env staging
+npx wrangler secret put BROKER_SIGNING_KEY --config wrangler.operator.jsonc --env staging
+npx wrangler secret put BROKER_SESSION_START_KEY --config wrangler.operator.jsonc --env staging
 ```
 
 Use independent, high-entropy values. The signing key must be at least 32
 bytes, and the session-start key must be a 32-byte base64url value (43
 characters). Do not reuse the HubSpot client secret.
 
-6. Validate and deploy:
+7. Validate and deploy:
 
 ```powershell
 npm run typecheck
 npm test
-npx wrangler deploy --dry-run --env staging
+npx wrangler deploy --dry-run --config wrangler.operator.jsonc --env staging
 npm run deploy:staging
 ```
 
-7. Confirm `GET /healthz` reports `ready: true`, then perform a full install,
+8. Confirm `GET /healthz` reports `ready: true`, then perform a full install,
    exchange, refresh, and revoke against a disposable/test HubSpot account.
 
 ### Verified staging deployment
@@ -286,16 +288,17 @@ credentials. Staging is not approved as a production identity service.
 
 ## Production
 
-First choose the production HubSpot account/app boundary. Replace and validate
-the production account ID, client ID, and exact registered callback; the
-checked-in values are deliberate placeholders. Then provision independent
-production secrets and deploy:
+First choose the production HubSpot account/app boundary. In the gitignored
+`wrangler.operator.jsonc`, replace and validate the production account ID,
+client ID, exact registered callback, and account-local rate-limit namespace
+ID; the checked-in values are deliberate placeholders. Then provision
+independent production secrets and deploy:
 
 ```powershell
-npx wrangler secret put HUBSPOT_CLIENT_SECRET --env production
-npx wrangler secret put BROKER_SIGNING_KEY --env production
-npx wrangler secret put BROKER_SESSION_START_KEY --env production
-npx wrangler deploy --dry-run --env production
+npx wrangler secret put HUBSPOT_CLIENT_SECRET --config wrangler.operator.jsonc --env production
+npx wrangler secret put BROKER_SIGNING_KEY --config wrangler.operator.jsonc --env production
+npx wrangler secret put BROKER_SESSION_START_KEY --config wrangler.operator.jsonc --env production
+npx wrangler deploy --dry-run --config wrangler.operator.jsonc --env production
 npm run deploy:production
 ```
 

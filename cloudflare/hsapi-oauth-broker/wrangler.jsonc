@@ -6,8 +6,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
 
-  // These are public, server-controlled OAuth settings. Staging is configured
-  // below; production deliberately keeps a placeholder redirect until rollout.
+  // These are public, server-controlled OAuth settings. Every tracked
+  // environment is portal-neutral. Copy this file to the gitignored
+  // wrangler.operator.jsonc and put deployment-specific values there.
   "vars": {
     "ENVIRONMENT": "local",
     "HUBSPOT_ACCOUNT_ID": "REPLACE_ACCOUNT_ID",
@@ -43,7 +44,7 @@
   "ratelimits": [
     {
       "name": "AUTH_RATE_LIMITER",
-      "namespace_id": "31719689",
+      "namespace_id": "1001",
       "simple": {
         "limit": 120,
         "period": 60
@@ -69,9 +70,9 @@
       },
       "vars": {
         "ENVIRONMENT": "staging",
-        "HUBSPOT_ACCOUNT_ID": "246523489",
-        "HUBSPOT_CLIENT_ID": "3930f35a-b323-4fc3-a4ba-5a528cb1b289",
-        "HUBSPOT_REDIRECT_URI": "https://hsapi-oauth-broker-staging.chad-m-hohn.workers.dev/v1/oauth/callback",
+        "HUBSPOT_ACCOUNT_ID": "REPLACE_ACCOUNT_ID",
+        "HUBSPOT_CLIENT_ID": "00000000-0000-4000-8000-000000000001",
+        "HUBSPOT_REDIRECT_URI": "https://hsapi-oauth-broker-staging.REPLACE.workers.dev/v1/oauth/callback",
         "HUBSPOT_REQUIRED_SCOPES": "oauth",
         "HUBSPOT_OPTIONAL_SCOPES": "crm.objects.contacts.read crm.objects.companies.read crm.objects.deals.read crm.objects.contacts.write crm.objects.companies.write crm.objects.deals.write crm.objects.tickets.read crm.objects.tickets.write crm.objects.line_items.read crm.objects.line_items.write crm.objects.products.read crm.objects.products.write crm.objects.quotes.read crm.objects.owners.read crm.objects.subscriptions.read crm.objects.carts.read crm.objects.orders.read crm.objects.invoices.read crm.objects.tasks.read crm.objects.tasks.write crm.objects.notes.read crm.objects.notes.write crm.objects.calls.read crm.objects.calls.write crm.objects.meetings.read crm.objects.meetings.write crm.objects.emails.read crm.objects.emails.write crm.objects.contracts.read crm.objects.marketing_events.read crm.schemas.calls.read crm.schemas.emails.read crm.schemas.meetings.read crm.schemas.notes.read crm.schemas.tasks.read crm.lists.read crm.hubsql.execute cpq.quote_templates.read cpq.quotes.read cms.blogs.blog_posts.read cms.pages.landing_pages.read cms.pages.site_pages.read marketing.campaigns.read marketing.campaigns.revenue.full.read marketing.campaigns.revenue.lite.read settings.users.teams.read mcp.users.read cpq.quotes.write crm.objects.marketing_events.write"
       },
@@ -86,7 +87,7 @@
       "ratelimits": [
         {
           "name": "AUTH_RATE_LIMITER",
-          "namespace_id": "31719690",
+          "namespace_id": "1002",
           "simple": {
             "limit": 120,
             "period": 60
@@ -125,7 +126,7 @@
       "ratelimits": [
         {
           "name": "AUTH_RATE_LIMITER",
-          "namespace_id": "31719691",
+          "namespace_id": "1003",
           "simple": {
             "limit": 120,
             "period": 60

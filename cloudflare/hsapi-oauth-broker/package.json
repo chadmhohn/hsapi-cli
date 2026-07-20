@@ -6,8 +6,8 @@
   "scripts": {
     "check": "npm run types:check && npm run typecheck && npm test && npm run deploy:dry-run",
     "deploy:dry-run": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
-    "deploy:production": "wrangler deploy --env production",
-    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --config wrangler.operator.jsonc --env production",
+    "deploy:staging": "wrangler deploy --config wrangler.operator.jsonc --env staging",
     "dev": "wrangler dev",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",

@@ -22,6 +22,7 @@ const env = {
   npm_config_cache: cacheDir,
   npm_config_update_notifier: 'false',
 };
+const syntheticPortalId = String(Number.MAX_SAFE_INTEGER);
 
 let tarballPath;
 
@@ -64,8 +65,11 @@ try {
     path.join('docs', 'INSTALL.md'),
     path.join('docs', 'OAUTH_FIRST_AUTH_DESIGN.md'),
     path.join('docs', 'OAUTH_SETUP.md'),
+    path.join('docs', 'hubspot-api-context', 'portal-auth-setup.md'),
     path.join('cloudflare', 'hsapi-oauth-broker', 'README.md'),
     path.join('examples', 'portals.sample.json'),
+    path.join('examples', 'portals.oauth-hosted.sample.json'),
+    path.join('examples', 'portals.oauth-service-key.sample.json'),
     path.join('src', 'oauth-broker.js'),
   ];
 
@@ -86,7 +90,7 @@ try {
     portals: {
       'hosted-smoke': {
         label: 'Hosted OAuth package smoke',
-        portalId: '246523489',
+        portalId: syntheticPortalId,
         baseUrl: 'https://api.hubapi.com',
         auth: {
           defaultFamily: 'oauth',
@@ -116,6 +120,32 @@ try {
 
   if (!helpOutput.includes('hsapi - portal-aware HubSpot API CLI')) {
     throw new Error('installed binary did not respond with expected help output');
+  }
+  if (
+    !helpOutput.includes(path.join(installedRoot, 'docs', 'hubspot-api-context', 'portal-auth-setup.md'))
+    || !helpOutput.includes(path.join(installedRoot, 'examples', 'portals.sample.json'))
+    || !helpOutput.includes(path.join(installedRoot, 'examples', 'portals.oauth-hosted.sample.json'))
+  ) {
+    throw new Error('installed help did not expose absolute portal onboarding paths');
+  }
+
+  const serviceKeySampleText = execCommand(hsapiBin, ['profiles', 'list'], {
+    cwd: root,
+    env: {
+      ...env,
+      HSAPI_PORTALS_CONFIG: path.join(installedRoot, 'examples', 'portals.sample.json'),
+    },
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const serviceKeySample = JSON.parse(serviceKeySampleText);
+  if (
+    !serviceKeySample.ok
+    || serviceKeySample.default !== 'service-key-example'
+    || serviceKeySample.profiles?.[0]?.authDefaultFamily !== 'portal_bearer'
+    || serviceKeySample.profiles?.[0]?.authFamilies?.length !== 1
+  ) {
+    throw new Error('installed ServiceKey sample is not a minimal, parseable portal_bearer profile');
   }
 
   const doctorText = execCommand(hsapiBin, ['auth', 'doctor', '--portal', 'hosted-smoke', '--require-env'], {

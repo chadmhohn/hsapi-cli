@@ -13,7 +13,7 @@ npm install -g .
 From a git ref:
 
 ```bash
-npm install -g git+ssh://git@github.com/your-org/hsapi-cli.git#<tag-or-branch>
+npm install -g git+https://github.com/chadmhohn/hsapi-cli.git#<tag-or-branch>
 ```
 
 From a release tarball:
@@ -28,6 +28,30 @@ From a GitHub Release (preferred once tags exist):
 2. `npm install -g ./hsapi-cli-<version>.tgz`
 
 Releases are produced by `.github/workflows/release.yml`: pushing a `v*` tag runs the full test suite, stamps the package version from the tag, packs, and attaches the tarball to a GitHub Release.
+
+A curl-based release install has the same result:
+
+```bash
+VERSION="<released-version>"
+curl -fL -o "hsapi-cli-${VERSION}.tgz" \
+  "https://github.com/chadmhohn/hsapi-cli/releases/download/v${VERSION}/hsapi-cli-${VERSION}.tgz"
+npm install -g "./hsapi-cli-${VERSION}.tgz"
+```
+
+For an ephemeral or MCP-managed launch, npm can execute a pinned git package
+without a global install:
+
+```bash
+npx --yes --package=github:chadmhohn/hsapi-cli#v<released-version> hsapi-mcp
+```
+
+Pin a reviewed tag or commit. Do not use an unpinned branch for a desktop MCP
+process. There is no bare `npx hsapi-cli` flow until a registry release exists.
+For a continuously configured desktop client, a global release-tarball install
+is easier to audit and update.
+
+Npm's supported package specs include local tarballs, tarball URLs, and git
+URLs: https://docs.npmjs.com/cli/v11/using-npm/package-spec
 
 ## Update
 
@@ -51,19 +75,34 @@ After install or update:
 ```bash
 hsapi --help
 hsapi profiles list
-hsapi auth doctor --portal example
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example
+hsapi account details --portal service-key-example --show-request
 command -v hsapi-mcp
 ```
 
 ## Configure Auth Families
 
-Copy `examples/portals.sample.json` to a private path outside the package, then
-set `HSAPI_PORTALS_CONFIG` to that private file. JSON may contain non-secret
+Start with `docs/hubspot-api-context/portal-auth-setup.md`. It is the canonical
+guide for people and assistants and is also available through
+`hsapi_context_doc` as `portal-auth-setup`.
+
+Choose one portal-neutral template:
+
+- ServiceKey/private-app only: `examples/portals.sample.json`
+- Hosted OAuth only: `examples/portals.oauth-hosted.sample.json`
+- Hosted OAuth plus an explicitly approved ServiceKey:
+  `examples/portals.oauth-service-key.sample.json`
+
+Copy the chosen template to a private path outside the package, then set
+`HSAPI_PORTALS_CONFIG` to that private file. JSON may contain non-secret
 profile metadata such as IDs, URLs, cache paths, and environment variable
 names; put credential values in your shell, secret manager, or CI secret store.
 When `HSAPI_PORTALS_CONFIG` is absent, the CLI checks the per-user
 `~/.config/hsapi/portals.json` path before the legacy checkout-local path.
+
+`ServiceKey` maps to `auth.portalBearer`: it is a HubSpot private-app access
+token loaded from the environment named by `auth.portalBearer.tokenEnv`. It is
+not an OAuth client secret.
 
 `hsapi` uses explicit auth families:
 
@@ -100,6 +139,11 @@ An enrolled teammate needs only the operator-issued external profile, the
 broker session-start credential injected under the profile's
 `brokerStartKeyEnv`, and their normal HubSpot browser login. They do not receive
 the HubSpot app client ID or client secret.
+
+An assistant must never ask a user to paste a ServiceKey, client secret, broker
+credential, authorization code, or token cache into chat. It should ask the
+user to inject the value locally, then use `auth doctor` and the read-only
+identity checks.
 
 Before running an unfamiliar command, inspect its auth requirement:
 

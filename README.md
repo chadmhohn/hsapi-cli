@@ -13,6 +13,10 @@ the repository license until a registry/public-licensing decision is made.
 For the full install/update flow, read `docs/INSTALL.md`.
 
 Agent runtimes should start with `AGENTS.md` or `CLAUDE.md`.
+For portal and auth onboarding, both humans and assistants should use
+`docs/hubspot-api-context/portal-auth-setup.md`. It explains the
+ServiceKey/private-app and hosted OAuth paths without containing any real
+portal configuration.
 
 Quick install from a checkout:
 
@@ -34,20 +38,33 @@ npm install -g .
 
 ## Configure a Portal
 
-Copy `examples/portals.sample.json` to a private location outside the package and edit it for your portal:
+Choose the smallest portal-neutral template that matches the operator's
+intended auth:
+
+- ServiceKey/private-app only: `examples/portals.sample.json`
+- Hosted OAuth only: `examples/portals.oauth-hosted.sample.json`
+- Hosted OAuth plus an approved ServiceKey:
+  `examples/portals.oauth-service-key.sample.json`
+
+`ServiceKey` is the team-facing name for a HubSpot private-app access token. It
+maps to `auth.portalBearer.tokenEnv`; the config stores only the environment
+variable name.
+
+From a checkout, copy one template to a private location outside the package:
 
 ```bash
 cp examples/portals.sample.json ~/.config/hsapi/portals.json
 export HSAPI_PORTALS_CONFIG=~/.config/hsapi/portals.json
-export HUBSPOT_ACCESS_TOKEN_EXAMPLE="<your-private-app-token>"
-export HUBSPOT_CLIENT_ID_EXAMPLE="<your-oauth-client-id>"
-export HUBSPOT_CLIENT_SECRET_EXAMPLE="<your-oauth-client-secret>"
-export HUBSPOT_REFRESH_TOKEN_EXAMPLE="<your-oauth-refresh-token>"
-export HUBSPOT_PERSONAL_ACCESS_KEY_EXAMPLE="<your-hubspot-cli-personal-access-key>"
-export HUBSPOT_DEVELOPER_API_KEY_EXAMPLE="<your-developer-api-key>"
-export HUBSPOT_APP_ID_EXAMPLE="<your-developer-app-id>"
-export HSAPI_OAUTH_BROKER_START_KEY="<broker-session-start-credential>"
+export HUBSPOT_SERVICE_KEY_EXAMPLE="<set-locally-from-your-secret-channel>"
 ```
+
+After a global git or tarball install, run `hsapi --help` and copy the absolute
+ServiceKey or hosted-OAuth template path printed there; do not assume the
+current directory contains `examples/`.
+
+For hosted OAuth, copy the hosted template instead and use only the exact
+portal ID, broker URL, and broker admission credential issued by the app
+operator. Do not add local HubSpot client credentials.
 
 The normal per-user default is `~/.config/hsapi/portals.json`
 (`%USERPROFILE%\.config\hsapi\portals.json` on Windows). An explicit
@@ -75,8 +92,8 @@ contents.
 Validate profile wiring offline before running live commands:
 
 ```bash
-hsapi auth doctor --portal example
-hsapi auth doctor --portal example --require-env
+hsapi auth doctor --portal service-key-example
+hsapi auth doctor --portal service-key-example --require-env
 ```
 
 `auth doctor` reports configured auth families, missing environment variables, and token-cache path safety without printing secret values or calling HubSpot. Use `--require-env` when a release or deployment gate should fail if a configured credential environment variable is missing.
@@ -93,8 +110,9 @@ an independently issued broker session-start credential in the environment
 named by `brokerStartKeyEnv`; this prevents arbitrary callers from creating
 consent sessions. The broker is fixed to one app, portal, redirect, and scope
 set, and the CLI rejects a returned token whose hub ID does not match the
-profile. See `docs/OAUTH_SETUP.md` for onboarding and the live user-level scope
-matrix.
+profile. See `docs/hubspot-api-context/portal-auth-setup.md` for the
+assistant-safe decision flow and `docs/OAUTH_SETUP.md` for broker operations
+and the live user-level scope matrix.
 
 For an enrolled teammate, the controlled-beta sequence is:
 
@@ -109,7 +127,11 @@ URL is a credential destination and must come from the app operator.
 
 For package-beta test coverage across multiple HubSpot tiers, use `examples/portals.test-matrix.sample.json` and `docs/TEST_PORTAL_MATRIX.md` as the fixture contract. Keep the real matrix config outside the package, and reserve live writes for the `disposable_write` fixture with an explicit write-test gate.
 
-Auth-mode implementation planning lives in `docs/hubspot-api-context/auth-modes-project-plan.md`. The key rule: endpoint auth requirements must be explicit, and `hsapi` must never silently fall back between portal bearer, OAuth, and developer auth families.
+Current auth onboarding lives in
+`docs/hubspot-api-context/portal-auth-setup.md`. The historical implementation
+plan remains in `docs/hubspot-api-context/auth-modes-project-plan.md`. The key
+rule is unchanged: endpoint auth requirements are explicit, and `hsapi` never
+silently falls back between portal bearer, OAuth, and developer auth families.
 
 Endpoint catalog entries declare auth metadata with one of the shared auth families: `portal_bearer`, `oauth`, or `developer`. Developer endpoints also declare one of `personal_access_key`, `developer_api_key`, or `client_credentials`. Public endpoints that intentionally send no credential must opt out with `auth.required: false`; missing or unknown endpoint auth metadata is rejected before a request is sent. `--show-request` reports the resolved auth family, subtype, catalog/default provenance, credential source names such as environment variable names, and redacted OAuth token-cache expiry metadata without printing secret values or refreshing live tokens.
 
@@ -125,13 +147,13 @@ Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-proj
 
 ## MCP Server Usage
 
-Operational MCP docs live in `docs/MCP.md`; sample OpenClaw and generic MCP client config lives in `examples/mcp-server.sample.json`. For local Codex Desktop and Claude Desktop setup from a shared GitHub checkout, use `docs/DESKTOP_MCP_QUICKSTART.md`.
+Operational MCP docs live in `docs/MCP.md`; sample OpenClaw and generic MCP client config lives in `examples/mcp-server.sample.json`. For local Codex Desktop and Claude Desktop setup from a checkout or installed package, use `docs/DESKTOP_MCP_QUICKSTART.md`.
 
 Use direct CLI mode when an operator or agent can run shell commands:
 
 ```bash
-hsapi account details --portal example --show-request
-hsapi crm list contacts --portal example --properties email --max-results 5
+hsapi account details --portal service-key-example --show-request
+hsapi crm list contacts --portal service-key-example --properties email --max-results 5
 ```
 
 Use MCP server mode when OpenClaw or another MCP client should expose bounded HubSpot tools over stdio:
@@ -196,13 +218,13 @@ The disposable-write runner refuses non-disposable fixture roles, requires the `
 
 ```bash
 hsapi profiles list
-hsapi auth doctor --portal example
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example
+hsapi account details --portal service-key-example --show-request
 hsapi catalog coverage
 hsapi catalog commands --pick commands[].command,commands[].auth.family,commands[].auth.subtype
-hsapi request GET /crm/v3/owners --portal example --query limit=10
-hsapi properties list deals --portal example --names-only
-hsapi properties names deals --portal example
+hsapi request GET /crm/v3/owners --portal service-key-example --query limit=10
+hsapi properties list deals --portal service-key-example --names-only
+hsapi properties names deals --portal service-key-example
 hsapi crm object-types --family commerce
 hsapi crm object-types --family activity
 hsapi crm search companies --filter hs_object_id:GT:0 --count-only
@@ -240,8 +262,8 @@ hsapi project deploy --account example --project "my-project" --build 5 --show-r
   hsapi forms list --form-types hubspot --limit 10 --show-request
   hsapi forms submissions form-guid-123 --limit 20 --show-request
   hsapi forms secure-submit 123456 form-guid-123 --fields '[{"name":"email","value":"ada@example.com"}]' --show-request
-  hsapi cms doctor --portal example
-  hsapi cms doctor --portal example --content-id 123 --type SITE_PAGE
+  hsapi cms doctor --portal service-key-example
+  hsapi cms doctor --portal service-key-example --content-id 123 --type SITE_PAGE
   hsapi cms site-pages list --state PUBLISHED_OR_SCHEDULED --show-request
   hsapi cms blog-posts create --name "Draft post" --content-group-id 123 --post-body "<p>Hello</p>" --show-request
   hsapi cms redirects create --route-prefix /old --destination /new --redirect-style 301 --show-request

@@ -1,6 +1,8 @@
 # Desktop MCP Quickstart for Codex and Claude Desktop
 
-This guide is for a person or AI agent setting up `hsapi-cli` from a shared GitHub checkout on a local desktop machine. It covers two MCP clients:
+This guide is for a person or AI agent setting up `hsapi-cli` from a checkout,
+git install, or release tarball on a local desktop machine. It covers two MCP
+clients:
 
 - Codex Desktop / Codex CLI MCP config
 - Claude Desktop MCP config
@@ -28,7 +30,7 @@ Desktop apps often do not inherit the terminal environment that installed the pa
 From a checkout:
 
 ```bash
-git clone git@github.com:your-org/hsapi-cli.git
+git clone https://github.com/chadmhohn/hsapi-cli.git
 cd hsapi-cli
 npm install -g .
 hsapi --help
@@ -38,7 +40,7 @@ command -v hsapi-mcp
 On Windows PowerShell:
 
 ```powershell
-git clone git@github.com:your-org/hsapi-cli.git
+git clone https://github.com/chadmhohn/hsapi-cli.git
 cd hsapi-cli
 npm install -g .
 hsapi --help
@@ -47,9 +49,52 @@ where.exe hsapi-mcp
 
 If a desktop MCP client cannot find `hsapi-mcp`, use the full path printed by `command -v hsapi-mcp` or `where.exe hsapi-mcp` in that client's MCP config.
 
+A checked GitHub Release tarball can also be downloaded with `curl` and
+installed globally; see `docs/INSTALL.md`. If the client intentionally uses an
+ephemeral npm launch, pin a reviewed tag:
+
+```bash
+npx --yes --package=github:chadmhohn/hsapi-cli#v<released-version> hsapi-mcp
+```
+
+In Claude Desktop JSON, the equivalent process definition is:
+
+```json
+{
+  "command": "npx",
+  "args": [
+    "--yes",
+    "--package=github:chadmhohn/hsapi-cli#v<released-version>",
+    "hsapi-mcp"
+  ],
+  "env": {
+    "HSAPI_PORTALS_CONFIG": "/absolute/path/outside-package/hsapi/portals.json",
+    "HSAPI_PORTAL": "service-key-example"
+  }
+}
+```
+
+On Windows, use `npx.cmd` if the desktop process cannot resolve `npx`. There is
+no bare `npx hsapi-cli` command until this project has a registry release.
+Global installation from a reviewed release tarball remains the recommended
+long-running desktop setup.
+
 ## 2. Create a Private Portal Config
 
-Create a config directory outside the repo, then copy a sample.
+Read `docs/hubspot-api-context/portal-auth-setup.md`, then choose the smallest
+template for the intended auth:
+
+- ServiceKey/private-app only: `examples/portals.sample.json`
+- Hosted OAuth only: `examples/portals.oauth-hosted.sample.json`
+- Hosted OAuth plus an approved ServiceKey:
+  `examples/portals.oauth-service-key.sample.json`
+
+The commands below use the ServiceKey template. `ServiceKey` maps to
+`auth.portalBearer` and is a HubSpot private-app access token.
+
+Create a config directory outside the repo, then copy the selected sample. The
+relative commands below are for a checkout. After a global install, run
+`hsapi --help` and substitute the absolute installed template path it prints.
 
 macOS/Linux:
 
@@ -69,16 +114,16 @@ Edit the private `portals.json`. Keep credential values out of the file. The imp
 
 ```json
 {
-  "default": "example",
+  "default": "service-key-example",
   "portals": {
-    "example": {
+    "service-key-example": {
       "label": "Example HubSpot Portal",
-      "portalId": "<example-portal-id>",
       "baseUrl": "https://api.hubapi.com",
       "auth": {
         "defaultFamily": "portal_bearer",
         "portalBearer": {
-          "tokenEnv": "HUBSPOT_ACCESS_TOKEN_EXAMPLE"
+          "tokenEnv": "HUBSPOT_SERVICE_KEY_EXAMPLE",
+          "kind": "private_app"
         }
       }
     }
@@ -96,19 +141,34 @@ macOS/Linux shell profile example:
 
 ```bash
 export HSAPI_PORTALS_CONFIG="$HOME/.config/hsapi/portals.json"
-export HUBSPOT_ACCESS_TOKEN_EXAMPLE="<your-private-app-token>"
+export HUBSPOT_SERVICE_KEY_EXAMPLE="<set-locally-from-your-secret-channel>"
 ```
 
 Windows PowerShell user environment example:
 
 ```powershell
 [Environment]::SetEnvironmentVariable('HSAPI_PORTALS_CONFIG', "$env:USERPROFILE\.config\hsapi\portals.json", 'User')
-[Environment]::SetEnvironmentVariable('HUBSPOT_ACCESS_TOKEN_EXAMPLE', '<your-private-app-token>', 'User')
+[Environment]::SetEnvironmentVariable('HUBSPOT_SERVICE_KEY_EXAMPLE', '<set-locally-from-your-secret-channel>', 'User')
 ```
 
-Safer shared/operator path: use a wrapper or secret lookup command so MCP config never stores real tokens. See `examples/neutral-token-wrapper.sample.sh` and the neutral token source section in `docs/MCP.md`.
+Safer shared/operator path: use a wrapper or secret lookup command so MCP
+config never stores real tokens or broker admission credentials. The supplied
+wrapper loads both ServiceKey `tokenEnv` and hosted OAuth `brokerStartKeyEnv`
+values declared by the selected profile. See
+`examples/neutral-token-wrapper.sample.sh` and the neutral credential source
+section in `docs/MCP.md`.
 
 After changing user environment variables, restart terminals and fully restart Codex Desktop or Claude Desktop.
+
+For hosted OAuth, copy `examples/portals.oauth-hosted.sample.json`, replace
+every `REPLACE_...` value with the exact metadata issued by the app operator,
+and inject only the broker start credential locally. Do not configure a local
+HubSpot client ID or client secret. After the doctor check, run:
+
+```bash
+hsapi auth login --portal oauth-hosted-example
+hsapi auth whoami --portal oauth-hosted-example
+```
 
 ## 4. Verify the CLI Before MCP
 
@@ -119,8 +179,8 @@ macOS/Linux:
 ```bash
 export HSAPI_PORTALS_CONFIG="$HOME/.config/hsapi/portals.json"
 hsapi profiles list
-hsapi auth doctor --portal example --require-env
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example --require-env
+hsapi account details --portal service-key-example --show-request
 ```
 
 Windows PowerShell:
@@ -128,8 +188,8 @@ Windows PowerShell:
 ```powershell
 $env:HSAPI_PORTALS_CONFIG = "$env:USERPROFILE\.config\hsapi\portals.json"
 hsapi profiles list
-hsapi auth doctor --portal example --require-env
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example --require-env
+hsapi account details --portal service-key-example --show-request
 ```
 
 `--show-request` must show redacted credential source names, not token values.
@@ -141,9 +201,9 @@ Codex reads MCP servers from its Codex MCP config. Use `codex mcp add` when the 
 macOS/Linux example:
 
 ```bash
-codex mcp add hubspot-example \
+codex mcp add hubspot-service-key-example \
   --env HSAPI_PORTALS_CONFIG="$HOME/.config/hsapi/portals.json" \
-  --env HSAPI_PORTAL=example \
+  --env HSAPI_PORTAL=service-key-example \
   -- hsapi-mcp
 
 codex mcp list
@@ -152,9 +212,9 @@ codex mcp list
 Windows PowerShell example:
 
 ```powershell
-codex mcp add hubspot-example `
+codex mcp add hubspot-service-key-example `
   --env "HSAPI_PORTALS_CONFIG=$env:USERPROFILE\.config\hsapi\portals.json" `
-  --env "HSAPI_PORTAL=example" `
+  --env "HSAPI_PORTAL=service-key-example" `
   -- hsapi-mcp
 
 codex mcp list
@@ -172,10 +232,11 @@ codex mcp add hubspot-portal-beta --env HSAPI_PORTALS_CONFIG="$HOME/.config/hsap
 Fully restart Codex Desktop after adding or changing MCP servers. Then ask Codex to use the HubSpot MCP tool surface, for example:
 
 ```text
-Use the HubSpot MCP server only. Run auth doctor for the example portal and summarize whether it is configured without printing secrets.
+Use the HubSpot MCP server only. Read portal-auth-setup, then run auth doctor for the service-key-example profile and summarize whether it is configured without printing secrets.
 ```
 
-Expected tool groups are named like `mcp__hubspot_example__...` or, for custom entry names, the normalized server name.
+Expected tool groups use the normalized MCP server entry name, such as
+`mcp__hubspot_service_key_example__...`.
 
 ## 6. Claude Desktop Quickstart
 
@@ -193,11 +254,11 @@ macOS/Linux-style example:
 ```json
 {
   "mcpServers": {
-    "hubspot-example": {
+    "hubspot-service-key-example": {
       "command": "hsapi-mcp",
       "env": {
         "HSAPI_PORTALS_CONFIG": "/Users/you/.config/hsapi/portals.json",
-        "HSAPI_PORTAL": "example"
+        "HSAPI_PORTAL": "service-key-example"
       }
     }
   }
@@ -209,11 +270,11 @@ Windows example:
 ```json
 {
   "mcpServers": {
-    "hubspot-example": {
+    "hubspot-service-key-example": {
       "command": "C:\\Users\\you\\AppData\\Roaming\\npm\\hsapi-mcp.cmd",
       "env": {
         "HSAPI_PORTALS_CONFIG": "C:\\Users\\you\\.config\\hsapi\\portals.json",
-        "HSAPI_PORTAL": "example"
+        "HSAPI_PORTAL": "service-key-example"
       }
     }
   }
@@ -245,16 +306,34 @@ Multi-portal Claude Desktop example:
 
 Fully quit and restart Claude Desktop after editing the file. Then ask Claude to run `hsapi_auth_doctor` through the HubSpot MCP server and summarize only status fields.
 
-## 7. Sandboxed Agent Runtimes (Claude Cowork, Codex Cloud)
+## 7. Desktop, Sandboxed, and Remote Agent Boundaries
 
-Agent products that run tasks inside an isolated sandbox still use the same pattern, with one nuance: the MCP server is spawned by the *client* (host side), not inside the task sandbox.
+The JSON examples in section 6 configure a local stdio MCP server in Claude
+Desktop. The process runs on the user's machine and can read the approved local
+environment and external portal config.
 
-- **Claude Cowork:** configure `hsapi-mcp` as a custom connector in the Claude desktop app config (same JSON shape as Claude Desktop in section 6). The server process runs host-side where the configured `env` applies; the agent's Linux sandbox only sees tool calls and tool results, never the environment. Scheduled/automated Cowork tasks therefore also reach HubSpot through the connector, even though the sandbox itself has no credentials.
-- **Codex (cloud sandbox):** same `mcpServers` shape in the Codex config. If the runtime cannot inject env securely, point `command` at the neutral-token wrapper (`examples/neutral-token-wrapper.sample.sh`) so token values come from a local secret lookup command instead of config.
+Do not assume that the same local server is available in every Claude surface.
+Anthropic currently documents local `claude_desktop_config.json` servers as a
+Claude Desktop-only mechanism; they are not available in Cowork or claude.ai.
+Those surfaces require a separately hosted remote MCP server and remote
+connector. This package does not currently deploy that remote transport:
+https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp
 
-### What this isolation guarantees (validated 2026-06-10)
+Claude Desktop also supports installable desktop extensions. This package
+currently documents the explicit local JSON process configuration so its
+executable, profile path, and auth behavior remain inspectable; it does not yet
+ship an `.mcpb` desktop-extension bundle.
 
-A scripted validation run inside a Cowork Linux sandbox (results on issue #29) drove an 8-message MCP conversation with a fake token injected only via child-process env:
+For another sandboxed agent product, first verify whether its client can spawn
+a host-side stdio MCP server. If it cannot, deploy an approved remote MCP
+transport instead of copying the local JSON shape into the sandbox. Never make
+the task sandbox itself the secret store.
+
+### What the MCP subprocess test established (validated 2026-06-10)
+
+A scripted eight-message MCP conversation with a fake token injected only via
+child-process environment established the server's output and mutation
+boundaries:
 
 - zero occurrences of the token value in any stdout/stderr; only env var *names* and `Bearer $ENV_NAME` placeholders appear in previews
 - `tokenPresent: true` confirms the env was seen without exposing it
@@ -278,7 +357,8 @@ When sharing the repo with another user or agent, give them:
 
 1. GitHub repo access.
 2. This quickstart.
-3. Their portal names and portal IDs.
+3. Their intended local profile names; for hosted OAuth, the exact portal ID
+   and broker URL issued by the app operator.
 4. The credential env var names they should place in their private `portals.json`.
 5. Instructions for their approved secret source.
 

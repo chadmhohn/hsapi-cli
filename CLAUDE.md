@@ -4,6 +4,7 @@
 
 Read first:
 
+- `docs/hubspot-api-context/portal-auth-setup.md` for portal-profile onboarding
 - `README.md`
 - `docs/INSTALL.md`
 - `SECURITY.md`
@@ -13,7 +14,7 @@ Install:
 
 ```bash
 npm install -g .
-npm install -g git+ssh://git@github.com/your-org/hsapi-cli.git#<tag-or-branch>
+npm install -g git+https://github.com/chadmhohn/hsapi-cli.git#<tag-or-branch>
 npm install -g ./hsapi-cli-<version>.tgz
 ```
 
@@ -28,6 +29,28 @@ Rules:
 - Keep real portal config outside the package and point to it with `HSAPI_PORTALS_CONFIG`.
 - Use `--show-request` before live HubSpot calls.
 - Mutations require `--yes`; dangerous schema operations may require an additional danger flag.
+
+## Portal onboarding for assistants
+
+When a user needs a portal profile:
+
+1. Read `docs/hubspot-api-context/portal-auth-setup.md`. Through MCP, call
+   `hsapi_context_doc` with `name: "portal-auth-setup"`.
+2. Ask whether the operator intends hosted OAuth, ServiceKey/private-app auth,
+   or an explicitly combined profile. Do not configure every auth family.
+3. Start from the matching portal-neutral template under `examples/`.
+4. Keep the real config and token cache outside the package. Put only
+   environment-variable names in the config, never credential values.
+5. Never ask the user to paste a token, client secret, broker start credential,
+   authorization code, or cache contents into chat.
+6. Run `hsapi auth doctor --portal <name> --require-env` before live access.
+   For hosted OAuth, follow with `auth login` and `auth whoami`. For
+   ServiceKey/private-app auth, preview and then run the read-only
+   `account details` identity check.
+
+`ServiceKey` maps to `auth.portalBearer` and is a HubSpot private-app access
+token. Hosted OAuth teammates do not need the HubSpot app client ID or client
+secret locally. Never invent a broker URL, portal ID, or enrollment credential.
 
 ## MCP Tool Selection (for agents using the MCP server)
 

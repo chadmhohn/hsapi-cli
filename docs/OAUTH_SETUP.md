@@ -1,5 +1,10 @@
 # HSAPI CLI — OAuth Setup Guide
 
+For the portal-profile decision tree used by people and assistants, start with
+`docs/hubspot-api-context/portal-auth-setup.md` (or
+`hsapi_context_doc` name `portal-auth-setup` through MCP). This guide focuses
+on OAuth broker setup and operations.
+
 ## What this gives you
 
 Each teammate authorizes the shared HubSpot app in a browser. `hsapi` then acts

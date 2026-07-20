@@ -1,4 +1,10 @@
+const path = require('path');
 const { endpointDefinitions, commandLiteralPrefix } = require('./catalog');
+
+const PACKAGE_ROOT = path.resolve(__dirname, '..');
+const PORTAL_SETUP_GUIDE = path.join(PACKAGE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md');
+const SERVICE_KEY_SAMPLE = path.join(PACKAGE_ROOT, 'examples', 'portals.sample.json');
+const HOSTED_OAUTH_SAMPLE = path.join(PACKAGE_ROOT, 'examples', 'portals.oauth-hosted.sample.json');
 
 // Lines for commands that exist outside the endpoint catalog: local tooling,
 // virtual commands built on other endpoints, and bridge surfaces.
@@ -69,6 +75,9 @@ ${typedCommandLines(filePath).map(indent).join('\n')}
 
 Config:
   ${defaultConfigPath}
+  Setup guide: ${PORTAL_SETUP_GUIDE}
+  ServiceKey template: ${SERVICE_KEY_SAMPLE}
+  Hosted OAuth template: ${HOSTED_OAUTH_SAMPLE}
 
 Output:
   --select <path>              Print one projected value, e.g. data.results[].id

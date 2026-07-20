@@ -13,12 +13,12 @@ Use direct CLI mode for scripts, local operator work, package smoke tests, and a
 
 ```bash
 export HSAPI_PORTALS_CONFIG=/path/outside-package/hsapi/portals.json
-export HUBSPOT_ACCESS_TOKEN_EXAMPLE="<loaded-from-env-or-secret-manager>"
+export HUBSPOT_SERVICE_KEY_EXAMPLE="<loaded-from-env-or-secret-manager>"
 
 hsapi profiles list
-hsapi auth doctor --portal example --require-env
-hsapi account details --portal example --show-request
-hsapi crm list contacts --portal example --properties email --max-results 5
+hsapi auth doctor --portal service-key-example --require-env
+hsapi account details --portal service-key-example --show-request
+hsapi crm list contacts --portal service-key-example --properties email --max-results 5
 ```
 
 Direct CLI mode gives the caller the full command surface. Keep using `--show-request` before unfamiliar writes, and keep mutating commands behind `--yes` plus any command-specific danger flags. Use `--agent`, `--max-results`, `--max-chars`, `--select`, `--pick`, `--ids-only`, `--names-only`, and `--id-name-map` to keep output bounded for agents.
@@ -47,7 +47,9 @@ These tools are stateless and never call HubSpot:
 - `hsapi_catalog_coverage`: summarize endpoint coverage and auth-family coverage.
 - `hsapi_catalog_commands`: inspect command metadata with bounded filters.
 - `hsapi_auth_doctor`: validate profile wiring without printing secrets.
-- `hsapi_context_doc`: fetch a named context document from the local docs library.
+- `hsapi_context_doc`: fetch a named context document from the local docs
+  library. For a missing profile or auth onboarding, fetch
+  `portal-auth-setup` first.
 - `hsapi_command_help`: return help text for a catalog command without executing it.
 
 ### Execute tools — read-only variants (`readOnlyHint: true` — always-approvable)
@@ -67,6 +69,12 @@ Use these only when you need to mutate data:
 MCP input uses top-level fields for `portal`, `showRequest`, `confirmMutation`, compact output, projection, and limits; those flags are rejected if they are smuggled inside the raw command argv.
 
 **Rule for agents:** default to the `_read` variants. Switch to the write variants only when you specifically need to create, update, or delete data — and always review the blocked preview before passing `confirmMutation: true`.
+
+For a new connection, the assistant should call `hsapi_context_doc` with
+`name: "portal-auth-setup"`, choose the ServiceKey, hosted OAuth, or combined
+template, then run `hsapi_profiles_list` and `hsapi_auth_doctor`. The guide is
+packaged locally; MCP access is a convenience and does not require repository
+access.
 
 ## OpenClaw Config
 
@@ -115,7 +123,7 @@ Before replacing older HubSpot MCP entries with the CLI-backed MCP server, make 
 3. Load real token values through a local secret manager, OpenClaw-supported SecretRef wrapper, or another private injection command.
 4. Start `hsapi` or `hsapi-mcp` through a wrapper that reads the needed env var names from `HSAPI_PORTALS_CONFIG` and exports values only for the child process.
 
-Use `examples/portals.multi-portal.sample.json` as the profile-name template. It preserves the `portal-alpha` and `portal-beta` profile names while keeping token values out of the repo. Use `examples/neutral-token-wrapper.sample.sh` as the wrapper template. The wrapper calls `HSAPI_SECRET_LOOKUP_CMD <ENV_NAME>` for each missing portal-bearer token env var declared by `HSAPI_PORTALS_CONFIG`; the lookup command is deliberately local and repo-external so it can be backed by a password manager, an OpenClaw SecretRef command, a locked-down file provider, or another operator-approved secret manager.
+Use `examples/portals.multi-portal.sample.json` as the profile-name template. It preserves the `portal-alpha` and `portal-beta` profile names while keeping token values out of the repo. Use `examples/neutral-token-wrapper.sample.sh` as the wrapper template. The wrapper calls `HSAPI_SECRET_LOOKUP_CMD <ENV_NAME>` for each missing credential environment variable declared by the selected profiles in `HSAPI_PORTALS_CONFIG`, including `auth.portalBearer.tokenEnv` and hosted OAuth `auth.oauth.brokerStartKeyEnv`; the lookup command is deliberately local and repo-external so it can be backed by a password manager, an OpenClaw SecretRef command, a locked-down file provider, or another operator-approved secret manager.
 
 Direct CLI shape:
 

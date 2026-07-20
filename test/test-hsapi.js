@@ -811,6 +811,7 @@ test('config discovery prefers explicit then external per-user config and falls 
   assert.notStrictEqual(missingExplicit.status, 0);
   assert(missingExplicit.stderr.includes(missingExplicitPath));
   assert.match(missingExplicit.stderr, /HSAPI_PORTALS_CONFIG points to a file that does not exist/);
+  assert(missingExplicit.stderr.includes(path.join(WORKSPACE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md')));
   assert.match(missingExplicit.stderr, /does not create or overwrite portal configs automatically/);
 
   const missingXdgRoot = path.join(root, 'missing-xdg');
@@ -824,7 +825,9 @@ test('config discovery prefers explicit then external per-user config and falls 
   });
   assert.notStrictEqual(missingDefault.status, 0);
   assert(missingDefault.stderr.includes(missingDefaultPath));
-  assert.match(missingDefault.stderr, /Copy examples\/portals\.sample\.json/);
+  assert(missingDefault.stderr.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.sample.json')));
+  assert(missingDefault.stderr.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.oauth-hosted.sample.json')));
+  assert.match(missingDefault.stderr, /Read the installed setup guide/);
   assert.match(missingDefault.stderr, /set HSAPI_PORTALS_CONFIG to an existing config file/);
   assert.strictEqual(fs.existsSync(missingDefaultPath), false, 'config discovery must not create a missing per-user config');
 
@@ -1336,6 +1339,9 @@ test('11 Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help
     const bareHelp = await run(['help'], baseEnv);
     assert.strictEqual(bareHelp.status, 0);
     assert.match(bareHelp.stdout, /^hsapi - portal-aware HubSpot API CLI/);
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md')));
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.sample.json')));
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.oauth-hosted.sample.json')));
 
 });
 
@@ -1600,13 +1606,16 @@ test('17 Issue #18: packaged context docs are reachable through MCP', async () =
       { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: {} } },
       { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'crm-records' } } },
       { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'docs/hubspot-api-context/associations.md', maxChars: 1000 } } },
-      { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: '../../package.json' } } }
-    ], baseEnv, 5);
+      { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: '../../package.json' } } },
+      { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'portal-auth-setup' } } }
+    ], baseEnv, 6);
     assert.strictEqual(mcp.stderr, '');
+    assert.match(mcp.responses[0].result.instructions, /portal-auth-setup/);
 
     const listing = mcpStructuredContent(mcp.responses[1]);
     assert.strictEqual(listing.ok, true);
     assert(listing.docs.some((doc) => doc.name === 'crm-records'));
+    assert(listing.docs.some((doc) => doc.name === 'portal-auth-setup'));
     assert(listing.docs.every((doc) => doc.path.startsWith('docs/hubspot-api-context/')));
 
     const crmRecords = mcpStructuredContent(mcp.responses[2]);
@@ -1622,6 +1631,13 @@ test('17 Issue #18: packaged context docs are reachable through MCP', async () =
     const traversal = mcpStructuredContent(mcp.responses[4]);
     assert.strictEqual(traversal.ok, false);
     assert.strictEqual(traversal.error.code, 'unknown_context_doc');
+
+    const portalSetup = mcpStructuredContent(mcp.responses[5]);
+    assert.strictEqual(portalSetup.ok, true);
+    assert.strictEqual(portalSetup.name, 'portal-auth-setup');
+    assert.match(portalSetup.markdown, /ServiceKey/);
+    assert.match(portalSetup.markdown, /hosted_broker/);
+    assert.match(portalSetup.markdown, /Claude|MCP/);
 
 });
 
@@ -7187,7 +7203,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         res.writeHead(201, { 'content-type': 'application/json' });
         res.end(JSON.stringify({
           sessionId: brokerSessionId,
-          authorizationUrl: `https://app.hubspot.com/oauth/246523489/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
+          authorizationUrl: `https://app.hubspot.com/oauth/123456789/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
           expiresIn: 600,
           interval: 1
         }));
@@ -7206,7 +7222,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
             expiresIn: 1800,
             tokenType: 'bearer',
             scopes: ['oauth', 'crm.objects.contacts.read'],
-            hubId: 246523489,
+            hubId: 123456789,
             userId: 12345
           }));
         return;
@@ -7221,7 +7237,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
           expiresIn: 1800,
           tokenType: 'bearer',
           scopes: ['oauth', 'crm.objects.contacts.read'],
-          hubId: 246523489,
+          hubId: 123456789,
           userId: 12345
         }));
         return;
@@ -7251,7 +7267,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     const brokerStartKey = 'test-broker-start-key';
 
     const session = await startHostedBrokerLogin(source, {
-      accountId: '246523489',
+      accountId: '123456789',
       codeChallenge: 'challenge-123',
       consumeSecretHash: 'consume-hash-123',
       brokerStartKey
@@ -7262,9 +7278,9 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.strictEqual(session.intervalSeconds, 1);
     assert.throws(
       () => validateHubSpotAuthorizationUrl(
-        new URL(`https://evil.example/oauth/246523489/authorize?client_id=x&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`),
+        new URL(`https://evil.example/oauth/123456789/authorize?client_id=x&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`),
         brokerSessionId,
-        '246523489',
+        '123456789',
         'test'
       ),
       /untrusted HubSpot authorizationUrl/
@@ -7287,13 +7303,13 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     });
     assert.strictEqual(complete.status, 'complete');
     assert.deepStrictEqual(complete.token.scopes, ['oauth', 'crm.objects.contacts.read']);
-    assert.strictEqual(complete.token.hubId, '246523489');
+    assert.strictEqual(complete.token.hubId, '123456789');
     assert.strictEqual(complete.token.userId, '12345');
 
     const cacheSource = {
       mode: OAUTH_MODES.HOSTED_BROKER,
       brokerUrl: 'https://auth.example.test',
-      portalId: '246523489',
+      portalId: '123456789',
       tokenCachePath: path.join(os.tmpdir(), 'hsapi-hosted-oauth-test-cache.json'),
       tokenCachePathDisplay: '~/.config/hsapi/oauth/test.json'
     };
@@ -7301,11 +7317,11 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.strictEqual(cache.refreshToken, 'broker-refresh-token');
     assert.strictEqual(cache.brokerCredential, 'v1.broker-credential');
     assert.deepStrictEqual(cache.scopes, ['oauth', 'crm.objects.contacts.read']);
-    assert.strictEqual(cache.hubId, '246523489');
+    assert.strictEqual(cache.hubId, '123456789');
     assert.strictEqual(cache.userId, '12345');
     assert.strictEqual(cache.source.mode, OAUTH_MODES.HOSTED_BROKER);
     assert.strictEqual(cache.source.brokerUrl, 'https://auth.example.test');
-    assert.strictEqual(cache.source.portalId, '246523489');
+    assert.strictEqual(cache.source.portalId, '123456789');
     assert.deepStrictEqual(oauthCacheProfileMatch(cache, cacheSource), {
       ok: true,
       reason: null
@@ -7351,7 +7367,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.deepStrictEqual(startRequest.body, {
       codeChallenge: 'challenge-123',
       consumeSecretHash: 'consume-hash-123',
-      accountId: '246523489'
+      accountId: '123456789'
     });
     const exchangeRequest = brokerRequests.find((request) => request.pathname.endsWith('/exchange'));
     assert.strictEqual(exchangeRequest.headers.authorization, 'Bearer consume-secret-123');
@@ -7363,7 +7379,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     });
 
     const hostedProfile = resolveOAuthProfile({
-      portalId: '246523489',
+      portalId: '123456789',
       auth: {
         oauth: {
           mode: OAUTH_MODES.HOSTED_BROKER,
@@ -7378,7 +7394,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.strictEqual(hostedProfile.mode, OAUTH_MODES.HOSTED_BROKER);
     assert.strictEqual(hostedProfile.brokerUrl, 'https://auth.example.test/base');
     assert.strictEqual(hostedProfile.brokerStartKeyEnv, 'HSAPI_OAUTH_BROKER_START_KEY');
-    assert.strictEqual(hostedProfile.portalId, '246523489');
+    assert.strictEqual(hostedProfile.portalId, '123456789');
     assert.strictEqual(hostedProfile.clientIdEnv, null);
     assert.strictEqual(hostedProfile.clientSecretEnv, null);
     assert.strictEqual(hostedProfile.redirectUrl, null);

@@ -2,5 +2,6 @@
 .env*
 .wrangler/
 .wrangler-config/
+wrangler.operator.jsonc
 coverage/
 node_modules/

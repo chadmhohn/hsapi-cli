@@ -76,7 +76,7 @@ describe("hsapi OAuth broker", () => {
     const unauthenticatedStart = await postJson(
       "/v1/oauth/sessions",
       {
-        accountId: "246523489",
+        accountId: "123456789",
         codeChallenge: await sha256Base64Url(verifier),
         consumeSecretHash: await sha256Base64Url(consumeSecret),
       },
@@ -95,7 +95,7 @@ describe("hsapi OAuth broker", () => {
 
     const authorizationUrl = new URL(start.authorizationUrl);
     expect(authorizationUrl.pathname).toBe(
-      "/oauth/246523489/authorize",
+      "/oauth/123456789/authorize",
     );
     expect(authorizationUrl.searchParams.get("scope")).toBe("oauth");
     const optionalScopes = (
@@ -144,7 +144,7 @@ describe("hsapi OAuth broker", () => {
             refresh_token: "refresh-token-2",
             expires_in: 1800,
             token_type: "bearer",
-            hub_id: 246523489,
+            hub_id: 123456789,
             user_id: 222,
             scopes: ["oauth", "cpq.quotes.write"],
           });
@@ -154,7 +154,7 @@ describe("hsapi OAuth broker", () => {
           refresh_token: "refresh-token-1",
           expires_in: 1800,
           token_type: "bearer",
-          hub_id: 246523489,
+          hub_id: 123456789,
           user_id: 111,
           scopes: ["oauth", "crm.objects.marketing_events.write"],
         });
@@ -187,7 +187,7 @@ describe("hsapi OAuth broker", () => {
       refreshToken: "refresh-token-1",
       expiresIn: 1800,
       tokenType: "bearer",
-      hubId: 246523489,
+      hubId: 123456789,
       userId: 111,
       scopes: ["oauth", "crm.objects.marketing_events.write"],
     });
@@ -334,7 +334,7 @@ describe("hsapi OAuth broker", () => {
           refresh_token: "initial-refresh",
           expires_in: 1800,
           token_type: "bearer",
-          hub_id: 246523489,
+          hub_id: 123456789,
         });
       },
     );
@@ -381,7 +381,7 @@ describe("hsapi OAuth broker", () => {
         refresh_token: "refresh-token",
         expires_in: 1800,
         token_type: "bearer",
-        hub_id: 246523489,
+          hub_id: 123456789,
       }),
     );
 
@@ -571,7 +571,7 @@ describe("hsapi OAuth broker", () => {
     const invalidChallenge = await postJson(
       "/v1/oauth/sessions",
       {
-        accountId: "246523489",
+        accountId: "123456789",
         codeChallenge: "not-a-sha256-challenge",
         consumeSecretHash: await sha256Base64Url(consumeSecret),
       },
@@ -702,7 +702,7 @@ describe("hsapi OAuth broker", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "246523489",
+          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -762,7 +762,7 @@ describe("hsapi OAuth broker", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "246523489",
+          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -817,7 +817,7 @@ describe("hsapi OAuth broker", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "246523489",
+          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -850,7 +850,7 @@ async function startSession(): Promise<StartResponse> {
   const response = await postJson(
     "/v1/oauth/sessions",
     {
-      accountId: "246523489",
+      accountId: "123456789",
       codeChallenge: await sha256Base64Url(verifier),
       consumeSecretHash: await sha256Base64Url(consumeSecret),
     },

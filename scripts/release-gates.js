@@ -80,7 +80,17 @@ const REQUIRED_DOC_PHRASES = [
   ['docs/RELEASE_CHECKLIST.md', 'MCP release gate'],
   ['docs/RELEASE_CHECKLIST.md', 'hsapi auth doctor'],
   ['docs/OAUTH_SETUP.md', 'Package installs and upgrades never create, download, or overwrite'],
-  ['cloudflare/hsapi-oauth-broker/README.md', 'controlled staging/internal enrollment']
+  ['docs/hubspot-api-context/portal-auth-setup.md', 'Portal Profile Setup for Users and AI Assistants'],
+  ['docs/hubspot-api-context/portal-auth-setup.md', 'ServiceKey'],
+  ['docs/hubspot-api-context/portal-auth-setup.md', 'hosted_broker'],
+  ['docs/hubspot-api-context/portal-auth-setup.md', 'hsapi_context_doc'],
+  ['AGENTS.md', 'portal-auth-setup'],
+  ['CLAUDE.md', 'portal-auth-setup'],
+  ['README.md', 'portals.oauth-hosted.sample.json'],
+  ['docs/INSTALL.md', 'portals.oauth-service-key.sample.json'],
+  ['docs/DESKTOP_MCP_QUICKSTART.md', 'npx --yes --package=github:chadmhohn/hsapi-cli'],
+  ['cloudflare/hsapi-oauth-broker/README.md', 'controlled staging/internal enrollment'],
+  ['cloudflare/hsapi-oauth-broker/README.md', 'wrangler.operator.jsonc']
 ];
 
 const DISALLOWED_PACKAGE_PATHS = [
@@ -116,6 +126,15 @@ const REQUIRED_NEUTRAL_TOKEN_FILES = [
 
 const REQUIRED_AUTH_BOUNDARY_PACKAGE_FILES = [
   'docs/CMS_PROJECTS_AUTH_BOUNDARY.md'
+];
+
+const REQUIRED_PORTAL_ONBOARDING_FILES = [
+  'AGENTS.md',
+  'CLAUDE.md',
+  'docs/hubspot-api-context/portal-auth-setup.md',
+  'examples/portals.sample.json',
+  'examples/portals.oauth-hosted.sample.json',
+  'examples/portals.oauth-service-key.sample.json'
 ];
 
 const REQUIRED_BIN_ENTRIES = {
@@ -181,8 +200,16 @@ const DISALLOWED_CONTENT_PATTERNS = [
     label: 'private maintainer name'
   },
   {
-    pattern: /"portalId"\s*:\s*"\d{5,}"/,
-    label: 'concrete portal ID'
+    pattern: /\b(?:portalId|accountId|hubId|HUBSPOT_ACCOUNT_ID)\s*[:=]\s*["']?\d{5,}["']?/,
+    label: 'concrete HubSpot account/portal ID'
+  },
+  {
+    pattern: /https:\/\/app\.hubspot\.com\/oauth\/\d{5,}\//i,
+    label: 'concrete HubSpot OAuth account URL'
+  },
+  {
+    pattern: /https:\/\/[a-z0-9-]+\.(?!REPLACE\.)[a-z0-9-]+\.workers\.dev\b/i,
+    label: 'concrete Cloudflare Worker hostname'
   }
 ];
 
@@ -510,7 +537,8 @@ function validateNeutralTokenSource(failures, files) {
     'HSAPI_SECRET_LOOKUP_CMD',
     'HSAPI_NEUTRAL_TOKEN_PROFILES',
     'HSAPI_NEUTRAL_TOKEN_DRY_RUN',
-    'auth.portalBearer.tokenEnv',
+    'portalBearer.tokenEnv',
+    'brokerStartKeyEnv',
     'exec "$@"'
   ];
   for (const marker of requiredMarkers) {
@@ -649,15 +677,135 @@ function validatePackagedFiles(failures) {
   return files;
 }
 
-function validateHostedOAuthSample(failures) {
-  const sample = readJson('examples/portals.sample.json');
+function validateWorkerCheckoutNeutrality(failures) {
+  const configPath = 'cloudflare/hsapi-oauth-broker/wrangler.jsonc';
+  const configText = readText(configPath);
+  const placeholderClientId = '00000000-0000-4000-8000-000000000001';
+  const syntheticTestAccountIds = new Set(['123456789', '999999999']);
+
+  if (/"HUBSPOT_ACCOUNT_ID"\s*:\s*"\d{5,}"/.test(configText)) {
+    failures.push(`${configPath} must not contain a concrete HubSpot account ID.`);
+  }
+
+  const clientIds = [...configText.matchAll(/"HUBSPOT_CLIENT_ID"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
+  if (!clientIds.length || clientIds.some((value) => value !== placeholderClientId)) {
+    failures.push(`${configPath} must use only the documented placeholder HubSpot client ID.`);
+  }
+
+  const redirectUris = [...configText.matchAll(/"HUBSPOT_REDIRECT_URI"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
+  if (
+    !redirectUris.length
+    || redirectUris.some((value) => value.includes('.workers.dev') && !value.includes('.REPLACE.workers.dev'))
+  ) {
+    failures.push(`${configPath} must not contain a concrete Cloudflare Worker callback hostname.`);
+  }
+
+  const workerGitignore = readText('cloudflare/hsapi-oauth-broker/.gitignore');
+  if (!workerGitignore.split(/\r?\n/).includes('wrangler.operator.jsonc')) {
+    failures.push('The Worker must ignore wrangler.operator.jsonc so deployment-specific public metadata stays local.');
+  }
+
+  const workerPackage = readJson('cloudflare/hsapi-oauth-broker/package.json');
+  for (const scriptName of ['deploy:staging', 'deploy:production']) {
+    const script = workerPackage.scripts && workerPackage.scripts[scriptName];
+    if (!script || !script.includes('--config wrangler.operator.jsonc')) {
+      failures.push(`Worker script ${scriptName} must deploy through the gitignored operator config.`);
+    }
+  }
+
+  let trackedSourceFiles = [];
+  try {
+    trackedSourceFiles = execFileSync(
+      'git',
+      ['ls-files', '-z', '--', 'cloudflare/hsapi-oauth-broker'],
+      { cwd: PACKAGE_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    )
+      .split('\0')
+      .filter(Boolean)
+      .map((relativePath) => path.join(PACKAGE_ROOT, relativePath));
+  } catch (error) {
+    failures.push(`Unable to enumerate tracked Worker files for neutrality checks: ${error.message}.`);
+  }
+
+  const syntheticUuidPattern = /^([0-9a-f])\1{7}-\1{4}-4\1{3}-[89ab]\1{3}-\1{12}$/i;
+  for (const absolutePath of trackedSourceFiles) {
+    const relativePath = path.relative(PACKAGE_ROOT, absolutePath).replaceAll('\\', '/');
+    const text = fs.readFileSync(absolutePath, 'utf8');
+
+    const accountIds = [
+      ...text.matchAll(/\b(?:accountId|hubId|hub_id|HUBSPOT_ACCOUNT_ID)\b["']?\s*[:=]\s*["']?(\d{5,})/gi),
+      ...text.matchAll(/\/oauth\/(\d{5,})\//gi)
+    ].map((match) => match[1]);
+    if (accountIds.some((value) => !syntheticTestAccountIds.has(value))) {
+      failures.push(`Tracked Worker file ${relativePath} contains a non-synthetic HubSpot account ID.`);
+    }
+
+    const clientIds = [...text.matchAll(/\bHUBSPOT_CLIENT_ID\b["']?\s*[:=]\s*["']([0-9a-f-]{36})["']/gi)]
+      .map((match) => match[1]);
+    if (
+      clientIds.some((value) => value !== placeholderClientId && !syntheticUuidPattern.test(value))
+    ) {
+      failures.push(`Tracked Worker file ${relativePath} contains a non-placeholder HubSpot client ID.`);
+    }
+
+    const workerHosts = [...text.matchAll(/\b([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev)\b/gi)]
+      .map((match) => match[1]);
+    if (workerHosts.some((value) => !value.includes('.REPLACE.workers.dev'))) {
+      failures.push(`Tracked Worker file ${relativePath} contains a concrete Cloudflare Worker hostname.`);
+    }
+  }
+
+  return {
+    config: configPath,
+    operatorConfig: 'cloudflare/hsapi-oauth-broker/wrangler.operator.jsonc',
+    trackedValues: 'placeholders-and-synthetic-fixtures-only',
+    scannedFileCount: trackedSourceFiles.length
+  };
+}
+
+function validatePortalOnboarding(failures, files) {
+  const packageFileSet = new Set(files);
+  for (const relativePath of REQUIRED_PORTAL_ONBOARDING_FILES) {
+    if (!packageFileSet.has(relativePath)) {
+      failures.push('Package dry-run must include portal onboarding file: ' + relativePath + '.');
+    }
+  }
+
+  const serviceKeySample = readJson('examples/portals.sample.json');
+  const serviceKeyProfile = serviceKeySample.portals
+    && serviceKeySample.portals['service-key-example'];
+  const serviceKeyAuth = serviceKeyProfile && serviceKeyProfile.auth;
+  const portalBearer = serviceKeyProfile
+    && serviceKeyAuth
+    && serviceKeyAuth.portalBearer;
+  if (
+    serviceKeySample.default !== 'service-key-example'
+    || !serviceKeyProfile
+    || !serviceKeyAuth
+    || serviceKeyAuth.defaultFamily !== AUTH_FAMILIES.PORTAL_BEARER
+    || !portalBearer
+    || portalBearer.tokenEnv !== 'HUBSPOT_SERVICE_KEY_EXAMPLE'
+    || portalBearer.kind !== 'private_app'
+  ) {
+    failures.push('examples/portals.sample.json must be the minimal ServiceKey/private-app portal_bearer template.');
+  }
+  if (
+    serviceKeyAuth
+    && (serviceKeyAuth.oauth || serviceKeyAuth.developer)
+  ) {
+    failures.push('ServiceKey sample must not require OAuth or developer credentials.');
+  }
+
+  const sample = readJson('examples/portals.oauth-hosted.sample.json');
   const profile = sample.portals && sample.portals['oauth-hosted-example'];
   const oauth = profile && profile.auth && profile.auth.oauth;
   if (!profile || !oauth) {
-    failures.push('examples/portals.sample.json must include oauth-hosted-example with auth.oauth.');
+    failures.push('examples/portals.oauth-hosted.sample.json must include oauth-hosted-example with auth.oauth.');
     return null;
   }
-  if (profile.portalId !== '<numeric-portal-id>') {
+  if (profile.portalId !== 'REPLACE_WITH_NUMERIC_PORTAL_ID') {
     failures.push('Hosted OAuth sample must retain a non-concrete portalId placeholder.');
   }
   if (profile.auth.defaultFamily !== AUTH_FAMILIES.OAUTH || oauth.mode !== 'hosted_broker') {
@@ -665,7 +813,7 @@ function validateHostedOAuthSample(failures) {
   }
   if (
     typeof oauth.brokerUrl !== 'string'
-    || !oauth.brokerUrl.startsWith('https://')
+    || oauth.brokerUrl !== 'https://replace-with-operator-broker.example'
     || typeof oauth.brokerStartKeyEnv !== 'string'
     || !/^[A-Z][A-Z0-9_]*$/.test(oauth.brokerStartKeyEnv)
     || typeof oauth.tokenCachePath !== 'string'
@@ -678,10 +826,36 @@ function validateHostedOAuthSample(failures) {
       failures.push(`Hosted OAuth sample must not declare local ${forbidden}.`);
     }
   }
+
+  const combinedSample = readJson('examples/portals.oauth-service-key.sample.json');
+  const combinedProfile = combinedSample.portals
+    && combinedSample.portals['oauth-and-service-key-example'];
+  const combinedAuth = combinedProfile && combinedProfile.auth;
+  const combinedOauth = combinedAuth && combinedAuth.oauth;
+  const combinedPortalBearer = combinedAuth && combinedAuth.portalBearer;
+  if (
+    combinedSample.default !== 'oauth-and-service-key-example'
+    || !combinedProfile
+    || combinedProfile.portalId !== 'REPLACE_WITH_NUMERIC_PORTAL_ID'
+    || !combinedAuth
+    || combinedAuth.defaultFamily !== AUTH_FAMILIES.OAUTH
+    || !combinedOauth
+    || combinedOauth.mode !== 'hosted_broker'
+    || combinedOauth.brokerUrl !== 'https://replace-with-operator-broker.example'
+    || !combinedPortalBearer
+    || combinedPortalBearer.tokenEnv !== 'HUBSPOT_SERVICE_KEY_EXAMPLE'
+    || combinedPortalBearer.kind !== 'private_app'
+  ) {
+    failures.push('Combined portal sample must contain hosted OAuth plus an explicit ServiceKey/private-app portal_bearer credential.');
+  }
+
   return {
-    profile: 'oauth-hosted-example',
-    mode: oauth.mode,
-    brokerStartKeyEnv: oauth.brokerStartKeyEnv,
+    guide: 'docs/hubspot-api-context/portal-auth-setup.md',
+    serviceKeyProfile: 'service-key-example',
+    hostedOAuthProfile: 'oauth-hosted-example',
+    combinedProfile: 'oauth-and-service-key-example',
+    hostedOAuthMode: oauth.mode,
+    brokerStartKeyEnv: oauth.brokerStartKeyEnv
   };
 }
 
@@ -691,14 +865,16 @@ function main() {
   validateDocs(failures);
   const files = validatePackagedFiles(failures);
   const mcp = validateMcp(failures, files);
-  const hostedOAuthSample = validateHostedOAuthSample(failures);
+  const portalOnboarding = validatePortalOnboarding(failures, files);
+  const workerCheckoutNeutrality = validateWorkerCheckoutNeutrality(failures);
 
   const output = {
     ok: failures.length === 0,
     checkedAt: new Date().toISOString(),
     catalog,
     mcp,
-    hostedOAuthSample,
+    portalOnboarding,
+    workerCheckoutNeutrality,
     packageFileCount: files.length,
     failures
   };

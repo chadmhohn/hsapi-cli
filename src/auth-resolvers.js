@@ -34,13 +34,17 @@ function loadConfig() {
   const configPath = resolvePortalConfigPath();
   if (!fs.existsSync(configPath)) {
     const userConfigPath = defaultUserConfigPath();
+    const setupGuidePath = path.join(PACKAGE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md');
+    const serviceKeySamplePath = path.join(PACKAGE_ROOT, 'examples', 'portals.sample.json');
+    const hostedOAuthSamplePath = path.join(PACKAGE_ROOT, 'examples', 'portals.oauth-hosted.sample.json');
     const explicitConfigPath = configString(process.env.HSAPI_PORTALS_CONFIG);
     const selectedMessage = explicitConfigPath
       ? `HSAPI_PORTALS_CONFIG points to a file that does not exist: ${configPath}`
       : `No portal config was found at the per-user default: ${userConfigPath}`;
     fail(
-      `${selectedMessage}. Copy examples/portals.sample.json to a private external path `
-      + `such as ${userConfigPath}, or set HSAPI_PORTALS_CONFIG to an existing config file. `
+      `${selectedMessage}. Read the installed setup guide: ${setupGuidePath}. `
+      + `Choose the ServiceKey template at ${serviceKeySamplePath} or the hosted OAuth template at ${hostedOAuthSamplePath}, `
+      + `copy it to a private external path such as ${userConfigPath}, or set HSAPI_PORTALS_CONFIG to an existing config file. `
       + 'hsapi does not create or overwrite portal configs automatically.'
     );
   }
