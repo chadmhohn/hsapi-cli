@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const {
@@ -18,7 +19,14 @@ const { TOOLS: MCP_TOOLS } = require('../src/mcp-server');
 
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const CATALOG_FILE = path.join(PACKAGE_ROOT, 'data', 'hubspot-api-catalog.json');
-const NPM_BIN = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const NPM_CLI = [
+  process.env.npm_execpath,
+  path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')
+].find((candidate) => candidate && fs.existsSync(candidate)) || null;
+const NPM_BIN = NPM_CLI
+  ? process.execPath
+  : (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+const NPM_PREFIX_ARGS = NPM_CLI ? [NPM_CLI] : [];
 
 function execCommand(command, args, options) {
   if (process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command)) {
@@ -29,10 +37,12 @@ function execCommand(command, args, options) {
 
 const REQUIRED_DOC_PHRASES = [
   ['README.md', 'hsapi auth doctor'],
+  ['README.md', 'Package installs and upgrades never create or overwrite'],
   ['README.md', 'hsapi cms doctor'],
   ['README.md', 'hsapi catalog commands'],
   ['docs/INSTALL.md', 'Auth Families'],
   ['docs/INSTALL.md', 'hsapi auth doctor'],
+  ['docs/INSTALL.md', 'Package installs and upgrades never create or replace'],
   ['docs/INSTALL.md', 'hsapi cms doctor'],
   ['docs/INSTALL.md', 'MCP Server Mode'],
   ['docs/hubspot-api-context/cms.md', 'hsapi cms doctor'],
@@ -68,7 +78,9 @@ const REQUIRED_DOC_PHRASES = [
   ['docs/RELEASE_CHECKLIST.md', 'secret redaction'],
   ['docs/RELEASE_CHECKLIST.md', 'auth-family coverage'],
   ['docs/RELEASE_CHECKLIST.md', 'MCP release gate'],
-  ['docs/RELEASE_CHECKLIST.md', 'hsapi auth doctor']
+  ['docs/RELEASE_CHECKLIST.md', 'hsapi auth doctor'],
+  ['docs/OAUTH_SETUP.md', 'Package installs and upgrades never create, download, or overwrite'],
+  ['cloudflare/hsapi-oauth-broker/README.md', 'controlled staging/internal enrollment']
 ];
 
 const DISALLOWED_PACKAGE_PATHS = [
@@ -183,13 +195,23 @@ function readJson(relativePath) {
 }
 
 function packageFiles() {
-  const output = execCommand(NPM_BIN, ['pack', '--dry-run', '--json'], {
-    cwd: PACKAGE_ROOT,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe']
-  });
-  const pack = JSON.parse(output)[0];
-  return (pack.files || []).map((file) => file.path).sort();
+  const npmCache = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-release-gates-npm-'));
+  try {
+    const output = execCommand(NPM_BIN, [...NPM_PREFIX_ARGS, 'pack', '--dry-run', '--json'], {
+      cwd: PACKAGE_ROOT,
+      env: {
+        ...process.env,
+        npm_config_cache: npmCache,
+        npm_config_update_notifier: 'false'
+      },
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    const pack = JSON.parse(output)[0];
+    return (pack.files || []).map((file) => file.path).sort();
+  } finally {
+    fs.rmSync(npmCache, { recursive: true, force: true });
+  }
 }
 
 function validateCatalog(failures) {
@@ -627,18 +649,56 @@ function validatePackagedFiles(failures) {
   return files;
 }
 
+function validateHostedOAuthSample(failures) {
+  const sample = readJson('examples/portals.sample.json');
+  const profile = sample.portals && sample.portals['oauth-hosted-example'];
+  const oauth = profile && profile.auth && profile.auth.oauth;
+  if (!profile || !oauth) {
+    failures.push('examples/portals.sample.json must include oauth-hosted-example with auth.oauth.');
+    return null;
+  }
+  if (profile.portalId !== '<numeric-portal-id>') {
+    failures.push('Hosted OAuth sample must retain a non-concrete portalId placeholder.');
+  }
+  if (profile.auth.defaultFamily !== AUTH_FAMILIES.OAUTH || oauth.mode !== 'hosted_broker') {
+    failures.push('Hosted OAuth sample must default to oauth in hosted_broker mode.');
+  }
+  if (
+    typeof oauth.brokerUrl !== 'string'
+    || !oauth.brokerUrl.startsWith('https://')
+    || typeof oauth.brokerStartKeyEnv !== 'string'
+    || !/^[A-Z][A-Z0-9_]*$/.test(oauth.brokerStartKeyEnv)
+    || typeof oauth.tokenCachePath !== 'string'
+    || !oauth.tokenCachePath.startsWith('~/')
+  ) {
+    failures.push('Hosted OAuth sample must declare HTTPS brokerUrl, brokerStartKeyEnv, and an external user tokenCachePath.');
+  }
+  for (const forbidden of ['clientId', 'clientIdEnv', 'clientSecret', 'clientSecretEnv', 'refreshToken', 'refreshTokenEnv']) {
+    if (Object.prototype.hasOwnProperty.call(oauth, forbidden)) {
+      failures.push(`Hosted OAuth sample must not declare local ${forbidden}.`);
+    }
+  }
+  return {
+    profile: 'oauth-hosted-example',
+    mode: oauth.mode,
+    brokerStartKeyEnv: oauth.brokerStartKeyEnv,
+  };
+}
+
 function main() {
   const failures = [];
   const catalog = validateCatalog(failures);
   validateDocs(failures);
   const files = validatePackagedFiles(failures);
   const mcp = validateMcp(failures, files);
+  const hostedOAuthSample = validateHostedOAuthSample(failures);
 
   const output = {
     ok: failures.length === 0,
     checkedAt: new Date().toISOString(),
     catalog,
     mcp,
+    hostedOAuthSample,
     packageFileCount: files.length,
     failures
   };

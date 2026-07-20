@@ -33,7 +33,12 @@ Releases are produced by `.github/workflows/release.yml`: pushing a `v*` tag run
 
 Update by reinstalling the newer tag, branch, or tarball. That keeps the same command surface while replacing the package contents.
 
-Once the package is distributed through a registry, standard npm updates can be used:
+Package installs and upgrades never create or replace the external portal
+configuration or OAuth token cache. Back up operator-managed configuration
+normally, but do not copy it into the package directory.
+
+There is currently no npm-registry release. If the package is distributed
+through a registry later, standard npm updates can be used:
 
 ```bash
 npm update -g hsapi-cli
@@ -53,19 +58,48 @@ command -v hsapi-mcp
 
 ## Configure Auth Families
 
-Copy `examples/portals.sample.json` to a private path outside the package, then set `HSAPI_PORTALS_CONFIG` to that private file. Keep only environment variable names in JSON; put credential values in your shell, secret manager, or CI secret store.
+Copy `examples/portals.sample.json` to a private path outside the package, then
+set `HSAPI_PORTALS_CONFIG` to that private file. JSON may contain non-secret
+profile metadata such as IDs, URLs, cache paths, and environment variable
+names; put credential values in your shell, secret manager, or CI secret store.
+When `HSAPI_PORTALS_CONFIG` is absent, the CLI checks the per-user
+`~/.config/hsapi/portals.json` path before the legacy checkout-local path.
 
 `hsapi` uses explicit auth families:
 
 | Auth family | Profile fields | Typical commands |
 | --- | --- | --- |
 | `portal_bearer` | `auth.portalBearer.tokenEnv` or legacy `tokenEnv` | CRM, CMS, files, properties, associations, account details, most account-scoped typed commands |
-| `oauth` | `auth.oauth.clientIdEnv`, `auth.oauth.clientSecretEnv`, `auth.oauth.refreshTokenEnv`, `auth.oauth.tokenCachePath` | OAuth-installed-app endpoints and `hsapi auth token|refresh|introspect|revoke` helpers |
+| `oauth` | Hosted: `auth.oauth.mode`, `auth.oauth.brokerUrl`, `auth.oauth.brokerStartKeyEnv`, `auth.oauth.tokenCachePath`; local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` | Browser login, refresh/logout, and OAuth-installed-app endpoints |
 | `developer/personal_access_key` | `auth.developer.personalAccessKeyEnv` | Developer-tooling surfaces that explicitly require a personal access key |
 | `developer/developer_api_key` | `auth.developer.developerApiKeyEnv`, sometimes `auth.developer.appIdEnv` | Classic app webhooks and app-management endpoints documented with `hapikey` |
 | `developer/client_credentials` | `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, `auth.developer.tokenCachePath` | App-level developer APIs such as Webhooks Journal |
 
-Run `hsapi auth doctor --portal <name>` after editing a profile. It validates profile fields, reports missing credential environment variables, and checks that OAuth/developer token-cache paths live outside the package without printing secret values or making HubSpot calls. Add `--require-env` when the command should fail if configured credential env vars are not set.
+Run `hsapi auth doctor --portal <name>` after editing a profile. It validates
+profile fields, reports missing credential environment variables, and checks
+that OAuth/developer token-cache paths live outside the package without
+printing secret values or making HubSpot calls. Add `--require-env` when the
+command should fail if required local environment variables are not set. A
+complete `hosted_broker` profile passes without local HubSpot client
+credentials; it requires a numeric `portalId`, an HTTPS `brokerUrl`, a
+`brokerStartKeyEnv`, its injected value, and a token-cache path.
+
+For a hosted user login:
+
+```bash
+hsapi auth login --portal <name>
+hsapi auth whoami --portal <name>
+```
+
+The operator must provision the broker separately, keep the HubSpot client
+secret in its server-side secret store, and securely issue the independent
+broker session-start credential to enrolled users. See `docs/OAUTH_SETUP.md`
+and `cloudflare/hsapi-oauth-broker/README.md`.
+
+An enrolled teammate needs only the operator-issued external profile, the
+broker session-start credential injected under the profile's
+`brokerStartKeyEnv`, and their normal HubSpot browser login. They do not receive
+the HubSpot app client ID or client secret.
 
 Before running an unfamiliar command, inspect its auth requirement:
 

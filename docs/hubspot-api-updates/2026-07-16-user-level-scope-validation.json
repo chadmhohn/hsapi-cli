@@ -1,0 +1,234 @@
+{
+  "generatedAt": "2026-07-19T01:33:54.252Z",
+  "validationDates": {
+    "initial": "2026-07-16",
+    "freshRevalidation": "2026-07-18"
+  },
+  "account": {
+    "id": "<isolated-test-account-id>",
+    "alias": "hsapi-cli",
+    "label": "hsapi-cli [test account]",
+    "dataHostingLocation": "na2",
+    "uiDomain": "app-na2.hubspot.com",
+    "isConfiguredCustomerProfile": false,
+    "trialBannerObserved": true,
+    "allProductEntitlementsConfirmed": false
+  },
+  "project": {
+    "name": "HubSpot API CLI MCP",
+    "projectId": "<isolated-test-project-id>",
+    "appId": "<isolated-test-app-id>",
+    "appUid": "hubspot-api-cli-mcp",
+    "platformVersion": "2025.2",
+    "isUserLevel": true,
+    "authType": "oauth",
+    "distribution": "marketplace"
+  },
+  "sourceScopeSet": {
+    "requiredScopeCount": 1,
+    "requiredScopes": [
+      "oauth"
+    ],
+    "optionalScopeCount": 72
+  },
+  "initialValidation": {
+    "date": "2026-07-16",
+    "baselineBuild": 25,
+    "baselineOptionalScopeCount": 47,
+    "probeBuildStart": 26,
+    "probeBuildEnd": 50,
+    "acceptedWithWarning": [
+      "cpq.quotes.write",
+      "crm.objects.marketing_events.write"
+    ],
+    "combinedBuild": 52,
+    "combinedOptionalScopeCount": 49
+  },
+  "freshRejectedScopeRevalidation": {
+    "date": "2026-07-18",
+    "baselineOptionalScopeCount": 49,
+    "probeBuildStart": 55,
+    "probeBuildEnd": 77,
+    "candidateDeployStart": 57,
+    "candidateDeployEnd": 79,
+    "probeCount": 23,
+    "rejectedCount": 23,
+    "acceptedCount": 0,
+    "rejectionReason": "The scope <scope> could not be recognized. Check your scope and try again.",
+    "rejected": [
+      "crm.objects.appointments.read",
+      "crm.objects.appointments.write",
+      "crm.objects.carts.write",
+      "crm.objects.commercepayments.read",
+      "crm.objects.courses.read",
+      "crm.objects.courses.write",
+      "crm.objects.custom.read",
+      "crm.objects.custom.write",
+      "crm.objects.feedback_submissions.read",
+      "crm.objects.leads.read",
+      "crm.objects.leads.write",
+      "crm.objects.listings.read",
+      "crm.objects.listings.write",
+      "crm.objects.quotes.write",
+      "crm.objects.services.read",
+      "crm.objects.services.write",
+      "crm.objects.users.read",
+      "crm.objects.users.write",
+      "crm.schemas.custom.read",
+      "crm.schemas.custom.write",
+      "crm.schemas.quotes.read",
+      "crm.schemas.quotes.write",
+      "dashboard.external.read"
+    ]
+  },
+  "currentDeployment": {
+    "build": 78,
+    "deploy": 80,
+    "status": "deployed",
+    "requiredScopeCount": 1,
+    "optionalScopeCount": 49,
+    "cleanOptionalScopeCount": 33,
+    "warningOptionalScopeCount": 16,
+    "redirectUrls": [
+      "http://localhost:5123/callback",
+      "https://<staging-worker-origin>/v1/oauth/callback"
+    ],
+    "warningScopes": [
+      "cms.blogs.blog_posts.read",
+      "cms.pages.landing_pages.read",
+      "cms.pages.site_pages.read",
+      "cpq.quote_templates.read",
+      "cpq.quotes.read",
+      "cpq.quotes.write",
+      "crm.hubsql.execute",
+      "crm.lists.read",
+      "crm.objects.contracts.read",
+      "crm.objects.marketing_events.read",
+      "crm.objects.marketing_events.write",
+      "marketing.campaigns.read",
+      "marketing.campaigns.revenue.full.read",
+      "marketing.campaigns.revenue.lite.read",
+      "mcp.users.read",
+      "settings.users.teams.read"
+    ]
+  },
+  "consentValidation": {
+    "portalId": "<isolated-test-account-id>",
+    "selectedAll": true,
+    "displayedOptionalScopeCount": 49,
+    "requiredGrantedCount": 1,
+    "optionalGrantedCount": 46,
+    "totalGrantedCount": 47,
+    "hubId": "<matches-test-account>",
+    "profileMatch": true,
+    "disabledAndNotGranted": [
+      "cpq.quotes.write",
+      "crm.objects.marketing_events.write",
+      "marketing.campaigns.revenue.lite.read"
+    ]
+  },
+  "runtimeValidation": {
+    "status": "complete_for_granted_warning_tier_reads",
+    "readOnly": true,
+    "postRefreshResultsMatched": true,
+    "identityControl": {
+      "method": "GET",
+      "path": "/account-info/2026-03/details",
+      "status": 200,
+      "portalId": "<matches-test-account>"
+    },
+    "isolatedSuccess": [
+      {
+        "scope": "crm.objects.contracts.read",
+        "status": 200
+      }
+    ],
+    "strongEvidenceSuccess": [
+      {
+        "scope": "mcp.users.read",
+        "path": "/crm/objects/2026-03/users?limit=1",
+        "status": 200,
+        "reason": "The token did not contain crm.objects.users.read."
+      }
+    ],
+    "overlappingScopeSuccess": [
+      {
+        "scope": "cpq.quote_templates.read",
+        "status": 200,
+        "overlaps": [
+          "crm.objects.quotes.read"
+        ]
+      },
+      {
+        "scope": "cpq.quotes.read",
+        "status": 200,
+        "overlaps": [
+          "crm.objects.quotes.read"
+        ]
+      }
+    ],
+    "explicitUserLevelTokenRejection": {
+      "status": 403,
+      "message": "User level OAuth token is not allowed for this endpoint.",
+      "scopes": [
+        "cms.blogs.blog_posts.read",
+        "cms.pages.landing_pages.read",
+        "cms.pages.site_pages.read",
+        "crm.lists.read",
+        "crm.objects.marketing_events.read",
+        "marketing.campaigns.read",
+        "marketing.campaigns.revenue.full.read",
+        "settings.users.teams.read"
+      ]
+    },
+    "cleanScopeBoundaryRecheck": [
+      {
+        "capability": "owners",
+        "method": "GET",
+        "path": "/crm/v3/owners?limit=1",
+        "status": 403,
+        "message": "User level OAuth token is not allowed for this endpoint."
+      },
+      {
+        "capability": "pipelines",
+        "method": "GET",
+        "path": "/crm/pipelines/2026-03/deals",
+        "status": 403,
+        "message": "User level OAuth token is not allowed for this endpoint."
+      }
+    ],
+    "noDocumentedPublicRestProbe": [
+      "crm.hubsql.execute"
+    ],
+    "notRuntimeTestedBecauseNotGranted": [
+      "cpq.quotes.write",
+      "crm.objects.marketing_events.write",
+      "marketing.campaigns.revenue.lite.read"
+    ]
+  },
+  "hostedBrokerValidation": {
+    "environment": "staging",
+    "url": "https://<staging-worker-origin>",
+    "validatedAuthorizationWorkerVersion": "5a333109-82bc-42d4-bc71-0364c6b9de1d",
+    "validatedRefreshWorkerVersion": "5a333109-82bc-42d4-bc71-0364c6b9de1d",
+    "currentDeployedWorkerVersion": "a7a9641e-0324-402d-83cc-61d04fe4075a",
+    "healthReadyOnCurrentDeployment": true,
+    "sessionStartValidatedOnCurrentDeployment": false,
+    "unauthenticatedSessionStartRejectedOnCurrentDeployment": true,
+    "authorizationCompleted": true,
+    "exchangeCompleted": true,
+    "refreshCompleted": true,
+    "freshAuthorizationCompletedOnCurrentDeployment": false,
+    "refreshCompletedOnCurrentDeployment": false,
+    "productionReady": false,
+    "productionBlockers": [
+      "production app and account selection",
+      "exact production callback and independent secrets",
+      "per-install enrollment",
+      "refresh-response retry and replay recovery",
+      "protected local-cache policy",
+      "monitoring, custom-domain policy, and incident response",
+      "separate production deployment"
+    ]
+  }
+}

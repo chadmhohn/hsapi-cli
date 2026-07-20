@@ -17,6 +17,7 @@
           "kind": "private_app"
         },
         "oauth": {
+          "mode": "local",
           "clientIdEnv": "HUBSPOT_CLIENT_ID_EXAMPLE",
           "clientSecretEnv": "HUBSPOT_CLIENT_SECRET_EXAMPLE",
           "refreshTokenEnv": "HUBSPOT_REFRESH_TOKEN_EXAMPLE",
@@ -42,6 +43,23 @@
       "baseUrl": "https://api.hubapi.com",
       "knownPlanLabel": "Starter, Professional, or Enterprise if known",
       "knownPlanSource": "Optional note explaining how the plan label was verified."
+    },
+    "oauth-hosted-example": {
+      "label": "Example HubSpot Portal with Hosted OAuth",
+      "portalId": "<numeric-portal-id>",
+      "baseUrl": "https://api.hubapi.com",
+      "authFamilyIntent": [
+        "oauth"
+      ],
+      "auth": {
+        "defaultFamily": "oauth",
+        "oauth": {
+          "mode": "hosted_broker",
+          "brokerUrl": "https://oauth.example.com",
+          "brokerStartKeyEnv": "HSAPI_OAUTH_BROKER_START_KEY",
+          "tokenCachePath": "~/.config/hsapi/oauth/hosted-example-token-cache.json"
+        }
+      }
     }
   }
 }

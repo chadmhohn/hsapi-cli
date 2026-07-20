@@ -501,15 +501,31 @@ async function main(argv = process.argv.slice(2)) {
         authDefaultFamily: resolveProfileDefaultFamily(portal, name)
       };
       if (oauth) {
-        profile.oauth = {
-          clientIdEnv: oauth.clientIdEnv,
-          clientIdPresent: Boolean(process.env[oauth.clientIdEnv]),
-          clientSecretEnv: oauth.clientSecretEnv,
-          clientSecretPresent: Boolean(process.env[oauth.clientSecretEnv]),
-          refreshTokenEnv: oauth.refreshTokenEnv,
-          refreshTokenPresent: Boolean(process.env[oauth.refreshTokenEnv]),
+        const oauthMetadata = {
+          mode: oauth.mode,
           tokenCache: redactedOAuthTokenCacheContract(oauth)
         };
+        if (oauth.mode === 'hosted_broker') {
+          oauthMetadata.brokerUrl = oauth.brokerUrl;
+          oauthMetadata.brokerStartKeyEnv = oauth.brokerStartKeyEnv;
+          oauthMetadata.brokerStartKeyPresent = Boolean(
+            oauth.brokerStartKeyEnv && process.env[oauth.brokerStartKeyEnv]
+          );
+        } else {
+          oauthMetadata.clientIdEnv = oauth.clientIdEnv;
+          oauthMetadata.clientIdPresent = Boolean(
+            oauth.clientIdEnv && process.env[oauth.clientIdEnv]
+          );
+          oauthMetadata.clientSecretEnv = oauth.clientSecretEnv;
+          oauthMetadata.clientSecretPresent = Boolean(
+            oauth.clientSecretEnv && process.env[oauth.clientSecretEnv]
+          );
+          oauthMetadata.refreshTokenEnv = oauth.refreshTokenEnv;
+          oauthMetadata.refreshTokenPresent = Boolean(
+            oauth.refreshTokenEnv && process.env[oauth.refreshTokenEnv]
+          );
+        }
+        profile.oauth = oauthMetadata;
       }
       if (developer) {
         profile.developer = {

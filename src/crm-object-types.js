@@ -266,6 +266,23 @@ const CRM_OBJECT_TYPE_CATALOG = [
     label: 'Users',
     aliases: ['user', 'owner', 'owners'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/users/guide'
+  },
+  {
+    family: 'optional',
+    objectType: 'contracts',
+    objectTypeId: null,
+    label: 'Contracts',
+    aliases: ['contract'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contracts/guide',
+    notes: 'The standard path name is authoritative; HubSpot does not currently document a stable object type ID for contracts.'
+  },
+  {
+    family: 'optional',
+    objectType: 'marketing_events',
+    objectTypeId: '0-54',
+    label: 'Marketing events',
+    aliases: ['marketing_event', 'marketing event', 'marketing events'],
+    docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/marketing-events/guide'
   }
 ];
 
@@ -466,16 +483,15 @@ async function resolveCrmObjectTypeWithCustomFallback(portal, input, flags) {
   };
 }
 
-// Standard CRM objects HubSpot's user-level (per-user) OAuth apps can act on.
-// A resolved STANDARD object in this set routes to the 'user' token audience
-// (issue #80); everything else - non-capable standard objects (owners/users,
-// communications, postal_mail, projects, payments, fees, discounts, taxes,
-// listings, services, appointments, courses, leads, feedback_submissions,
-// goals), custom objects, and anything unresolved - stays 'admin'. This set is
-// generic to HubSpot's user-app support, not portal-specific.
-// 'contracts' is registered in our OAuth app scope but HubSpot warns it may 403
-// for user-level apps at runtime — included anyway so the OAuth token is tried.
-const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
+// Standard CRM objects whose records the current user-level OAuth app can read.
+// This reflects the app's accepted scopes plus live runtime evidence.
+// In particular, mcp.users.read authorizes the current Users CRM GET surface,
+// even though HubSpot rejects crm.objects.users.read for this app type.
+// Read routing is still operation-aware; membership alone is insufficient.
+// Custom, unresolved, and non-member object types remain admin-only.
+// This set is generic to the tested app configuration, not portal-specific.
+// Contracts is accepted by the app but may still be entitlement-gated by portal.
+const USER_OAUTH_READABLE_OBJECT_TYPES = new Set([
   'contacts',
   'companies',
   'deals',
@@ -493,23 +509,50 @@ const USER_OAUTH_CAPABLE_OBJECT_TYPES = new Set([
   'meetings',
   'emails',
   'contracts',
-  'marketing_events'
+  'marketing_events',
+  'users'
 ]);
 
-// Map a resolveCrmObjectType / resolveCrmObjectTypeWithCustomFallback result to
-// a tokenAudience. Only a resolved STANDARD object in the user-capable set is
-// 'user'; non-capable standard objects, custom objects (custom-object-type-id /
-// fully-qualified / custom-schema), and unresolved inputs are 'admin'. Audience
-// follows the OBJECT, not the verb. Issue #80.
-function crmObjectTokenAudience(resolution) {
-  if (
-    resolution
-    && resolution.resolved === true
-    && resolution.standard === true
-    && USER_OAUTH_CAPABLE_OBJECT_TYPES.has(resolution.objectType)
-  ) {
-    return 'user';
+// Backward-compatible export for callers that previously used the single
+// capability set. It now represents read capability only; routing must use
+// crmObjectTokenAudience with operation metadata.
+const USER_OAUTH_CAPABLE_OBJECT_TYPES = USER_OAUTH_READABLE_OBJECT_TYPES;
+
+const USER_OAUTH_WRITABLE_OBJECT_TYPES = new Set([
+  'contacts',
+  'companies',
+  'deals',
+  'tickets',
+  'line_items',
+  'products',
+  'tasks',
+  'notes',
+  'calls',
+  'meetings',
+  'emails'
+]);
+
+// Map a resolved CRM object plus catalog operation metadata to a token audience.
+// GET and explicitly catalog-marked read-only POST endpoints use the readable
+// set. Non-destructive catalog mutations use the narrower writable set.
+// Destructive, uncataloged, custom, and unresolved operations stay admin.
+function crmObjectTokenAudience(resolution, operation = {}) {
+  if (!resolution || resolution.resolved !== true || resolution.standard !== true) {
+    return 'admin';
   }
+
+  const method = String(operation.method || '').toUpperCase();
+  const risk = String(operation.risk || '').toLowerCase();
+  if (method === 'DELETE' || risk === 'destructive') return 'admin';
+
+  if (method === 'GET' || (method === 'POST' && operation.readOnlyPost === true)) {
+    return USER_OAUTH_READABLE_OBJECT_TYPES.has(resolution.objectType) ? 'user' : 'admin';
+  }
+
+  if (risk === 'mutation') {
+    return USER_OAUTH_WRITABLE_OBJECT_TYPES.has(resolution.objectType) ? 'user' : 'admin';
+  }
+
   return 'admin';
 }
 
@@ -518,6 +561,8 @@ module.exports = {
   CRM_OBJECT_TYPE_RESOLUTION_CACHE,
   STANDARD_CRM_OBJECT_TYPE_INDEX,
   USER_OAUTH_CAPABLE_OBJECT_TYPES,
+  USER_OAUTH_READABLE_OBJECT_TYPES,
+  USER_OAUTH_WRITABLE_OBJECT_TYPES,
   crmObjectCatalogEntryForOutput,
   crmObjectTokenAudience,
   crmObjectLookupKeys,

@@ -74,6 +74,7 @@ const SENSITIVE_BODY_KEYS = new Set([
 ]);
 
 const MAX_RETRY_AFTER_MS = 15000;
+const EXTERNAL_FORM_REQUEST_TIMEOUT_MS = 30000;
 
 const DEFAULT_PAGINATE_MAX_RESULTS = 1000;
 
@@ -590,15 +591,28 @@ async function externalNoAuthFormFetch(portal, method, url, flags, body, endpoin
     });
   }
 
-  const response = await fetch(url, {
-    method,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: new URLSearchParams(body)
-  });
-  const text = await response.text();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), EXTERNAL_FORM_REQUEST_TIMEOUT_MS);
+  if (typeof timer.unref === 'function') timer.unref();
+  let response;
+  let text;
+  try {
+    response = await fetch(url, {
+      method,
+      redirect: 'error',
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams(body)
+    });
+    text = await response.text();
+  } catch (_error) {
+    fail(`External form request failed: network_error contacting the configured endpoint.`);
+  } finally {
+    clearTimeout(timer);
+  }
   let payload = null;
   if (text) {
     try {

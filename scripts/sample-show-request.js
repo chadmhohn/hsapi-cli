@@ -1,7 +1,14 @@
 #!/usr/bin/env node
+const path = require('path');
 const { runCli } = require('../src/cli');
 
-process.env.HSAPI_PORTALS_CONFIG = process.env.HSAPI_PORTALS_CONFIG || 'examples/portals.sample.json';
+// This packaged smoke must never inherit a developer's real portal config.
+process.env.HSAPI_PORTALS_CONFIG = path.resolve(
+  __dirname,
+  '..',
+  'examples',
+  'portals.sample.json'
+);
 
 runCli(['account', 'details', '--show-request'], {
   stdout: process.stdout,
