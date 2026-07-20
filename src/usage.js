@@ -1,4 +1,10 @@
+const path = require('path');
 const { endpointDefinitions, commandLiteralPrefix } = require('./catalog');
+
+const PACKAGE_ROOT = path.resolve(__dirname, '..');
+const PORTAL_SETUP_GUIDE = path.join(PACKAGE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md');
+const SERVICE_KEY_SAMPLE = path.join(PACKAGE_ROOT, 'examples', 'portals.sample.json');
+const HOSTED_OAUTH_SAMPLE = path.join(PACKAGE_ROOT, 'examples', 'portals.oauth-hosted.sample.json');
 
 // Lines for commands that exist outside the endpoint catalog: local tooling,
 // virtual commands built on other endpoints, and bridge surfaces.
@@ -19,6 +25,9 @@ const STATIC_COMMAND_LINES = [
   'hsapi project list|info|list-builds|logs|validate|lint ... --account <account>',
   'hsapi project upload|deploy|delete|create|add|download|migrate|install-deps|update-deps ... --account <account> [--yes]',
   'hsapi auth doctor [--portal <name>] [--require-env]',
+  'hsapi auth login [--portal <name>] [--timeout <milliseconds>]',
+  'hsapi auth whoami [--portal <name>]',
+  'hsapi auth logout [--portal <name>]',
   'hsapi auth authorize-url --redirect-uri <uri> --scopes a,b [--optional-scopes a,b] [--state s]',
   'hsapi mcp serve',
   'hsapi catalog coverage',
@@ -66,6 +75,9 @@ ${typedCommandLines(filePath).map(indent).join('\n')}
 
 Config:
   ${defaultConfigPath}
+  Setup guide: ${PORTAL_SETUP_GUIDE}
+  ServiceKey template: ${SERVICE_KEY_SAMPLE}
+  Hosted OAuth template: ${HOSTED_OAUTH_SAMPLE}
 
 Output:
   --select <path>              Print one projected value, e.g. data.results[].id
@@ -81,7 +93,7 @@ Output:
   --format jsonl               With --paginate: stream one record per line page-by-page (flat memory, pipe-friendly). Not combinable with --select/--pick/--max-chars; --max-results still applies; summary goes to stderr
 
 Notes:
-  - hsapi upgrade fast-forwards a git-checkout install to origin/main (--check to inspect first); tarball installs get the gh release download flow printed. The repo can stay private - your existing GitHub auth is used. Restart hsapi-mcp consumers after upgrading.
+  - hsapi upgrade fast-forwards a git-checkout install to origin/main (--check to inspect first); tarball installs get the gh release download flow printed. GitHub installs use your existing repository access. Restart hsapi-mcp consumers after upgrading.
   - Executed mutations append to a local audit log (~/.local/state/hsapi/history.jsonl, 0600; override with HSAPI_HISTORY_FILE, disable with HSAPI_HISTORY=0). Payload flag values are recorded as lengths only. Read it with: hsapi history --since 24h
   - --paginate follows page cursors (crm list query-param after; crm search body after, stopping at HubSpot's 10K search window) and applies a default 1000-result cap. Pass --max-results <n> to change it or --max-results 0 for unlimited.
   - Any @file argument also accepts @- to read from stdin (one @- per invocation). Batch --inputs accepts a JSON array, an object with an inputs array, or JSONL (one JSON object per line) - so JSONL pipelines can flow straight into batch-create/update/upsert.

@@ -3,6 +3,7 @@
 // flows, and per-request credential + metadata resolution.
 const fs = require('fs');
 const path = require('path');
+const { createHash, randomUUID } = require('crypto');
 const {
   fail,
 } = require('./runtime');
@@ -12,7 +13,11 @@ const {
   configString,
   expandUserPath,
 } = require('./flags');
-const { DEFAULT_CONFIG } = require('./config-paths');
+const {
+  PACKAGE_ROOT,
+  defaultUserConfigPath,
+  resolvePortalConfigPath,
+} = require('./config-paths');
 const {
   AUTH_FAMILIES,
   DEVELOPER_AUTH_SUBTYPES,
@@ -21,9 +26,28 @@ const {
   endpointAuthRequirement,
   optionalStringArray,
 } = require('./auth');
+const {
+  refreshHostedBrokerTokens,
+} = require('./oauth-broker');
 
 function loadConfig() {
-  const configPath = process.env.HSAPI_PORTALS_CONFIG || DEFAULT_CONFIG;
+  const configPath = resolvePortalConfigPath();
+  if (!fs.existsSync(configPath)) {
+    const userConfigPath = defaultUserConfigPath();
+    const setupGuidePath = path.join(PACKAGE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md');
+    const serviceKeySamplePath = path.join(PACKAGE_ROOT, 'examples', 'portals.sample.json');
+    const hostedOAuthSamplePath = path.join(PACKAGE_ROOT, 'examples', 'portals.oauth-hosted.sample.json');
+    const explicitConfigPath = configString(process.env.HSAPI_PORTALS_CONFIG);
+    const selectedMessage = explicitConfigPath
+      ? `HSAPI_PORTALS_CONFIG points to a file that does not exist: ${configPath}`
+      : `No portal config was found at the per-user default: ${userConfigPath}`;
+    fail(
+      `${selectedMessage}. Read the installed setup guide: ${setupGuidePath}. `
+      + `Choose the ServiceKey template at ${serviceKeySamplePath} or the hosted OAuth template at ${hostedOAuthSamplePath}, `
+      + `copy it to a private external path such as ${userConfigPath}, or set HSAPI_PORTALS_CONFIG to an existing config file. `
+      + 'hsapi does not create or overwrite portal configs automatically.'
+    );
+  }
   const config = readJsonFile(configPath);
   if (!config.portals || typeof config.portals !== 'object') {
     fail(`Portal config missing "portals" object: ${configPath}`);
@@ -42,6 +66,77 @@ const SUPPORTED_OAUTH_TOKEN_CACHE_SCHEMAS = new Set([
 ]);
 const DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA = 'hsapi.developerClientCredentialsTokenCache.v1';
 const OAUTH_TOKEN_REFRESH_SKEW_MS = 60 * 1000;
+const OAUTH_TOKEN_REQUEST_TIMEOUT_MS = 30 * 1000;
+const OAUTH_REFRESH_LOCK_WAIT_TIMEOUT_MS = OAUTH_TOKEN_REQUEST_TIMEOUT_MS + 15 * 1000;
+const OAUTH_REFRESH_LOCK_STALE_MS = OAUTH_TOKEN_REQUEST_TIMEOUT_MS + 15 * 1000;
+const OAUTH_REFRESH_LOCK_POLL_MIN_MS = 40;
+const OAUTH_REFRESH_LOCK_POLL_JITTER_MS = 80;
+const OAUTH_REFRESH_LOCK_SCHEMA = 'hsapi.oauthRefreshLock.v1';
+const oauthRefreshProcessQueues = new Map();
+const oauthRefreshActiveOwners = new Set();
+const OAUTH_MODES = Object.freeze({
+  LOCAL: 'local',
+  HOSTED_BROKER: 'hosted_broker'
+});
+
+function hostedBrokerStartKeyIsValid(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9_-]{43}$/.test(value);
+}
+
+function oauthClientIdFingerprint(clientId) {
+  const normalized = configString(clientId);
+  return normalized
+    ? createHash('sha256').update(normalized, 'utf8').digest('hex')
+    : null;
+}
+
+function oauthCacheClientIdFingerprint(cache) {
+  if (!cache || typeof cache !== 'object') return null;
+  const cacheSource = cache.source
+    && typeof cache.source === 'object'
+    && !Array.isArray(cache.source)
+    ? cache.source
+    : {};
+  return configString(cacheSource.clientIdFingerprint);
+}
+
+function hostedBrokerUrl(rawUrl, portalName) {
+  if (!rawUrl) {
+    fail(`Portal "${portalName}" auth.oauth.brokerUrl must be a non-empty HTTPS URL when auth.oauth.mode is "${OAUTH_MODES.HOSTED_BROKER}".`);
+  }
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (_error) {
+    fail(`Portal "${portalName}" auth.oauth.brokerUrl must be a valid HTTPS URL.`);
+  }
+  if (
+    parsed.protocol !== 'https:'
+    || parsed.username
+    || parsed.password
+    || parsed.search
+    || parsed.hash
+  ) {
+    fail(`Portal "${portalName}" auth.oauth.brokerUrl must use HTTPS and must not contain URL credentials, a query string, or a fragment.`);
+  }
+  return parsed.toString().replace(/\/+$/, '');
+}
+
+function hostedOAuthPortalId(rawPortalId, portalName) {
+  const portalId = rawPortalId === undefined || rawPortalId === null
+    ? null
+    : String(rawPortalId).trim();
+  if (!portalId || !/^[1-9][0-9]*$/.test(portalId)) {
+    fail(`Portal "${portalName}" must define a numeric portalId when auth.oauth.mode is "${OAUTH_MODES.HOSTED_BROKER}".`);
+  }
+  return portalId;
+}
+
+function optionalOAuthPortalId(rawPortalId) {
+  if (rawPortalId === undefined || rawPortalId === null) return null;
+  const portalId = String(rawPortalId).trim();
+  return /^[1-9][0-9]*$/.test(portalId) ? portalId : null;
+}
 
 function maybeResolvePortalBearerProfile(portal, portalName) {
   if (portal.auth !== undefined) assertConfigObject(portal.auth, `Portal "${portalName}" auth`);
@@ -94,31 +189,55 @@ function resolveOAuthProfile(portal, portalName) {
   if (rawOAuth === undefined) return null;
 
   const oauth = assertConfigObject(rawOAuth, `Portal "${portalName}" auth.oauth`);
-  const clientIdEnv = configString(oauth.clientIdEnv);
-  const clientSecretEnv = configString(oauth.clientSecretEnv);
+  const mode = configString(oauth.mode) || OAUTH_MODES.LOCAL;
+  if (!Object.values(OAUTH_MODES).includes(mode)) {
+    fail(`Portal "${portalName}" auth.oauth.mode must be one of ${Object.values(OAUTH_MODES).join(', ')}.`);
+  }
+  const clientIdEnv = mode === OAUTH_MODES.LOCAL ? configString(oauth.clientIdEnv) : null;
+  const clientSecretEnv = mode === OAUTH_MODES.LOCAL ? configString(oauth.clientSecretEnv) : null;
   // refreshTokenEnv is optional (issue #78): login-based profiles persist the
   // refresh token to the per-user token cache, so an env var is not required.
-  const refreshTokenEnv = configString(oauth.refreshTokenEnv);
+  const refreshTokenEnv = mode === OAUTH_MODES.LOCAL ? configString(oauth.refreshTokenEnv) : null;
   const tokenCachePath = configString(oauth.tokenCachePath);
-  if (!clientIdEnv) fail(`Portal "${portalName}" auth.oauth.clientIdEnv must be a non-empty environment variable name.`);
-  if (!clientSecretEnv) fail(`Portal "${portalName}" auth.oauth.clientSecretEnv must be a non-empty environment variable name.`);
+  if (mode === OAUTH_MODES.LOCAL && !clientIdEnv) fail(`Portal "${portalName}" auth.oauth.clientIdEnv must be a non-empty environment variable name.`);
+  if (mode === OAUTH_MODES.LOCAL && !clientSecretEnv) fail(`Portal "${portalName}" auth.oauth.clientSecretEnv must be a non-empty environment variable name.`);
   if (!tokenCachePath) fail(`Portal "${portalName}" auth.oauth.tokenCachePath must be a non-empty cache path outside the package.`);
 
   // Optional interactive-login fields (issue #77). Only required when running
   // `hsapi auth login`; absence here is fine for refresh-token-only profiles.
-  const redirectUrl = configString(oauth.redirectUrl);
+  const redirectUrl = mode === OAUTH_MODES.LOCAL ? configString(oauth.redirectUrl) : null;
   const scopes = optionalStringArray(oauth.scopes, 'auth.oauth.scopes', `Portal "${portalName}"`);
   const optionalScopes = optionalStringArray(oauth.optionalScopes, 'auth.oauth.optionalScopes', `Portal "${portalName}"`);
-  const authorizeUrlBase = configString(oauth.authorizeUrlBase) || 'https://app.hubspot.com';
+  const authorizeUrlBase = mode === OAUTH_MODES.LOCAL
+    ? (configString(oauth.authorizeUrlBase) || 'https://app.hubspot.com')
+    : null;
+  const brokerUrl = mode === OAUTH_MODES.HOSTED_BROKER
+    ? hostedBrokerUrl(configString(oauth.brokerUrl), portalName)
+    : null;
+  const brokerStartKeyEnv = mode === OAUTH_MODES.HOSTED_BROKER
+    ? configString(oauth.brokerStartKeyEnv)
+    : null;
+  if (mode === OAUTH_MODES.HOSTED_BROKER && !brokerStartKeyEnv) {
+    fail(`Portal "${portalName}" auth.oauth.brokerStartKeyEnv must name the environment variable holding the broker session-start credential.`);
+  }
+  const portalId = mode === OAUTH_MODES.HOSTED_BROKER
+    ? hostedOAuthPortalId(portal.portalId, portalName)
+    : optionalOAuthPortalId(portal.portalId);
 
   return {
     family: AUTH_FAMILIES.OAUTH,
+    mode,
+    brokerUrl,
+    brokerStartKeyEnv,
+    portalId,
     clientIdEnv,
     clientSecretEnv,
     refreshTokenEnv: refreshTokenEnv || null,
     tokenCachePath: expandUserPath(tokenCachePath),
     tokenCachePathDisplay: tokenCachePath,
-    tokenUrlPath: configString(oauth.tokenUrlPath) || '/oauth/2026-03/token',
+    tokenUrlPath: mode === OAUTH_MODES.LOCAL
+      ? (configString(oauth.tokenUrlPath) || '/oauth/2026-03/token')
+      : null,
     redirectUrl: redirectUrl || null,
     scopes,
     optionalScopes,
@@ -184,7 +303,14 @@ function resolvePortal(config, flags) {
     fail(`Unknown portal "${portalName}". Run: hsapi profiles list`);
   }
   const portalBearer = maybeResolvePortalBearerProfile(portal, portalName);
-  const oauth = resolveOAuthProfile(portal, portalName);
+  const resolvedOAuth = resolveOAuthProfile(portal, portalName);
+  const portalId = portal.portalId ? String(portal.portalId) : null;
+  const oauth = resolvedOAuth
+    ? {
+      ...resolvedOAuth,
+      portalId
+    }
+    : null;
   const developer = resolveDeveloperProfile(portal, portalName);
   if (!portalBearer && !oauth && !developer) {
     fail(`Portal "${portalName}" is missing auth.portalBearer.tokenEnv, auth.oauth, auth.developer, or legacy tokenEnv. Named profiles must declare at least one explicit credential family.`);
@@ -194,7 +320,7 @@ function resolvePortal(config, flags) {
   return {
     name: portalName,
     label: portal.label || portalName,
-    portalId: portal.portalId || null,
+    portalId,
     baseUrl: portal.baseUrl || 'https://api.hubapi.com',
     tokenEnv,
     token,
@@ -218,8 +344,8 @@ function readOAuthTokenCache(tokenCachePath) {
       return { status: 'invalid', cache: null, error: 'Cache file must contain a JSON object.' };
     }
     return { status: 'read', cache, error: null };
-  } catch (error) {
-    return { status: 'invalid', cache: null, error: error.message };
+  } catch (_error) {
+    return { status: 'invalid', cache: null, error: 'Cache file is not valid JSON.' };
   }
 }
 
@@ -248,6 +374,168 @@ function oauthCacheRefreshToken(cache) {
   return configString(cache.refreshToken) || configString(cache.refresh_token);
 }
 
+function isPathInside(parentPath, childPath) {
+  const relative = path.relative(path.resolve(parentPath), path.resolve(childPath));
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function canonicalPathWithMissingTail(inputPath) {
+  let cursor = path.resolve(inputPath);
+  const missingTail = [];
+  while (!fs.existsSync(cursor)) {
+    const parent = path.dirname(cursor);
+    if (parent === cursor) break;
+    missingTail.unshift(path.basename(cursor));
+    cursor = parent;
+  }
+  const realBase = fs.existsSync(cursor)
+    ? (fs.realpathSync.native ? fs.realpathSync.native(cursor) : fs.realpathSync(cursor))
+    : cursor;
+  return path.resolve(realBase, ...missingTail);
+}
+
+function tokenCachePathIsOutsidePackage(tokenCachePath) {
+  if (!tokenCachePath) return false;
+  const lexicalInside = isPathInside(PACKAGE_ROOT, tokenCachePath);
+  const canonicalInside = isPathInside(
+    canonicalPathWithMissingTail(PACKAGE_ROOT),
+    canonicalPathWithMissingTail(tokenCachePath)
+  );
+  return !lexicalInside && !canonicalInside;
+}
+
+function assertTokenCacheOutsidePackage(tokenCachePath, label = 'Token cache') {
+  if (!tokenCachePath) fail(`${label} path is required.`);
+  if (!tokenCachePathIsOutsidePackage(tokenCachePath)) {
+    fail(`${label} must live outside the hsapi package: ${tokenCachePath}`);
+  }
+}
+
+function oauthCacheBrokerCredential(cache) {
+  if (!cache || typeof cache !== 'object') return null;
+  return configString(cache.brokerCredential) || configString(cache.broker_credential);
+}
+
+function safeOAuthMetadataId(value) {
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+  const normalized = String(value).trim();
+  return normalized && /^[A-Za-z0-9_-]{1,128}$/.test(normalized) ? normalized : null;
+}
+
+function oauthMetadataScopes(source) {
+  if (!source || typeof source !== 'object') return [];
+  const raw = source.scopes === undefined ? source.scope : source.scopes;
+  const candidates = Array.isArray(raw)
+    ? raw
+    : (typeof raw === 'string' ? raw.split(/[\s,]+/) : []);
+  return [...new Set(candidates
+    .filter((scope) => typeof scope === 'string')
+    .map((scope) => scope.trim())
+    .filter((scope) => scope && scope.length <= 256))]
+    .slice(0, 256);
+}
+
+function oauthCacheHubId(cache) {
+  if (!cache || typeof cache !== 'object') return null;
+  return safeOAuthMetadataId(cache.hubId === undefined ? cache.hub_id : cache.hubId);
+}
+
+function oauthCacheUserId(cache) {
+  if (!cache || typeof cache !== 'object') return null;
+  return safeOAuthMetadataId(cache.userId === undefined ? cache.user_id : cache.userId);
+}
+
+function comparableBrokerUrl(value) {
+  const raw = configString(value);
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== 'https:'
+      || parsed.username
+      || parsed.password
+      || parsed.search
+      || parsed.hash
+    ) {
+      return null;
+    }
+    return parsed.toString().replace(/\/+$/, '');
+  } catch (_error) {
+    return null;
+  }
+}
+
+function oauthCacheProfileMatch(cache, source) {
+  if (!cache || typeof cache !== 'object' || !source) {
+    return { ok: true, reason: null };
+  }
+  const cacheSource = cache.source
+    && typeof cache.source === 'object'
+    && !Array.isArray(cache.source)
+    ? cache.source
+    : {};
+  const cachedMode = configString(cacheSource.mode);
+  const expectedPortalId = safeOAuthMetadataId(source.portalId);
+  const cachedSourcePortalId = safeOAuthMetadataId(cacheSource.portalId);
+  const tokenHubId = oauthCacheHubId(cache);
+
+  if (source.mode === OAUTH_MODES.HOSTED_BROKER) {
+    if (cachedMode !== OAUTH_MODES.HOSTED_BROKER) {
+      return { ok: false, reason: 'oauth_mode_mismatch' };
+    }
+    if (
+      comparableBrokerUrl(cacheSource.brokerUrl)
+      !== comparableBrokerUrl(source.brokerUrl)
+    ) {
+      return { ok: false, reason: 'broker_url_mismatch' };
+    }
+    if (!oauthCacheBrokerCredential(cache)) {
+      return { ok: false, reason: 'broker_credential_missing' };
+    }
+    if (expectedPortalId && tokenHubId !== expectedPortalId) {
+      return {
+        ok: false,
+        reason: tokenHubId ? 'portal_id_mismatch' : 'token_portal_id_missing'
+      };
+    }
+  } else {
+    if (cachedMode && cachedMode !== OAUTH_MODES.LOCAL) {
+      return { ok: false, reason: 'oauth_mode_mismatch' };
+    }
+    const expectedClientIdFingerprint = oauthClientIdFingerprint(
+      source.clientIdEnv ? process.env[source.clientIdEnv] : null
+    );
+    if (!expectedClientIdFingerprint) {
+      return { ok: false, reason: 'client_id_unavailable' };
+    }
+    const cachedClientIdFingerprint = oauthCacheClientIdFingerprint(cache);
+    if (!cachedClientIdFingerprint) {
+      // Legacy local caches predate app-identity binding. They remain readable
+      // for redacted diagnostics/logout, but are never accepted for live API
+      // use: the user must authenticate again to create a bound cache.
+      return { ok: false, reason: 'client_id_fingerprint_missing' };
+    }
+    if (!/^[a-f0-9]{64}$/.test(cachedClientIdFingerprint)) {
+      return { ok: false, reason: 'client_id_fingerprint_invalid' };
+    }
+    if (cachedClientIdFingerprint !== expectedClientIdFingerprint) {
+      return { ok: false, reason: 'client_id_mismatch' };
+    }
+  }
+
+  if (
+    expectedPortalId
+    && cachedSourcePortalId
+    && cachedSourcePortalId !== expectedPortalId
+  ) {
+    return { ok: false, reason: 'cache_source_portal_id_mismatch' };
+  }
+  if (expectedPortalId && tokenHubId && tokenHubId !== expectedPortalId) {
+    return { ok: false, reason: 'portal_id_mismatch' };
+  }
+  return { ok: true, reason: null };
+}
+
 function oauthCacheHasExpectedSchema(cache) {
   if (!cache || typeof cache !== 'object') return false;
   if (!SUPPORTED_OAUTH_TOKEN_CACHE_SCHEMAS.has(cache.schema)) return false;
@@ -270,15 +558,26 @@ function redactedOAuthTokenCacheContract(source, cacheRead = readOAuthTokenCache
   const cache = cacheRead.cache;
   const expiresAt = oauthCacheExpiresAt(cache);
   const expiresAtMs = expiresAt ? Date.parse(expiresAt) : NaN;
+  const baseStatus = oauthCacheStatus(cacheRead, nowMs);
+  const profileMatch = oauthCacheProfileMatch(cache, source);
   const contract = {
     schema: OAUTH_TOKEN_CACHE_SCHEMA,
     path: source.tokenCachePathDisplay || source.tokenCachePath,
     present: cacheRead.status !== 'missing',
-    status: oauthCacheStatus(cacheRead, nowMs),
+    status: baseStatus !== 'missing' && !profileMatch.ok ? 'invalid' : baseStatus,
+    profileMatch: profileMatch.ok,
+    profileMismatchReason: profileMatch.reason,
+    clientIdBound: source.mode === OAUTH_MODES.HOSTED_BROKER
+      ? null
+      : Boolean(oauthCacheClientIdFingerprint(cache)),
     redacted: true,
     accessToken: oauthCacheAccessToken(cache) ? 'REDACTED' : null,
     refreshToken: oauthCacheRefreshToken(cache) ? 'REDACTED' : null,
+    brokerCredential: oauthCacheBrokerCredential(cache) ? 'REDACTED' : null,
     tokenType: oauthCacheTokenType(cache),
+    scopes: oauthMetadataScopes(cache),
+    hubId: oauthCacheHubId(cache),
+    userId: oauthCacheUserId(cache),
     expiresAt,
     expiresInSeconds: Number.isFinite(expiresAtMs) ? Math.max(Math.floor((expiresAtMs - nowMs) / 1000), 0) : null,
     refreshedAt: oauthCacheRefreshedAt(cache)
@@ -287,8 +586,13 @@ function redactedOAuthTokenCacheContract(source, cacheRead = readOAuthTokenCache
   return contract;
 }
 
-function usableOAuthCacheToken(cacheRead) {
-  return oauthCacheStatus(cacheRead) === 'usable' ? oauthCacheAccessToken(cacheRead.cache) : null;
+function usableOAuthCacheToken(cacheRead, source = null) {
+  const profileMatch = source
+    ? oauthCacheProfileMatch(cacheRead && cacheRead.cache, source)
+    : { ok: true };
+  return oauthCacheStatus(cacheRead) === 'usable' && profileMatch.ok
+    ? oauthCacheAccessToken(cacheRead.cache)
+    : null;
 }
 
 function readDeveloperClientCredentialsTokenCache(tokenCachePath) {
@@ -301,8 +605,8 @@ function readDeveloperClientCredentialsTokenCache(tokenCachePath) {
       return { status: 'invalid', cache: null, error: 'Cache file must contain a JSON object.' };
     }
     return { status: 'read', cache, error: null };
-  } catch (error) {
-    return { status: 'invalid', cache: null, error: error.message };
+  } catch (_error) {
+    return { status: 'invalid', cache: null, error: 'Cache file is not valid JSON.' };
   }
 }
 
@@ -390,6 +694,9 @@ function usableDeveloperClientCredentialsCacheToken(source, portal, cacheRead) {
 }
 
 function oauthEnvValues(source, portalName, cacheRead = null) {
+  if (source.mode === OAUTH_MODES.HOSTED_BROKER) {
+    fail(`OAuth refresh for portal "${portalName}" is configured for hosted_broker mode; refusing to read local OAuth client credentials.`);
+  }
   const missing = [];
   const clientId = process.env[source.clientIdEnv];
   const clientSecret = process.env[source.clientSecretEnv];
@@ -428,7 +735,14 @@ function hubSpotResponseCategory(payload) {
     || configString(payload.status);
 }
 
-function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date.now(), priorRefreshToken = null) {
+function oauthTokenCacheFromRefreshPayload(
+  payload,
+  source,
+  refreshedAtMs = Date.now(),
+  priorRefreshToken = null,
+  priorCache = null,
+  resolvedClientId = null
+) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     fail('OAuth refresh failed: HubSpot token response was not a JSON object.');
   }
@@ -446,7 +760,86 @@ function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date
   // token (rotation: prefer the response's value when present). Issue #78.
   const responseRefreshToken = configString(payload.refresh_token) || configString(payload.refreshToken);
   const refreshToken = responseRefreshToken || configString(priorRefreshToken) || null;
+  const responseBrokerCredential = configString(payload.broker_credential) || configString(payload.brokerCredential);
+  const brokerCredential = responseBrokerCredential || oauthCacheBrokerCredential(priorCache);
+  const responseScopes = oauthMetadataScopes(payload);
+  const scopes = responseScopes.length ? responseScopes : oauthMetadataScopes(priorCache);
+  const hubId = safeOAuthMetadataId(payload.hubId === undefined ? payload.hub_id : payload.hubId)
+    || oauthCacheHubId(priorCache);
+  const userId = safeOAuthMetadataId(payload.userId === undefined ? payload.user_id : payload.userId)
+    || oauthCacheUserId(priorCache);
+  const clientIdFingerprint = source.mode === OAUTH_MODES.HOSTED_BROKER
+    ? null
+    : oauthClientIdFingerprint(
+      resolvedClientId || (source.clientIdEnv ? process.env[source.clientIdEnv] : null)
+    );
+  if (source.mode !== OAUTH_MODES.HOSTED_BROKER && !clientIdFingerprint) {
+    fail('OAuth token cache write refused: the configured OAuth client ID is unavailable for app-identity binding.');
+  }
+  const knownCacheFields = new Set([
+    'schema',
+    'family',
+    'tokenType',
+    'token_type',
+    'accessToken',
+    'access_token',
+    'refreshToken',
+    'refresh_token',
+    'brokerCredential',
+    'broker_credential',
+    'scopes',
+    'scope',
+    'hubId',
+    'hub_id',
+    'userId',
+    'user_id',
+    'expiresIn',
+    'expires_in',
+    'expiresAt',
+    'expires_at',
+    'refreshedAt',
+    'refreshed_at',
+    'source'
+  ]);
+  const preserved = {};
+  if (priorCache && typeof priorCache === 'object' && !Array.isArray(priorCache)) {
+    for (const [key, value] of Object.entries(priorCache)) {
+      if (!knownCacheFields.has(key)) preserved[key] = value;
+    }
+  }
+  const rawPriorSource = priorCache
+    && priorCache.source
+    && typeof priorCache.source === 'object'
+    && !Array.isArray(priorCache.source)
+    ? priorCache.source
+    : {};
+  const knownSourceFields = new Set([
+    'mode',
+    'brokerUrl',
+    'portalId',
+    'clientIdEnv',
+    'clientIdFingerprint',
+    'refreshTokenEnv'
+  ]);
+  const priorSource = {};
+  for (const [key, value] of Object.entries(rawPriorSource)) {
+    if (!knownSourceFields.has(key)) priorSource[key] = value;
+  }
+  const sourceMetadata = source.mode === OAUTH_MODES.HOSTED_BROKER
+    ? {
+      mode: OAUTH_MODES.HOSTED_BROKER,
+      brokerUrl: source.brokerUrl,
+      portalId: source.portalId || null
+    }
+    : {
+      mode: OAUTH_MODES.LOCAL,
+      portalId: source.portalId || null,
+      clientIdEnv: source.clientIdEnv,
+      clientIdFingerprint,
+      refreshTokenEnv: source.refreshTokenEnv || null
+    };
   const cache = {
+    ...preserved,
     schema: OAUTH_TOKEN_CACHE_SCHEMA,
     family: AUTH_FAMILIES.OAUTH,
     tokenType: configString(payload.token_type) || configString(payload.tokenType) || 'bearer',
@@ -455,20 +848,38 @@ function oauthTokenCacheFromRefreshPayload(payload, source, refreshedAtMs = Date
     expiresAt: new Date(refreshedAtMs + expiresIn * 1000).toISOString(),
     refreshedAt: new Date(refreshedAtMs).toISOString(),
     source: {
-      clientIdEnv: source.clientIdEnv,
-      refreshTokenEnv: source.refreshTokenEnv || null
+      ...priorSource,
+      ...sourceMetadata
     }
   };
   if (refreshToken) cache.refreshToken = refreshToken;
+  if (brokerCredential) cache.brokerCredential = brokerCredential;
+  if (scopes.length) cache.scopes = scopes;
+  if (hubId) cache.hubId = hubId;
+  if (userId) cache.userId = userId;
   return cache;
 }
 
 function writeOAuthTokenCache(tokenCachePath, cache) {
+  assertTokenCacheOutsidePackage(tokenCachePath, 'OAuth token cache');
   const dir = path.dirname(tokenCachePath);
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const tempPath = path.join(dir, `.${path.basename(tokenCachePath)}.${process.pid}.${Date.now()}.tmp`);
-  fs.writeFileSync(tempPath, `${JSON.stringify(cache, null, 2)}\n`, { mode: 0o600 });
-  fs.renameSync(tempPath, tokenCachePath);
+  let renamed = false;
+  try {
+    fs.writeFileSync(tempPath, `${JSON.stringify(cache, null, 2)}\n`, { mode: 0o600 });
+    fs.renameSync(tempPath, tokenCachePath);
+    renamed = true;
+  } finally {
+    if (!renamed && fs.existsSync(tempPath)) {
+      try {
+        fs.unlinkSync(tempPath);
+      } catch (_error) {
+        // Preserve the original write/rename error. The temp file was created
+        // with the same restrictive mode and contains no filename credentials.
+      }
+    }
+  }
   try {
     fs.chmodSync(tokenCachePath, 0o600);
   } catch (_error) {
@@ -477,11 +888,25 @@ function writeOAuthTokenCache(tokenCachePath, cache) {
 }
 
 function writeDeveloperClientCredentialsTokenCache(tokenCachePath, cache) {
+  assertTokenCacheOutsidePackage(tokenCachePath, 'Developer client-credentials token cache');
   const dir = path.dirname(tokenCachePath);
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const tempPath = path.join(dir, `.${path.basename(tokenCachePath)}.${process.pid}.${Date.now()}.tmp`);
-  fs.writeFileSync(tempPath, `${JSON.stringify(cache, null, 2)}\n`, { mode: 0o600 });
-  fs.renameSync(tempPath, tokenCachePath);
+  let renamed = false;
+  try {
+    fs.writeFileSync(tempPath, `${JSON.stringify(cache, null, 2)}\n`, { mode: 0o600 });
+    fs.renameSync(tempPath, tokenCachePath);
+    renamed = true;
+  } finally {
+    if (!renamed && fs.existsSync(tempPath)) {
+      try {
+        fs.unlinkSync(tempPath);
+      } catch (_error) {
+        // Preserve the original write/rename error. The temp file was created
+        // with the same restrictive mode and contains no filename credentials.
+      }
+    }
+  }
   try {
     fs.chmodSync(tokenCachePath, 0o600);
   } catch (_error) {
@@ -489,14 +914,326 @@ function writeDeveloperClientCredentialsTokenCache(tokenCachePath, cache) {
   }
 }
 
-async function refreshOAuthCredential(portal, source, priorCacheRead = null) {
-  const cacheRead = priorCacheRead || readOAuthTokenCache(source.tokenCachePath);
+function oauthRefreshLockPath(tokenCachePath) {
+  return `${tokenCachePath}.refresh.lock`;
+}
+
+function oauthRefreshLockKey(tokenCachePath) {
+  const resolvedPath = path.resolve(tokenCachePath);
+  let canonicalPath = resolvedPath;
+  try {
+    const realParent = fs.realpathSync.native(path.dirname(resolvedPath));
+    canonicalPath = path.join(realParent, path.basename(resolvedPath));
+  } catch (_error) {
+    // The cache parent is created before lock acquisition, but path.resolve is
+    // still a stable fallback if realpath is unavailable on this filesystem.
+  }
+  return process.platform === 'win32' ? canonicalPath.toLowerCase() : canonicalPath;
+}
+
+function oauthRefreshDelay(delayMs) {
+  return new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function waitForOAuthRefreshTurn(previousTurn) {
+  let timer = null;
+  try {
+    return await Promise.race([
+      previousTurn.then(() => true),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(false), OAUTH_REFRESH_LOCK_WAIT_TIMEOUT_MS);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function withOAuthTokenCacheProcessLock(tokenCachePath, portalName, action) {
+  const key = oauthRefreshLockKey(tokenCachePath);
+  const previousTurn = oauthRefreshProcessQueues.get(key) || Promise.resolve();
+  let releaseTurn;
+  const thisTurn = new Promise((resolve) => {
+    releaseTurn = resolve;
+  });
+  oauthRefreshProcessQueues.set(key, thisTurn);
+
+  try {
+    if (!await waitForOAuthRefreshTurn(previousTurn)) {
+      fail(`Timed out waiting for another OAuth token-cache operation for portal "${portalName}". Retry the command.`);
+    }
+    return await action();
+  } finally {
+    releaseTurn();
+    if (oauthRefreshProcessQueues.get(key) === thisTurn) {
+      oauthRefreshProcessQueues.delete(key);
+    }
+  }
+}
+
+function readOAuthRefreshLockSnapshot(lockPath) {
+  let stat;
+  try {
+    stat = fs.statSync(lockPath);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return null;
+    return null;
+  }
+
+  let metadata = null;
+  // Lock metadata is intentionally tiny and credential-free. Refuse to read an
+  // unexpectedly large file so a corrupt sidecar cannot cause an unbounded
+  // allocation while another process is waiting.
+  if (stat.size >= 0 && stat.size <= 4096) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        metadata = parsed;
+      }
+    } catch (_error) {
+      metadata = null;
+    }
+  }
+  return { stat, metadata };
+}
+
+function oauthRefreshLockProcessIsAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error && error.code === 'ESRCH') return false;
+    // EPERM means the process exists but cannot be signalled. Treat all other
+    // platform-specific failures as "possibly alive" rather than stealing.
+    return true;
+  }
+}
+
+function oauthRefreshLockSnapshotIsStale(snapshot, nowMs = Date.now()) {
+  if (!snapshot) return false;
+  const metadata = snapshot.metadata;
+  const pid = metadata && Number(metadata.pid);
+  const owner = metadata && typeof metadata.owner === 'string'
+    ? metadata.owner
+    : null;
+
+  if (Number.isInteger(pid) && pid > 0) {
+    if (pid === process.pid) {
+      // A same-process owner not present in the active set is an orphan from an
+      // interrupted prior refresh and can be reclaimed immediately.
+      return !owner || !oauthRefreshActiveOwners.has(owner);
+    }
+    const processAlive = oauthRefreshLockProcessIsAlive(pid);
+    if (processAlive === false) return true;
+    if (processAlive === true) return false;
+  }
+
+  const ageMs = Math.max(0, nowMs - snapshot.stat.mtimeMs);
+  return ageMs >= OAUTH_REFRESH_LOCK_STALE_MS;
+}
+
+function sameOAuthRefreshLockSnapshot(left, right) {
+  if (!left || !right) return false;
+  const leftOwner = left.metadata && left.metadata.owner;
+  const rightOwner = right.metadata && right.metadata.owner;
+  if (leftOwner || rightOwner) return leftOwner === rightOwner;
+  return left.stat.dev === right.stat.dev
+    && left.stat.ino === right.stat.ino
+    && left.stat.size === right.stat.size
+    && left.stat.mtimeMs === right.stat.mtimeMs;
+}
+
+function tryRemoveStaleOAuthRefreshLock(lockPath) {
+  const observed = readOAuthRefreshLockSnapshot(lockPath);
+  if (!oauthRefreshLockSnapshotIsStale(observed)) return false;
+
+  // Re-check immediately before the atomic rename. This prevents an observation
+  // of an old lock from deleting a replacement created by a newer owner.
+  const current = readOAuthRefreshLockSnapshot(lockPath);
+  if (
+    !sameOAuthRefreshLockSnapshot(observed, current)
+    || !oauthRefreshLockSnapshotIsStale(current)
+  ) {
+    return false;
+  }
+
+  const quarantinePath = `${lockPath}.stale.${process.pid}.${randomUUID()}`;
+  try {
+    fs.renameSync(lockPath, quarantinePath);
+  } catch (error) {
+    if (error && ['ENOENT', 'EACCES', 'EPERM', 'EBUSY'].includes(error.code)) return false;
+    return false;
+  }
+
+  const moved = readOAuthRefreshLockSnapshot(quarantinePath);
+  if (!sameOAuthRefreshLockSnapshot(current, moved)) {
+    // The fixed path changed in the narrow interval before rename. Restore the
+    // marker when possible and leave it alone rather than risking two refreshes.
+    try {
+      if (!fs.existsSync(lockPath)) fs.renameSync(quarantinePath, lockPath);
+    } catch (_error) {
+      // Another owner may already have acquired the fixed path.
+    }
+    return false;
+  }
+
+  try {
+    fs.unlinkSync(quarantinePath);
+  } catch (_error) {
+    // A quarantined stale marker no longer blocks acquisition.
+  }
+  return true;
+}
+
+async function acquireOAuthRefreshFileLock(tokenCachePath, portalName) {
+  const lockPath = oauthRefreshLockPath(tokenCachePath);
+  const owner = randomUUID();
+  const deadlineMs = Date.now() + OAUTH_REFRESH_LOCK_WAIT_TIMEOUT_MS;
+
+  while (true) {
+    let handle = null;
+    try {
+      handle = fs.openSync(lockPath, 'wx', 0o600);
+      const acquiredAt = new Date().toISOString();
+      fs.writeFileSync(handle, `${JSON.stringify({
+        schema: OAUTH_REFRESH_LOCK_SCHEMA,
+        owner,
+        pid: process.pid,
+        acquiredAt
+      })}\n`, 'utf8');
+      fs.fsyncSync(handle);
+      try {
+        fs.chmodSync(lockPath, 0o600);
+      } catch (_error) {
+        // Best-effort only; some filesystems do not support chmod.
+      }
+      oauthRefreshActiveOwners.add(owner);
+      return { handle, lockPath, owner };
+    } catch (error) {
+      if (handle !== null) {
+        try {
+          fs.closeSync(handle);
+        } catch (_error) {
+          // Best-effort cleanup after a partial acquisition.
+        }
+        try {
+          fs.unlinkSync(lockPath);
+        } catch (_error) {
+          // A later stale-lock pass can reclaim a partial marker.
+        }
+      }
+      if (!error || error.code !== 'EEXIST') {
+        fail(`Unable to acquire the OAuth token-cache lock for portal "${portalName}".`);
+      }
+    }
+
+    if (tryRemoveStaleOAuthRefreshLock(lockPath)) continue;
+    if (Date.now() >= deadlineMs) {
+      fail(`Timed out waiting for another OAuth token-cache operation for portal "${portalName}". Retry the command.`);
+    }
+    const jitterMs = Math.floor(Math.random() * OAUTH_REFRESH_LOCK_POLL_JITTER_MS);
+    await oauthRefreshDelay(OAUTH_REFRESH_LOCK_POLL_MIN_MS + jitterMs);
+  }
+}
+
+async function releaseOAuthRefreshFileLock(lock) {
+  if (!lock) return;
+  try {
+    fs.closeSync(lock.handle);
+  } catch (_error) {
+    // The owner check below still prevents deleting another process's lock.
+  }
+
+  try {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const snapshot = readOAuthRefreshLockSnapshot(lock.lockPath);
+      if (!snapshot) return;
+      if (!snapshot.metadata || snapshot.metadata.owner !== lock.owner) return;
+      try {
+        fs.unlinkSync(lock.lockPath);
+        return;
+      } catch (error) {
+        if (!error || !['EACCES', 'EPERM', 'EBUSY'].includes(error.code)) return;
+        await oauthRefreshDelay(10 * (attempt + 1));
+      }
+    }
+  } finally {
+    oauthRefreshActiveOwners.delete(lock.owner);
+  }
+}
+
+async function withOAuthTokenCacheMutationLock(tokenCachePath, portalName, action) {
+  assertTokenCacheOutsidePackage(tokenCachePath, 'OAuth token cache');
+  fs.mkdirSync(path.dirname(tokenCachePath), { recursive: true, mode: 0o700 });
+  return withOAuthTokenCacheProcessLock(tokenCachePath, portalName, async () => {
+    const lock = await acquireOAuthRefreshFileLock(tokenCachePath, portalName);
+    try {
+      return await action();
+    } finally {
+      await releaseOAuthRefreshFileLock(lock);
+    }
+  });
+}
+
+function requireOAuthCacheProfileMatch(portal, source, cacheRead) {
+  if (!cacheRead || cacheRead.status !== 'read') return;
+  const match = oauthCacheProfileMatch(cacheRead.cache, source);
+  if (!match.ok) {
+    const guidance = match.reason === 'client_id_unavailable'
+      ? `Set ${source.clientIdEnv}, then run: hsapi auth login --portal ${portal.name}`
+      : match.reason === 'client_id_fingerprint_missing'
+        ? `This legacy cache is not bound to an OAuth client app. Re-authenticate with: hsapi auth login --portal ${portal.name}`
+        : match.reason === 'client_id_mismatch'
+          ? `The configured OAuth client ID belongs to a different app. Re-authenticate with: hsapi auth login --portal ${portal.name}`
+          : `Run: hsapi auth login --portal ${portal.name}`;
+    fail(`OAuth token cache does not match portal "${portal.name}" (${match.reason}). Refusing to use or forward cached credentials. ${guidance}`);
+  }
+}
+
+async function refreshOAuthCredentialUnlocked(portal, source, cacheRead) {
+  requireOAuthCacheProfileMatch(portal, source, cacheRead);
+  if (source.mode === OAUTH_MODES.HOSTED_BROKER) {
+    const priorCache = cacheRead && cacheRead.cache;
+    const refreshToken = oauthCacheRefreshToken(priorCache);
+    const brokerCredential = oauthCacheBrokerCredential(priorCache);
+    if (!refreshToken || !brokerCredential) {
+      fail(`OAuth refresh through hosted broker is unavailable for portal "${portal.name}" because the token cache is missing its broker-bound refresh credentials. Run: hsapi auth login --portal ${portal.name}`);
+    }
+    let payload;
+    try {
+      payload = await refreshHostedBrokerTokens(source, {
+        refreshToken,
+        brokerCredential
+      });
+    } catch (error) {
+      fail(`${error.message} Re-authenticate with: hsapi auth login --portal ${portal.name}`);
+    }
+    const cache = oauthTokenCacheFromRefreshPayload(payload, source, Date.now(), refreshToken, priorCache);
+    if (!oauthCacheBrokerCredential(cache)) {
+      fail(`OAuth refresh through hosted broker failed for portal "${portal.name}": broker response did not include a brokerCredential.`);
+    }
+    requireOAuthCacheProfileMatch(portal, source, { status: 'read', cache, error: null });
+    writeOAuthTokenCache(source.tokenCachePath, cache);
+    return {
+      token: cache.accessToken,
+      source,
+      tokenCache: redactedOAuthTokenCacheContract(source, { status: 'read', cache, error: null }),
+      cacheStatus: 'refreshed'
+    };
+  }
   const env = oauthEnvValues(source, portal.name, cacheRead);
   const tokenUrl = new URL(source.tokenUrlPath, portal.baseUrl);
   let response;
+  let text;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OAUTH_TOKEN_REQUEST_TIMEOUT_MS);
+  if (typeof timer.unref === 'function') timer.unref();
   try {
     response = await fetch(tokenUrl, {
       method: 'POST',
+      redirect: 'error',
+      signal: controller.signal,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -508,11 +1245,13 @@ async function refreshOAuthCredential(portal, source, priorCacheRead = null) {
         refresh_token: env.refreshToken
       })
     });
-  } catch (error) {
-    fail(`OAuth refresh failed for portal "${portal.name}": network_error ${error.message}`);
+    text = await response.text();
+  } catch (_error) {
+    fail(`OAuth refresh failed for portal "${portal.name}": network_error contacting HubSpot OAuth.`);
+  } finally {
+    clearTimeout(timer);
   }
 
-  const text = await response.text();
   let payload = null;
   if (text) {
     try {
@@ -531,7 +1270,15 @@ async function refreshOAuthCredential(portal, source, priorCacheRead = null) {
 
   // Preserve the refresh token across refreshes: HubSpot may rotate it (use the
   // new value) or omit it (keep the one we used). Issue #78.
-  const cache = oauthTokenCacheFromRefreshPayload(payload, source, Date.now(), env.refreshToken);
+  const cache = oauthTokenCacheFromRefreshPayload(
+    payload,
+    source,
+    Date.now(),
+    env.refreshToken,
+    cacheRead.cache,
+    env.clientId
+  );
+  requireOAuthCacheProfileMatch(portal, source, { status: 'read', cache, error: null });
   writeOAuthTokenCache(source.tokenCachePath, cache);
   return {
     token: cache.accessToken,
@@ -539,6 +1286,26 @@ async function refreshOAuthCredential(portal, source, priorCacheRead = null) {
     tokenCache: redactedOAuthTokenCacheContract(source, { status: 'read', cache, error: null }),
     cacheStatus: 'refreshed'
   };
+}
+
+async function refreshOAuthCredential(portal, source, _priorCacheRead = null) {
+  return withOAuthTokenCacheMutationLock(source.tokenCachePath, portal.name, async () => {
+    // The cache must be re-read only after both the in-process and cross-process
+    // locks are held. A preceding caller may have rotated the refresh token and
+    // persisted a fresh access token while this caller was waiting.
+    const cacheRead = readOAuthTokenCache(source.tokenCachePath);
+    requireOAuthCacheProfileMatch(portal, source, cacheRead);
+    const cachedToken = usableOAuthCacheToken(cacheRead, source);
+    if (cachedToken) {
+      return {
+        token: cachedToken,
+        source,
+        tokenCache: redactedOAuthTokenCacheContract(source, cacheRead),
+        cacheStatus: 'cache_hit'
+      };
+    }
+    return refreshOAuthCredentialUnlocked(portal, source, cacheRead);
+  });
 }
 
 async function resolveOAuthCredential(portal, auth) {
@@ -549,11 +1316,13 @@ async function resolveOAuthCredential(portal, auth) {
     fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${auth.family || '<none>'}; OAuth credentials can only satisfy ${AUTH_FAMILIES.OAUTH} endpoints.`);
   }
   if (!portal.oauth) {
-    fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, and tokenCachePath.`);
+    fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing an auth.oauth profile.`);
   }
 
+  assertTokenCacheOutsidePackage(portal.oauth.tokenCachePath, 'OAuth token cache');
   const cacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
-  const cachedToken = usableOAuthCacheToken(cacheRead);
+  requireOAuthCacheProfileMatch(portal, portal.oauth, cacheRead);
+  const cachedToken = usableOAuthCacheToken(cacheRead, portal.oauth);
   if (cachedToken) {
     return {
       token: cachedToken,
@@ -771,6 +1540,7 @@ function developerClientCredentialsFailureMessage(source) {
 }
 
 async function refreshDeveloperClientCredentialsCredential(portal, source) {
+  assertTokenCacheOutsidePackage(source.tokenCachePath, 'Developer client-credentials token cache');
   const env = developerClientCredentialsEnvValues(source, portal.name);
   const tokenUrl = new URL(source.tokenUrlPath, portal.baseUrl);
   const body = {
@@ -780,20 +1550,28 @@ async function refreshDeveloperClientCredentialsCredential(portal, source) {
     scope: source.scopes.join(' ')
   };
   let response;
+  let text;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OAUTH_TOKEN_REQUEST_TIMEOUT_MS);
+  if (typeof timer.unref === 'function') timer.unref();
   try {
     response = await fetch(tokenUrl, {
       method: 'POST',
+      redirect: 'error',
+      signal: controller.signal,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams(body)
     });
-  } catch (error) {
-    fail(`Developer client-credentials refresh failed for portal "${portal.name}": network_error ${error.message}`);
+    text = await response.text();
+  } catch (_error) {
+    fail(`Developer client-credentials refresh failed for portal "${portal.name}": network_error contacting HubSpot OAuth.`);
+  } finally {
+    clearTimeout(timer);
   }
 
-  const text = await response.text();
   let payload = null;
   if (text) {
     try {
@@ -830,6 +1608,7 @@ async function refreshDeveloperClientCredentialsCredential(portal, source) {
 
 async function resolveDeveloperClientCredentialsCredential(portal, auth) {
   const source = requireDeveloperClientCredentialsSource(portal, auth);
+  assertTokenCacheOutsidePackage(source.tokenCachePath, 'Developer client-credentials token cache');
   const cacheRead = readDeveloperClientCredentialsTokenCache(source.tokenCachePath);
   const cachedToken = usableDeveloperClientCredentialsCacheToken(source, portal, cacheRead);
   if (cachedToken) {
@@ -1012,10 +1791,29 @@ function credentialSourceForAuth(portal, auth) {
       };
     }
     if (!portal.oauth) {
-      fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing auth.oauth clientIdEnv, clientSecretEnv, and tokenCachePath.`);
+      fail(`Endpoint ${auth.endpointId || '<unknown>'} requires auth family ${AUTH_FAMILIES.OAUTH}; portal "${portal.name}" is missing an auth.oauth profile.`);
     }
     const oauthCacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
     const cacheHasRefreshToken = Boolean(oauthCacheRefreshToken(oauthCacheRead.cache));
+    const cacheHasBrokerCredential = Boolean(oauthCacheBrokerCredential(oauthCacheRead.cache));
+    if (portal.oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
+      const credentialSource = {
+        type: 'oauth_hosted_broker',
+        identity: 'user',
+        tokenAudience,
+        name: 'oauth_token_cache',
+        profileField: portal.oauth.profileField,
+        provenance: portal.oauth.provenance,
+        mode: portal.oauth.mode,
+        brokerUrl: portal.oauth.brokerUrl,
+        refreshTokenSource: cacheHasRefreshToken ? 'cache' : 'none',
+        brokerCredentialSource: cacheHasBrokerCredential ? 'cache' : 'none',
+        tokenCache: redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead),
+        redacted: true
+      };
+      if (promoted) credentialSource.routedFromFamily = auth.family;
+      return credentialSource;
+    }
     const refreshTokenEnv = portal.oauth.refreshTokenEnv || null;
     // Reflect where the refresh token comes from without emitting undefined for
     // login-based profiles (refreshTokenEnv === null). Issue #78.
@@ -1092,8 +1890,10 @@ function resolvePortalBearerCredential(portal, auth) {
 }
 
 module.exports = {
+  assertTokenCacheOutsidePackage,
   loadConfig,
   DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA,
+  OAUTH_MODES,
   OAUTH_TOKEN_CACHE_SCHEMA,
   OAUTH_TOKEN_CACHE_SCHEMA_V1,
   OAUTH_TOKEN_REFRESH_SKEW_MS,
@@ -1111,15 +1911,24 @@ module.exports = {
   effectiveCredentialFamily,
   hubSpotResponseCategory,
   hubSpotResponseClass,
+  hostedBrokerStartKeyIsValid,
+  hostedBrokerUrl,
   maybeResolvePortalBearerProfile,
   oauthCacheAccessToken,
+  oauthCacheBrokerCredential,
+  oauthCacheClientIdFingerprint,
   oauthCacheExpiresAt,
   oauthCacheHasExpectedSchema,
+  oauthCacheHubId,
+  oauthCacheProfileMatch,
   oauthCacheRefreshToken,
   oauthCacheRefreshedAt,
   oauthCacheStatus,
   oauthCacheTokenType,
+  oauthCacheUserId,
+  oauthClientIdFingerprint,
   oauthEnvValues,
+  oauthMetadataScopes,
   oauthTokenCacheFromRefreshPayload,
   optionalProfileEnv,
   portalTokenEnv,
@@ -1131,6 +1940,7 @@ module.exports = {
   refreshOAuthCredential,
   requestAuthMetadata,
   requestTokenAudience,
+  requireOAuthCacheProfileMatch,
   requireDeveloperApiKeyQueryMetadata,
   requireDeveloperClientCredentialsScopes,
   requireDeveloperClientCredentialsSource,
@@ -1148,8 +1958,10 @@ module.exports = {
   resolveProfileDefaultFamily,
   resolveRequestCredential,
   stringArraysEqual,
+  tokenCachePathIsOutsidePackage,
   usableDeveloperClientCredentialsCacheToken,
   usableOAuthCacheToken,
+  withOAuthTokenCacheMutationLock,
   writeDeveloperClientCredentialsTokenCache,
   writeOAuthTokenCache,
 };

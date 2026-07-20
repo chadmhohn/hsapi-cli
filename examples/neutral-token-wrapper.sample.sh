@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Sample neutral token-source wrapper for hsapi and hsapi-mcp.
+# Sample neutral credential-source wrapper for hsapi and hsapi-mcp.
 #
-# The wrapper reads portal-bearer token environment variable names from
-# HSAPI_PORTALS_CONFIG, asks a local secret lookup command for any missing
-# values, exports those variables for the child process, then execs the
+# The wrapper reads declared credential environment variable names from
+# HSAPI_PORTALS_CONFIG, including ServiceKey/private-app tokens and hosted
+# OAuth broker admission credentials. It asks a local secret lookup command
+# for missing values, exports them for the child process, then execs the
 # requested command. Keep the lookup command and real portal config outside
 # this package.
 #
@@ -30,7 +31,10 @@ fi
 
 profiles_filter="${HSAPI_NEUTRAL_TOKEN_PROFILES:-}"
 
-mapfile -t required_envs < <(node - "$HSAPI_PORTALS_CONFIG" "$profiles_filter" <<'NODE'
+required_envs=()
+while IFS= read -r required_env; do
+  required_envs+=("$required_env")
+done < <(node - "$HSAPI_PORTALS_CONFIG" "$profiles_filter" <<'NODE'
 const fs = require('fs');
 
 const configPath = process.argv[2];
@@ -57,7 +61,13 @@ if (!portals || typeof portals !== 'object' || Array.isArray(portals)) {
 }
 
 const profileNames = profileFilter.length ? profileFilter : Object.keys(portals);
-const tokenEnvNames = [];
+const credentialEnvNames = [];
+
+function addCredentialEnv(value) {
+  if (typeof value === 'string' && value.trim()) {
+    credentialEnvNames.push(value.trim());
+  }
+}
 
 for (const name of profileNames) {
   const portal = portals[name];
@@ -65,44 +75,59 @@ for (const name of profileNames) {
     fail(`Portal profile "${name}" is not defined in HSAPI_PORTALS_CONFIG.`);
   }
 
-  const tokenEnv = portal.auth
-    && portal.auth.portalBearer
-    && typeof portal.auth.portalBearer.tokenEnv === 'string'
-    && portal.auth.portalBearer.tokenEnv.trim()
-      ? portal.auth.portalBearer.tokenEnv.trim()
-      : (typeof portal.tokenEnv === 'string' ? portal.tokenEnv.trim() : '');
+  const auth = portal.auth && typeof portal.auth === 'object'
+    ? portal.auth
+    : {};
+  const portalBearer = auth.portalBearer && typeof auth.portalBearer === 'object'
+    ? auth.portalBearer
+    : {};
+  const oauth = auth.oauth && typeof auth.oauth === 'object'
+    ? auth.oauth
+    : {};
+  const developer = auth.developer && typeof auth.developer === 'object'
+    ? auth.developer
+    : {};
 
-  if (tokenEnv) tokenEnvNames.push(tokenEnv);
+  addCredentialEnv(portalBearer.tokenEnv);
+  addCredentialEnv(portal.tokenEnv);
+  addCredentialEnv(oauth.brokerStartKeyEnv);
+  addCredentialEnv(oauth.clientIdEnv);
+  addCredentialEnv(oauth.clientSecretEnv);
+  addCredentialEnv(developer.personalAccessKeyEnv);
+  addCredentialEnv(developer.developerApiKeyEnv);
+  addCredentialEnv(developer.appIdEnv);
+  addCredentialEnv(developer.clientIdEnv);
+  addCredentialEnv(developer.clientSecretEnv);
 }
 
-for (const tokenEnv of [...new Set(tokenEnvNames)]) {
-  console.log(tokenEnv);
+for (const credentialEnv of [...new Set(credentialEnvNames)]) {
+  console.log(credentialEnv);
 }
 NODE
 )
 
-for token_env in "${required_envs[@]}"; do
-  if [[ ! "$token_env" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-    printf 'Refusing invalid token env var name from HSAPI_PORTALS_CONFIG: %s\n' "$token_env" >&2
+for credential_env in "${required_envs[@]}"; do
+  if [[ ! "$credential_env" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+    printf 'Refusing invalid credential env var name from HSAPI_PORTALS_CONFIG: %s\n' "$credential_env" >&2
     exit 2
   fi
 
-  if [[ -n "${!token_env:-}" ]]; then
+  if [[ -n "${!credential_env:-}" ]]; then
     continue
   fi
 
   if [[ "${HSAPI_NEUTRAL_TOKEN_DRY_RUN:-}" == "1" ]]; then
-    printf 'would_load_env=%s\n' "$token_env" >&2
+    printf 'would_load_env=%s\n' "$credential_env" >&2
     continue
   fi
 
-  secret_value="$("$HSAPI_SECRET_LOOKUP_CMD" "$token_env")"
+  secret_value="$("$HSAPI_SECRET_LOOKUP_CMD" "$credential_env")"
   if [[ -z "$secret_value" ]]; then
-    printf 'Secret lookup returned an empty value for %s.\n' "$token_env" >&2
+    printf 'Secret lookup returned an empty value for %s.\n' "$credential_env" >&2
     exit 2
   fi
 
-  export "$token_env=$secret_value"
+  export "$credential_env=$secret_value"
 done
 
 if [[ "${HSAPI_NEUTRAL_TOKEN_DRY_RUN:-}" == "1" ]]; then

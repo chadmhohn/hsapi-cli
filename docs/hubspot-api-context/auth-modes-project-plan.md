@@ -1,4 +1,9 @@
-# Auth Modes Project Plan
+# Auth Modes Project Plan (Historical)
+
+> This file records the original implementation plan and is not an onboarding
+> guide. Current user/assistant setup lives in `portal-auth-setup.md`; current
+> config uses the top-level `portals` object, and `hsapi auth doctor` is
+> implemented. Do not copy configuration from this historical plan.
 
 Last updated: 2026-05-14
 

@@ -59,6 +59,7 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       }
     },
@@ -10940,6 +10941,7 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       }
     },

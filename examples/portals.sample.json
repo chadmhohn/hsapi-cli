@@ -1,47 +1,17 @@
 {
-  "default": "example",
+  "_comment": "Portal-neutral ServiceKey/private-app template. Store only the environment variable name here, never the token value.",
+  "default": "service-key-example",
   "portals": {
-    "example": {
+    "service-key-example": {
       "label": "Example HubSpot Portal",
-      "portalId": "<example-portal-id>",
-      "tokenEnv": "HUBSPOT_ACCESS_TOKEN_EXAMPLE",
-      "authFamilyIntent": [
-        "portal_bearer",
-        "oauth",
-        "developer"
-      ],
+      "baseUrl": "https://api.hubapi.com",
       "auth": {
         "defaultFamily": "portal_bearer",
         "portalBearer": {
-          "tokenEnv": "HUBSPOT_ACCESS_TOKEN_EXAMPLE",
+          "tokenEnv": "HUBSPOT_SERVICE_KEY_EXAMPLE",
           "kind": "private_app"
-        },
-        "oauth": {
-          "clientIdEnv": "HUBSPOT_CLIENT_ID_EXAMPLE",
-          "clientSecretEnv": "HUBSPOT_CLIENT_SECRET_EXAMPLE",
-          "refreshTokenEnv": "HUBSPOT_REFRESH_TOKEN_EXAMPLE",
-          "tokenCachePath": "~/.config/hsapi/oauth/example-token-cache.json",
-          "redirectUrl": "http://localhost:5123/callback",
-          "scopes": [
-            "oauth",
-            "crm.objects.contacts.read"
-          ],
-          "optionalScopes": [
-            "crm.objects.deals.read"
-          ]
-        },
-        "developer": {
-          "personalAccessKeyEnv": "HUBSPOT_PERSONAL_ACCESS_KEY_EXAMPLE",
-          "developerApiKeyEnv": "HUBSPOT_DEVELOPER_API_KEY_EXAMPLE",
-          "appIdEnv": "HUBSPOT_APP_ID_EXAMPLE",
-          "clientIdEnv": "HUBSPOT_DEVELOPER_CLIENT_ID_EXAMPLE",
-          "clientSecretEnv": "HUBSPOT_DEVELOPER_CLIENT_SECRET_EXAMPLE",
-          "tokenCachePath": "~/.config/hsapi/developer/example-token-cache.json"
         }
-      },
-      "baseUrl": "https://api.hubapi.com",
-      "knownPlanLabel": "Starter, Professional, or Enterprise if known",
-      "knownPlanSource": "Optional note explaining how the plan label was verified."
+      }
     }
   }
 }

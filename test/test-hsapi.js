@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const { spawn } = require('child_process');
+const { createHash } = require('crypto');
 const fs = require('fs');
 const http = require('http');
 const os = require('os');
@@ -26,11 +27,16 @@ const MCP_CLI = path.join(WORKSPACE_ROOT, 'bin', 'hsapi-mcp.js');
 const CATALOG_UPDATER = path.join(WORKSPACE_ROOT, 'scripts', 'update-hubspot-api-catalog.js');
 const LIVE_READ_SMOKE = path.join(WORKSPACE_ROOT, 'scripts', 'live-read-smoke.js');
 const DISPOSABLE_WRITE_SMOKE = path.join(WORKSPACE_ROOT, 'scripts', 'disposable-write-smoke.js');
+const USER_LEVEL_SCOPE_PROBE = path.join(WORKSPACE_ROOT, 'scripts', 'probe-hubspot-user-level-scopes.js');
 const COVERAGE_DASHBOARD = path.join(WORKSPACE_ROOT, 'scripts', 'write-hubspot-api-coverage-dashboard.js');
 const CATALOG_FILE = path.join(WORKSPACE_ROOT, 'data', 'hubspot-api-catalog.json');
 const TEST_MATRIX_SAMPLE = path.join(WORKSPACE_ROOT, 'examples', 'portals.test-matrix.sample.json');
 const DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA = 'hsapi.developerClientCredentialsTokenCache.v1';
 const { frameMessage, parseFrames } = require('../src/mcp-server');
+
+function testOAuthClientIdFingerprint(clientId) {
+  return createHash('sha256').update(clientId, 'utf8').digest('hex');
+}
 
 function writeTempConfig(baseUrl, portalOverrides = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-test-'));
@@ -730,6 +736,105 @@ test('01 block', async () => {
 
 });
 
+test('config discovery prefers explicit then external per-user config and falls back to a legacy checkout without writing', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-config-discovery-'));
+  const xdgRoot = path.join(root, 'xdg');
+  const userConfigPath = path.join(xdgRoot, 'hsapi', 'portals.json');
+  const legacyRoot = path.join(root, 'legacy-workspace');
+  const legacyConfigPath = path.join(legacyRoot, 'config', 'hubspot-portals.json');
+  const explicitConfigPath = path.join(root, 'explicit-portals.json');
+  const configText = (label) => `${JSON.stringify({
+    default: 'test',
+    portals: {
+      test: {
+        label,
+        portalId: '999',
+        baseUrl,
+        auth: {
+          defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+          portalBearer: {
+            tokenEnv: 'HSAPI_CONFIG_DISCOVERY_TOKEN',
+            kind: 'private_app'
+          }
+        }
+      }
+    }
+  }, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(userConfigPath), { recursive: true });
+  fs.mkdirSync(path.dirname(legacyConfigPath), { recursive: true });
+  fs.writeFileSync(userConfigPath, configText('Per-user config'));
+  fs.writeFileSync(legacyConfigPath, configText('Legacy config'));
+  fs.writeFileSync(explicitConfigPath, configText('Explicit config'));
+  const originalUserConfig = fs.readFileSync(userConfigPath, 'utf8');
+  const originalLegacyConfig = fs.readFileSync(legacyConfigPath, 'utf8');
+  const commonEnv = {
+    HSAPI_CONFIG_DISCOVERY_TOKEN: '',
+    XDG_CONFIG_HOME: xdgRoot,
+    HSAPI_WORKSPACE_ROOT: ''
+  };
+
+  const explicitResult = await run(['profiles', 'list'], {
+    ...commonEnv,
+    HSAPI_PORTALS_CONFIG: explicitConfigPath
+  });
+  assert.strictEqual(explicitResult.status, 0, explicitResult.stderr || explicitResult.stdout);
+  const explicitOutput = parseJsonOutput(explicitResult);
+  assert.strictEqual(explicitOutput.configPath, explicitConfigPath);
+  assert.strictEqual(explicitOutput.profiles[0].label, 'Explicit config');
+
+  const userResult = await run(['profiles', 'list'], {
+    ...commonEnv,
+    HSAPI_PORTALS_CONFIG: ''
+  });
+  assert.strictEqual(userResult.status, 0, userResult.stderr || userResult.stdout);
+  const userOutput = parseJsonOutput(userResult);
+  assert.strictEqual(userOutput.configPath, userConfigPath);
+  assert.strictEqual(userOutput.profiles[0].label, 'Per-user config');
+
+  const legacyXdgRoot = path.join(root, 'xdg-without-config');
+  const legacyResult = await run(['profiles', 'list'], {
+    ...commonEnv,
+    HSAPI_PORTALS_CONFIG: '',
+    XDG_CONFIG_HOME: legacyXdgRoot,
+    HSAPI_WORKSPACE_ROOT: legacyRoot
+  });
+  assert.strictEqual(legacyResult.status, 0, legacyResult.stderr || legacyResult.stdout);
+  const legacyOutput = parseJsonOutput(legacyResult);
+  assert.strictEqual(legacyOutput.configPath, legacyConfigPath);
+  assert.strictEqual(legacyOutput.profiles[0].label, 'Legacy config');
+
+  const missingExplicitPath = path.join(root, 'missing-explicit.json');
+  const missingExplicit = await run(['profiles', 'list'], {
+    ...commonEnv,
+    HSAPI_PORTALS_CONFIG: missingExplicitPath
+  });
+  assert.notStrictEqual(missingExplicit.status, 0);
+  assert(missingExplicit.stderr.includes(missingExplicitPath));
+  assert.match(missingExplicit.stderr, /HSAPI_PORTALS_CONFIG points to a file that does not exist/);
+  assert(missingExplicit.stderr.includes(path.join(WORKSPACE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md')));
+  assert.match(missingExplicit.stderr, /does not create or overwrite portal configs automatically/);
+
+  const missingXdgRoot = path.join(root, 'missing-xdg');
+  const missingWorkspaceRoot = path.join(root, 'missing-workspace');
+  const missingDefaultPath = path.join(missingXdgRoot, 'hsapi', 'portals.json');
+  const missingDefault = await run(['profiles', 'list'], {
+    HSAPI_PORTALS_CONFIG: '',
+    XDG_CONFIG_HOME: missingXdgRoot,
+    HSAPI_WORKSPACE_ROOT: missingWorkspaceRoot,
+    HSAPI_CONFIG_DISCOVERY_TOKEN: ''
+  });
+  assert.notStrictEqual(missingDefault.status, 0);
+  assert(missingDefault.stderr.includes(missingDefaultPath));
+  assert(missingDefault.stderr.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.sample.json')));
+  assert(missingDefault.stderr.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.oauth-hosted.sample.json')));
+  assert.match(missingDefault.stderr, /Read the installed setup guide/);
+  assert.match(missingDefault.stderr, /set HSAPI_PORTALS_CONFIG to an existing config file/);
+  assert.strictEqual(fs.existsSync(missingDefaultPath), false, 'config discovery must not create a missing per-user config');
+
+  assert.strictEqual(fs.readFileSync(userConfigPath, 'utf8'), originalUserConfig);
+  assert.strictEqual(fs.readFileSync(legacyConfigPath, 'utf8'), originalLegacyConfig);
+});
+
 test('02 block (2)', async () => {
     const mockHs = writeMockHsCli();
     const projectEnv = {
@@ -1234,6 +1339,9 @@ test('11 Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help
     const bareHelp = await run(['help'], baseEnv);
     assert.strictEqual(bareHelp.status, 0);
     assert.match(bareHelp.stdout, /^hsapi - portal-aware HubSpot API CLI/);
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'docs', 'hubspot-api-context', 'portal-auth-setup.md')));
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.sample.json')));
+    assert(bareHelp.stdout.includes(path.join(WORKSPACE_ROOT, 'examples', 'portals.oauth-hosted.sample.json')));
 
 });
 
@@ -1498,13 +1606,16 @@ test('17 Issue #18: packaged context docs are reachable through MCP', async () =
       { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: {} } },
       { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'crm-records' } } },
       { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'docs/hubspot-api-context/associations.md', maxChars: 1000 } } },
-      { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: '../../package.json' } } }
-    ], baseEnv, 5);
+      { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: '../../package.json' } } },
+      { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'hsapi_context_doc', arguments: { name: 'portal-auth-setup' } } }
+    ], baseEnv, 6);
     assert.strictEqual(mcp.stderr, '');
+    assert.match(mcp.responses[0].result.instructions, /portal-auth-setup/);
 
     const listing = mcpStructuredContent(mcp.responses[1]);
     assert.strictEqual(listing.ok, true);
     assert(listing.docs.some((doc) => doc.name === 'crm-records'));
+    assert(listing.docs.some((doc) => doc.name === 'portal-auth-setup'));
     assert(listing.docs.every((doc) => doc.path.startsWith('docs/hubspot-api-context/')));
 
     const crmRecords = mcpStructuredContent(mcp.responses[2]);
@@ -1520,6 +1631,13 @@ test('17 Issue #18: packaged context docs are reachable through MCP', async () =
     const traversal = mcpStructuredContent(mcp.responses[4]);
     assert.strictEqual(traversal.ok, false);
     assert.strictEqual(traversal.error.code, 'unknown_context_doc');
+
+    const portalSetup = mcpStructuredContent(mcp.responses[5]);
+    assert.strictEqual(portalSetup.ok, true);
+    assert.strictEqual(portalSetup.name, 'portal-auth-setup');
+    assert.match(portalSetup.markdown, /ServiceKey/);
+    assert.match(portalSetup.markdown, /hosted_broker/);
+    assert.match(portalSetup.markdown, /Claude|MCP/);
 
 });
 
@@ -3395,7 +3513,11 @@ test('73 127.0.0.1\');', async () => {
       accessToken: 'cached-access-token',
       expiresIn: 1800,
       expiresAt: freshExpiresAt,
-      refreshedAt: '2026-05-15T00:00:00.000Z'
+      refreshedAt: '2026-05-15T00:00:00.000Z',
+      source: {
+        mode: 'local',
+        clientIdFingerprint: testOAuthClientIdFingerprint('client-id')
+      }
     }, null, 2));
     const freshOauthConfig = oauthConfigForCache(freshCachePath);
 
@@ -3405,7 +3527,7 @@ test('73 127.0.0.1\');', async () => {
         ...baseEnv,
         HSAPI_PORTALS_CONFIG: freshOauthConfig,
         HSAPI_CATALOG_FILE: oauthCatalog,
-        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
         HSAPI_OAUTH_REFRESH_TOKEN: ''
       }));
@@ -3436,7 +3558,7 @@ test('73 127.0.0.1\');', async () => {
         ...baseEnv,
         HSAPI_PORTALS_CONFIG: freshOauthConfig,
         HSAPI_CATALOG_FILE: oauthCatalog,
-        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
         HSAPI_OAUTH_REFRESH_TOKEN: ''
       }));
@@ -3453,7 +3575,7 @@ test('73 127.0.0.1\');', async () => {
         ...baseEnv,
         HSAPI_PORTALS_CONFIG: freshOauthConfig,
         HSAPI_CATALOG_FILE: oauthCatalog,
-        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
         HSAPI_OAUTH_REFRESH_TOKEN: ''
       });
@@ -3472,7 +3594,11 @@ test('73 127.0.0.1\');', async () => {
         accessToken: 'expired-access-token',
         expiresIn: 1800,
         expiresAt: '2000-01-01T00:00:00.000Z',
-        refreshedAt: '1999-12-31T23:30:00.000Z'
+        refreshedAt: '1999-12-31T23:30:00.000Z',
+        source: {
+          mode: 'local',
+          clientIdFingerprint: testOAuthClientIdFingerprint('client-id')
+        }
       }, null, 2));
       const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
       const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
@@ -3566,8 +3692,8 @@ test('73 127.0.0.1\');', async () => {
     }
 
     {
-      // Issue #78: a legacy v1 cache (no refreshToken field) with a still-usable
-      // access token must remain readable and be used without a refresh.
+      // A legacy v1 cache with no client-app fingerprint remains readable for
+      // diagnostics, but must fail closed for live use.
       const v1CachePath = path.join(oauthDir, 'v1-backcompat-cache.json');
       fs.writeFileSync(v1CachePath, JSON.stringify({
         schema: 'hsapi.oauthTokenCache.v1',
@@ -3584,14 +3710,16 @@ test('73 127.0.0.1\');', async () => {
         ...baseEnv,
         HSAPI_PORTALS_CONFIG: oauthConfigForCache(v1CachePath),
         HSAPI_CATALOG_FILE: oauthCatalog,
-        HSAPI_OAUTH_CLIENT_ID: '',
+        HSAPI_OAUTH_CLIENT_ID: 'client-id',
         HSAPI_OAUTH_CLIENT_SECRET: '',
         HSAPI_OAUTH_REFRESH_TOKEN: ''
       });
-      assert.strictEqual(result.status, 0, result.stderr || result.stdout);
+      assert.notStrictEqual(result.status, 0);
+      assert.match(result.stderr, /client_id_fingerprint_missing/);
+      assert.match(result.stderr, /legacy cache is not bound to an OAuth client app/i);
       assert.strictEqual(requestCount(requests, 'POST', '/oauth/2026-03/token'), beforeToken, 'usable v1 cache must not refresh');
-      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount + 1);
-      assert.strictEqual(requests.at(-1).headers.authorization, 'Bearer v1-cached-access-token');
+      assert.strictEqual(requestCount(requests, 'GET', '/account-info/2026-03/details'), beforeAccount);
+      assert(!result.stderr.includes('v1-cached-access-token'));
     }
 
     {
@@ -3618,7 +3746,11 @@ test('73 127.0.0.1\');', async () => {
         refreshToken: 'cache-stored-refresh-token',
         expiresIn: 1800,
         expiresAt: '2000-01-01T00:00:00.000Z',
-        refreshedAt: '1999-12-31T23:30:00.000Z'
+        refreshedAt: '1999-12-31T23:30:00.000Z',
+        source: {
+          mode: 'local',
+          clientIdFingerprint: testOAuthClientIdFingerprint('client-id')
+        }
       }, null, 2));
       const beforeToken = requestCount(requests, 'POST', '/oauth/2026-03/token');
       const beforeAccount = requestCount(requests, 'GET', '/account-info/2026-03/details');
@@ -3786,6 +3918,8 @@ test('74 example.com/logo.png\', \'--folder-path\', \'/library/imports\', \'--ac
       assert(output.names === undefined, 'full object-type output should include object metadata');
       assert(output.objectTypes.some((entry) => entry.objectType === 'appointments' && entry.objectTypeId === '0-421'));
       assert(output.objectTypes.some((entry) => entry.objectType === 'leads' && entry.objectTypeId === '0-136'));
+      assert(output.objectTypes.some((entry) => entry.objectType === 'contracts' && entry.objectTypeId === null));
+      assert(output.objectTypes.some((entry) => entry.objectType === 'marketing_events' && entry.objectTypeId === '0-54'));
     }
     {
       const output = parseJsonOutput(await run(['crm', 'resolve-object', 'project'], baseEnv));
@@ -6376,6 +6510,9 @@ test('88 Issue #77: auth login prerequisite validation + auth logout (no sockets
   // auth login --help must not crash (local action, falls back to usage).
   const help = await run(['auth', 'login', '--help'], baseEnv);
   assert.strictEqual(help.status, 0, help.stderr || help.stdout);
+  assert.match(help.stdout, /hsapi auth login \[--portal <name>\] \[--timeout <milliseconds>\]/);
+  assert.match(help.stdout, /hsapi auth whoami \[--portal <name>\]/);
+  assert.match(help.stdout, /hsapi auth logout \[--portal <name>\]/);
 
   // Missing client id/secret env values -> clear failure listing what's missing,
   // before any socket bind or browser launch.
@@ -6486,7 +6623,7 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
   const oauthOnlyPortal = { name: 'test', baseUrl: baseUrl, portalBearer: null, oauth: oauthProfile, developer: null };
 
   // The auth metadata a CRM data op carries: declared portal_bearer (the non-user
-  // credential) with the object's tokenAudience injected (issue #80).
+  // credential) with the operation-aware tokenAudience injected.
   const userAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'user', endpointId: 'objects.get' };
   const adminAudienceAuth = { required: true, family: AUTH_FAMILIES.PORTAL_BEARER, tokenAudience: 'admin', endpointId: 'objects.get' };
 
@@ -6547,18 +6684,18 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     assert.strictEqual(meta.credentialSource.type, 'oauth_refresh_token');
   }
 
-  // --- CLI object-classification via --show-request (audience follows the OBJECT) ---
+  // --- CLI object/operation classification via --show-request ---
 
-  // A capable standard object ("deals") is user-audience; a custom object
-  // ("2-12345") is admin-audience. Assert on the resolved catalog endpoint id
-  // (preserved) plus the injected tokenAudience.
+  // A readable standard object GET ("deals") is user-audience; a custom object
+  // GET ("2-12345") is admin-audience. Assert on the resolved catalog endpoint
+  // id (preserved) plus the injected tokenAudience.
   const dealsShow = await expectShowRequest(['crm', 'get', 'deals', '101'], baseEnv, {
     requests,
     method: 'GET',
     pathname: '/crm/objects/2026-03/deals/101',
     endpointId: 'objects.get'
   });
-  assert.strictEqual(dealsShow.auth.tokenAudience, 'user', 'deals is a user-capable standard object');
+  assert.strictEqual(dealsShow.auth.tokenAudience, 'user', 'deals is a readable standard object');
   assert.strictEqual(dealsShow.auth.credentialSource.tokenAudience, 'user');
 
   const customShow = await expectShowRequest(['crm', 'get', '2-12345', '101'], baseEnv, {
@@ -6570,8 +6707,7 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
   assert.strictEqual(customShow.auth.tokenAudience, 'admin', 'custom object types are admin-audience');
   assert.strictEqual(customShow.auth.credentialSource.tokenAudience, 'admin');
 
-  // DELETE is always admin-audience regardless of object type: HubSpot user-level
-  // OAuth apps return 403 on any CRM delete (live-validated 2026-06-30, issue #80).
+  // Destructive operations are always admin-audience regardless of object type.
   const dealsArchiveShow = await expectShowRequest(['crm', 'archive', 'deals', '101'], baseEnv, {
     requests,
     method: 'DELETE',
@@ -6590,7 +6726,11 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     refreshToken: 'routing-cached-refresh-token',
     expiresIn: 1800,
     expiresAt: '2999-01-01T00:00:00.000Z',
-    refreshedAt: '2026-05-15T00:00:00.000Z'
+    refreshedAt: '2026-05-15T00:00:00.000Z',
+    source: {
+      mode: 'local',
+      clientIdFingerprint: testOAuthClientIdFingerprint('client-id')
+    }
   }, null, 2));
   const dualConfig = (tokenCachePath) => writeTempConfig(baseUrl, {
     tokenEnv: null,
@@ -6618,9 +6758,19 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     ...overrides
   });
 
-  // deals (user-audience) on a dual portal -> the OAuth user identity, with the
-  // promotion flagged. Custom object (admin) on the SAME portal -> portal_bearer.
+  // Readable standard objects on a dual portal -> the OAuth user identity, with
+  // the promotion flagged. A custom object on the SAME portal -> portal_bearer.
   {
+    const accountCs = await expectShowRequest(['account', 'details'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/account-info/2026-03/details',
+      endpointId: 'account.details'
+    });
+    assert.strictEqual(accountCs.auth.tokenAudience, 'user', 'live-validated account identity reads must use the user audience');
+    assert.strictEqual(accountCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(accountCs.auth.credentialSource.identity, 'user');
+
     const dealsCs = await expectShowRequest(['crm', 'get', 'deals', '101'], dualEnv(freshOauthCachePath), {
       requests,
       method: 'GET',
@@ -6632,6 +6782,27 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     assert.strictEqual(dealsCs.auth.credentialSource.routedFromFamily, AUTH_FAMILIES.PORTAL_BEARER);
     assert(!JSON.stringify(dealsCs).includes('routing-cached-access-token'), 'show-request must not leak cached token values');
 
+    const usersCs = await expectShowRequest(['crm', 'get', 'users', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'GET',
+      pathname: '/crm/objects/2026-03/users/101',
+      endpointId: 'objects.get'
+    });
+    assert.strictEqual(usersCs.auth.tokenAudience, 'user', 'mcp.users.read-backed Users CRM reads must use the user audience');
+    assert.strictEqual(usersCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(usersCs.auth.credentialSource.identity, 'user');
+
+    const contractsCs = await expectShowRequest(['crm', 'batch-read', 'contracts', '--ids', '101'], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'POST',
+      pathname: '/crm/objects/2026-03/contracts/batch/read',
+      endpointId: 'objects.batch_read',
+      body: { inputs: [{ id: '101' }] }
+    });
+    assert.strictEqual(contractsCs.auth.tokenAudience, 'user', 'catalog-marked read-only POSTs must use the readable OAuth set');
+    assert.strictEqual(contractsCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(contractsCs.auth.credentialSource.identity, 'user');
+
     const customCs = await expectShowRequest(['crm', 'get', '2-12345', '101'], dualEnv(freshOauthCachePath), {
       requests,
       method: 'GET',
@@ -6641,6 +6812,77 @@ test('89 Issue #80: least-privilege credential routing matrix', async () => {
     assert.strictEqual(customCs.auth.credentialSource.type, 'env');
     assert.strictEqual(customCs.auth.credentialSource.identity, 'admin');
     assert.strictEqual(customCs.auth.credentialSource.name, 'HSAPI_TEST_EXPLICIT_TOKEN');
+  }
+
+  const routingCatalog = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
+  for (const name of ['account.details', 'account.subscription']) {
+    const endpoint = routingCatalog.endpoints.find((candidate) => candidate.name === name);
+    assert(endpoint, `${name} must be cataloged`);
+    assert.strictEqual(endpoint.auth.tokenAudience, 'user', `${name} must preserve the live-validated user audience`);
+  }
+
+  // Objects backed only by read-capable user scopes must not route mutations to
+  // OAuth. These writes stay on the admin portal bearer on the same dual portal.
+  for (const objectType of ['users', 'contracts', 'quotes', 'carts']) {
+    const writeCs = await expectShowRequest([
+      'crm',
+      'create',
+      objectType,
+      '--properties',
+      '{"name":"routing test"}'
+    ], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'POST',
+      pathname: `/crm/objects/2026-03/${objectType}`,
+      endpointId: 'objects.create',
+      body: { properties: { name: 'routing test' } }
+    });
+    assert.strictEqual(writeCs.auth.tokenAudience, 'admin', `${objectType} writes must remain admin-audience`);
+    assert.strictEqual(writeCs.auth.credentialSource.type, 'env');
+    assert.strictEqual(writeCs.auth.credentialSource.identity, 'admin');
+    assert.strictEqual(writeCs.auth.credentialSource.name, 'HSAPI_TEST_EXPLICIT_TOKEN');
+  }
+
+  // A declared write-capable standard object still routes a non-destructive
+  // mutation to OAuth, preserving the existing least-privilege behavior.
+  {
+    const contactsWriteCs = await expectShowRequest([
+      'crm',
+      'create',
+      'contacts',
+      '--properties',
+      '{"email":"routing@example.test"}'
+    ], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'POST',
+      pathname: '/crm/objects/2026-03/contacts',
+      endpointId: 'objects.create',
+      body: { properties: { email: 'routing@example.test' } }
+    });
+    assert.strictEqual(contactsWriteCs.auth.tokenAudience, 'user');
+    assert.strictEqual(contactsWriteCs.auth.credentialSource.type, 'oauth_refresh_token');
+    assert.strictEqual(contactsWriteCs.auth.credentialSource.identity, 'user');
+  }
+
+  // Destructive POST operations remain admin-only even when the object itself
+  // is both readable and writable through the user-level app.
+  {
+    const batchArchiveCs = await expectShowRequest([
+      'crm',
+      'batch-archive',
+      'contacts',
+      '--ids',
+      '101'
+    ], dualEnv(freshOauthCachePath), {
+      requests,
+      method: 'POST',
+      pathname: '/crm/objects/2026-03/contacts/batch/archive',
+      endpointId: 'objects.batch_archive',
+      body: { inputs: [{ id: '101' }] }
+    });
+    assert.strictEqual(batchArchiveCs.auth.tokenAudience, 'admin');
+    assert.strictEqual(batchArchiveCs.auth.credentialSource.type, 'env');
+    assert.strictEqual(batchArchiveCs.auth.credentialSource.identity, 'admin');
   }
 
   // A real (non-show-request) user-audience read on a dual portal uses the cached
@@ -6754,7 +6996,11 @@ test('90 Issue #81: auth whoami â€” portal identity + OAuth cache status', async
     refreshToken: 'whoami-refresh-token',
     expiresIn: 1800,
     expiresAt: '2999-01-01T00:00:00.000Z',
-    refreshedAt: '2026-06-30T00:00:00.000Z'
+    refreshedAt: '2026-06-30T00:00:00.000Z',
+    source: {
+      mode: 'local',
+      clientIdFingerprint: testOAuthClientIdFingerprint('whoami-client-id')
+    }
   }, null, 2));
   const freshConfig = writeTempConfig(baseUrl, {
     tokenEnv: null,
@@ -6846,4 +7092,1127 @@ test('91 Issue #85: hsapi_command_execute_read and hsapi_request_execute_read â€
   const postReq = mcpStructuredContent(mcp.responses[5]);
   assert.strictEqual(postReq.ok, false, 'request_execute_read: unsafe POST must be blocked');
   assert.strictEqual(postReq.error.code, 'mutation_not_allowed', 'request_execute_read: unsafe POST must use mutation_not_allowed');
+});
+
+test('92 user-level app scope probe classification and combined candidates', async () => {
+  const {
+    authConfig,
+    candidateMeta,
+    classifyUpload,
+    parseArgs
+  } = require('../scripts/probe-hubspot-user-level-scopes');
+
+  const baseline = {
+    config: {
+      isUserLevel: true,
+      auth: {
+        optionalScopes: ['crm.objects.contacts.read']
+      }
+    }
+  };
+  const candidate = candidateMeta(baseline, [
+    'crm.objects.contacts.read',
+    'cpq.quotes.write',
+    'crm.objects.marketing_events.write'
+  ]);
+  assert.deepStrictEqual(candidate.config.auth.optionalScopes, [
+    'crm.objects.contacts.read',
+    'cpq.quotes.write',
+    'crm.objects.marketing_events.write'
+  ]);
+  assert.deepStrictEqual(
+    baseline.config.auth.optionalScopes,
+    ['crm.objects.contacts.read'],
+    'candidate construction must not mutate the downloaded baseline'
+  );
+  assert.strictEqual(authConfig(candidate), candidate.config.auth);
+  assert.throws(
+    () => authConfig({ config: { isUserLevel: false, auth: { optionalScopes: [] } } }),
+    /user-level app/
+  );
+
+  const parsed = parseArgs([
+    '--scope',
+    'cpq.quotes.write',
+    '--scope',
+    'crm.objects.marketing_events.write',
+    '--combined'
+  ]);
+  assert.deepStrictEqual(parsed.scopes, [
+    'cpq.quotes.write',
+    'crm.objects.marketing_events.write'
+  ]);
+  assert.strictEqual(parsed.combined, true);
+
+  assert.strictEqual(classifyUpload({
+    status: 0,
+    stdout: '[SUCCESS] Deployed build #52',
+    stderr: ''
+  }), 'accepted');
+  assert.strictEqual(classifyUpload({
+    status: 0,
+    stdout: '[WARNING] permission is not fully supported\n[SUCCESS] Deployed build #52',
+    stderr: ''
+  }), 'accepted_with_warning');
+  assert.strictEqual(classifyUpload({
+    status: 1,
+    stdout: 'Build #27 succeeded\nFailed to deploy build #27',
+    stderr: '[ERROR] The scope crm.objects.custom.read could not be recognized.'
+  }), 'rejected');
+
+  const help = await runNodeScript(USER_LEVEL_SCOPE_PROBE, ['--help'], {});
+  assert.strictEqual(help.status, 0, help.stderr || help.stdout);
+  assert.match(help.stdout, /--combined/);
+  assert.match(help.stdout, /finally block/);
+});
+
+test('93 hosted OAuth broker transport, config isolation, metadata, and redaction', async () => {
+  const {
+    exchangeHostedBrokerLogin,
+    refreshHostedBrokerTokens,
+    revokeHostedBrokerTokens,
+    startHostedBrokerLogin,
+    validateHubSpotAuthorizationUrl
+  } = require('../src/oauth-broker');
+  const {
+    OAUTH_MODES,
+    oauthCacheProfileMatch,
+    oauthTokenCacheFromRefreshPayload,
+    redactedOAuthTokenCacheContract,
+    resolveOAuthProfile
+  } = require('../src/auth-resolvers');
+
+  const brokerRequests = [];
+  const brokerSessionId = 's'.repeat(43);
+  let exchangeAttempts = 0;
+  const brokerServer = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      const url = new URL(req.url, 'http://127.0.0.1');
+      brokerRequests.push({
+        method: req.method,
+        pathname: url.pathname,
+        headers: req.headers,
+        body: body ? JSON.parse(body) : null
+      });
+
+      if (req.method === 'POST' && url.pathname === '/v1/oauth/sessions') {
+        res.writeHead(201, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({
+          sessionId: brokerSessionId,
+          authorizationUrl: `https://app.hubspot.com/oauth/123456789/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
+          expiresIn: 600,
+          interval: 1
+        }));
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === `/v1/oauth/sessions/${brokerSessionId}/exchange`) {
+        exchangeAttempts += 1;
+        res.writeHead(exchangeAttempts === 1 ? 202 : 200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify(exchangeAttempts === 1
+          ? { status: 'pending', interval: 1 }
+          : {
+            accessToken: 'broker-access-token',
+            refreshToken: 'broker-refresh-token',
+            brokerCredential: 'v1.broker-credential',
+            expiresIn: 1800,
+            tokenType: 'bearer',
+            scopes: ['oauth', 'crm.objects.contacts.read'],
+            hubId: 123456789,
+            userId: 12345
+          }));
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === '/v1/oauth/tokens/refresh') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({
+          accessToken: 'rotated-access-token',
+          refreshToken: 'rotated-refresh-token',
+          brokerCredential: 'v1.rotated-broker-credential',
+          expiresIn: 1800,
+          tokenType: 'bearer',
+          scopes: ['oauth', 'crm.objects.contacts.read'],
+          hubId: 123456789,
+          userId: 12345
+        }));
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === '/v1/oauth/tokens/revoke') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      res.writeHead(404, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: 'not_found' }));
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    brokerServer.once('error', reject);
+    brokerServer.listen(0, '127.0.0.1', resolve);
+  });
+
+  try {
+    const address = brokerServer.address();
+    assert(address && typeof address === 'object');
+    const brokerUrl = `http://127.0.0.1:${address.port}`;
+    const source = { brokerUrl };
+    const brokerStartKey = 'test-broker-start-key';
+
+    const session = await startHostedBrokerLogin(source, {
+      accountId: '123456789',
+      codeChallenge: 'challenge-123',
+      consumeSecretHash: 'consume-hash-123',
+      brokerStartKey
+    });
+    assert.strictEqual(session.sessionId, brokerSessionId);
+    assert.strictEqual(session.authorizationUrl.origin, 'https://app.hubspot.com');
+    assert.strictEqual(session.expiresIn, 600);
+    assert.strictEqual(session.intervalSeconds, 1);
+    assert.throws(
+      () => validateHubSpotAuthorizationUrl(
+        new URL(`https://evil.example/oauth/123456789/authorize?client_id=x&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`),
+        brokerSessionId,
+        '123456789',
+        'test'
+      ),
+      /untrusted HubSpot authorizationUrl/
+    );
+
+    const pending = await exchangeHostedBrokerLogin(source, {
+      sessionId: session.sessionId,
+      consumeSecret: 'consume-secret-123',
+      codeVerifier: 'verifier-123'
+    });
+    assert.deepStrictEqual(pending, {
+      status: 'pending',
+      intervalSeconds: 1
+    });
+
+    const complete = await exchangeHostedBrokerLogin(source, {
+      sessionId: session.sessionId,
+      consumeSecret: 'consume-secret-123',
+      codeVerifier: 'verifier-123'
+    });
+    assert.strictEqual(complete.status, 'complete');
+    assert.deepStrictEqual(complete.token.scopes, ['oauth', 'crm.objects.contacts.read']);
+    assert.strictEqual(complete.token.hubId, '123456789');
+    assert.strictEqual(complete.token.userId, '12345');
+
+    const cacheSource = {
+      mode: OAUTH_MODES.HOSTED_BROKER,
+      brokerUrl: 'https://auth.example.test',
+      portalId: '123456789',
+      tokenCachePath: path.join(os.tmpdir(), 'hsapi-hosted-oauth-test-cache.json'),
+      tokenCachePathDisplay: '~/.config/hsapi/oauth/test.json'
+    };
+    const cache = oauthTokenCacheFromRefreshPayload(complete.token, cacheSource, Date.now());
+    assert.strictEqual(cache.refreshToken, 'broker-refresh-token');
+    assert.strictEqual(cache.brokerCredential, 'v1.broker-credential');
+    assert.deepStrictEqual(cache.scopes, ['oauth', 'crm.objects.contacts.read']);
+    assert.strictEqual(cache.hubId, '123456789');
+    assert.strictEqual(cache.userId, '12345');
+    assert.strictEqual(cache.source.mode, OAUTH_MODES.HOSTED_BROKER);
+    assert.strictEqual(cache.source.brokerUrl, 'https://auth.example.test');
+    assert.strictEqual(cache.source.portalId, '123456789');
+    assert.deepStrictEqual(oauthCacheProfileMatch(cache, cacheSource), {
+      ok: true,
+      reason: null
+    });
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        { ...cache, hubId: '999' },
+        cacheSource
+      ),
+      {
+        ok: false,
+        reason: 'portal_id_mismatch'
+      }
+    );
+
+    const redacted = redactedOAuthTokenCacheContract(cacheSource, {
+      status: 'read',
+      cache,
+      error: null
+    });
+    assert.strictEqual(redacted.accessToken, 'REDACTED');
+    assert.strictEqual(redacted.refreshToken, 'REDACTED');
+    assert.strictEqual(redacted.brokerCredential, 'REDACTED');
+    assert(!JSON.stringify(redacted).includes('broker-access-token'));
+    assert(!JSON.stringify(redacted).includes('broker-refresh-token'));
+    assert(!JSON.stringify(redacted).includes('v1.broker-credential'));
+
+    const refreshed = await refreshHostedBrokerTokens(source, {
+      refreshToken: cache.refreshToken,
+      brokerCredential: cache.brokerCredential
+    });
+    assert.strictEqual(refreshed.accessToken, 'rotated-access-token');
+    assert.strictEqual(refreshed.refreshToken, 'rotated-refresh-token');
+    assert.strictEqual(refreshed.brokerCredential, 'v1.rotated-broker-credential');
+
+    await revokeHostedBrokerTokens(source, {
+      refreshToken: refreshed.refreshToken,
+      brokerCredential: refreshed.brokerCredential
+    });
+
+    const startRequest = brokerRequests.find((request) => request.pathname === '/v1/oauth/sessions');
+    assert.strictEqual(startRequest.headers.authorization, `Bearer ${brokerStartKey}`);
+    assert.deepStrictEqual(startRequest.body, {
+      codeChallenge: 'challenge-123',
+      consumeSecretHash: 'consume-hash-123',
+      accountId: '123456789'
+    });
+    const exchangeRequest = brokerRequests.find((request) => request.pathname.endsWith('/exchange'));
+    assert.strictEqual(exchangeRequest.headers.authorization, 'Bearer consume-secret-123');
+    assert.deepStrictEqual(exchangeRequest.body, { codeVerifier: 'verifier-123' });
+    const refreshRequest = brokerRequests.find((request) => request.pathname.endsWith('/refresh'));
+    assert.deepStrictEqual(refreshRequest.body, {
+      refreshToken: 'broker-refresh-token',
+      brokerCredential: 'v1.broker-credential'
+    });
+
+    const hostedProfile = resolveOAuthProfile({
+      portalId: '123456789',
+      auth: {
+        oauth: {
+          mode: OAUTH_MODES.HOSTED_BROKER,
+          brokerUrl: 'https://auth.example.test/base',
+          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
+          tokenCachePath: '~/.config/hsapi/oauth/test.json',
+          clientIdEnv: 'MUST_NOT_BE_READ',
+          clientSecretEnv: 'MUST_NOT_BE_READ'
+        }
+      }
+    }, 'hosted-test');
+    assert.strictEqual(hostedProfile.mode, OAUTH_MODES.HOSTED_BROKER);
+    assert.strictEqual(hostedProfile.brokerUrl, 'https://auth.example.test/base');
+    assert.strictEqual(hostedProfile.brokerStartKeyEnv, 'HSAPI_OAUTH_BROKER_START_KEY');
+    assert.strictEqual(hostedProfile.portalId, '123456789');
+    assert.strictEqual(hostedProfile.clientIdEnv, null);
+    assert.strictEqual(hostedProfile.clientSecretEnv, null);
+    assert.strictEqual(hostedProfile.redirectUrl, null);
+    const invalidBrokerConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          mode: OAUTH_MODES.HOSTED_BROKER,
+          brokerUrl: 'http://auth.example.test',
+          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
+          tokenCachePath: '~/.config/hsapi/oauth/test.json'
+        }
+      }
+    });
+    const invalidBrokerResult = await run(['auth', 'doctor', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: invalidBrokerConfig
+    });
+    assert.notStrictEqual(invalidBrokerResult.status, 0);
+    assert.match(invalidBrokerResult.stderr, /must use HTTPS/);
+
+    const missingPortalIdConfig = writeTempConfig(baseUrl, {
+      portalId: null,
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          mode: OAUTH_MODES.HOSTED_BROKER,
+          brokerUrl: 'https://auth.example.test',
+          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
+          tokenCachePath: '~/.config/hsapi/oauth/test.json'
+        }
+      }
+    });
+    const missingPortalIdDoctor = await run(['auth', 'doctor', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: missingPortalIdConfig
+    });
+    assert.notStrictEqual(missingPortalIdDoctor.status, 0);
+    assert.match(missingPortalIdDoctor.stderr, /numeric portalId/);
+    const missingPortalIdLogin = await run(['auth', 'login', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: missingPortalIdConfig
+    });
+    assert.notStrictEqual(missingPortalIdLogin.status, 0);
+    assert.match(missingPortalIdLogin.stderr, /numeric portalId/);
+
+    const logoutDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-logout-'));
+    const logoutCachePath = path.join(logoutDir, 'cache.json');
+    fs.writeFileSync(logoutCachePath, JSON.stringify({
+      schema: 'hsapi.oauthTokenCache.v2',
+      family: AUTH_FAMILIES.OAUTH,
+      accessToken: 'must-be-deleted-access-token',
+      refreshToken: 'must-be-deleted-refresh-token',
+      expiresIn: 1800,
+      expiresAt: '2999-01-01T00:00:00.000Z',
+      refreshedAt: '2026-07-18T00:00:00.000Z',
+      hubId: '999',
+      source: {
+        mode: OAUTH_MODES.HOSTED_BROKER,
+        brokerUrl: 'https://auth.example.test',
+        portalId: '999'
+      }
+    }, null, 2));
+    const logoutConfig = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          mode: OAUTH_MODES.HOSTED_BROKER,
+          brokerUrl: 'https://auth.example.test',
+          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
+          tokenCachePath: logoutCachePath
+        }
+      }
+    });
+    const logoutResult = await run(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: logoutConfig
+    });
+    assert.strictEqual(logoutResult.status, 0, logoutResult.stderr || logoutResult.stdout);
+    const logoutOutput = parseJsonOutput(logoutResult);
+    assert.strictEqual(logoutOutput.removed, true);
+    assert.strictEqual(logoutOutput.revoked, false);
+    assert.strictEqual(logoutOutput.remoteRevocation.status, 'not_attempted');
+    assert.match(logoutOutput.remoteRevocation.error, /broker_credential_missing/);
+    assert.strictEqual(fs.existsSync(logoutCachePath), false, 'hosted logout must remove local credentials even when remote revocation cannot run');
+    assert(!logoutResult.stdout.includes('must-be-deleted-access-token'));
+    assert(!logoutResult.stdout.includes('must-be-deleted-refresh-token'));
+  } finally {
+    await new Promise((resolve) => brokerServer.close(resolve));
+  }
+});
+
+test('malformed OAuth and developer token caches report generic JSON errors without leaking file content', async () => {
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-malformed-cache-'));
+  const oauthCachePath = path.join(cacheDir, 'oauth-cache.json');
+  const developerCachePath = path.join(cacheDir, 'developer-cache.json');
+  const oauthSentinel = 'MALFORMED_OAUTH_CACHE_SENTINEL_DO_NOT_LEAK';
+  const developerSentinel = 'MALFORMED_DEVELOPER_CACHE_SENTINEL_DO_NOT_LEAK';
+  fs.writeFileSync(oauthCachePath, `{"accessToken":"${oauthSentinel}",`, 'utf8');
+  fs.writeFileSync(developerCachePath, `{"accessToken":"${developerSentinel}",`, 'utf8');
+
+  const oauthConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        clientIdEnv: 'HSAPI_MALFORMED_OAUTH_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_MALFORMED_OAUTH_CLIENT_SECRET',
+        tokenCachePath: oauthCachePath
+      }
+    }
+  });
+  const oauthResult = await run(['auth', 'whoami', '--portal', 'test'], {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: oauthConfig
+  });
+  assert.strictEqual(oauthResult.status, 0, oauthResult.stderr || oauthResult.stdout);
+  const oauthOutput = parseJsonOutput(oauthResult);
+  assert.strictEqual(oauthOutput.oauth.status, 'invalid');
+  assert.strictEqual(oauthOutput.oauth.error, 'Cache file is not valid JSON.');
+  assert(!oauthResult.stdout.includes(oauthSentinel), 'malformed OAuth cache content must not appear in stdout');
+  assert(!oauthResult.stderr.includes(oauthSentinel), 'malformed OAuth cache content must not appear in stderr');
+
+  const developerConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.DEVELOPER,
+      developer: {
+        clientIdEnv: 'HSAPI_MALFORMED_DEVELOPER_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_MALFORMED_DEVELOPER_CLIENT_SECRET',
+        tokenCachePath: developerCachePath
+      }
+    }
+  });
+  const before = requests.length;
+  const developerResult = await run([
+    'webhook-journal',
+    'journal-earliest',
+    '--show-request'
+  ], {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: developerConfig
+  });
+  assert.strictEqual(developerResult.status, 0, developerResult.stderr || developerResult.stdout);
+  const developerOutput = parseJsonOutput(developerResult);
+  assert.strictEqual(developerOutput.auth.credentialSource.tokenCache.status, 'invalid');
+  assert.strictEqual(
+    developerOutput.auth.credentialSource.tokenCache.error,
+    'Cache file is not valid JSON.'
+  );
+  assert(!developerResult.stdout.includes(developerSentinel), 'malformed developer cache content must not appear in stdout');
+  assert(!developerResult.stderr.includes(developerSentinel), 'malformed developer cache content must not appear in stderr');
+  assert.strictEqual(requests.length, before, 'malformed developer cache preview must not make a network request');
+});
+
+test('atomic token-cache writers clean up secret-bearing temp files when replacement fails', async () => {
+  const {
+    writeDeveloperClientCredentialsTokenCache,
+    writeOAuthTokenCache
+  } = require('../src/auth-resolvers');
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-cache-replace-failure-'));
+  const originalRenameSync = fs.renameSync;
+  fs.renameSync = () => {
+    const error = new Error('simulated atomic replacement failure');
+    error.code = 'EPERM';
+    throw error;
+  };
+  try {
+    assert.throws(
+      () => writeOAuthTokenCache(path.join(cacheDir, 'oauth.json'), {
+        schema: 'hsapi.oauthTokenCache.v2',
+        family: AUTH_FAMILIES.OAUTH,
+        accessToken: 'TEMP_OAUTH_SECRET_MUST_BE_REMOVED'
+      }),
+      /simulated atomic replacement failure/
+    );
+    assert.throws(
+      () => writeDeveloperClientCredentialsTokenCache(path.join(cacheDir, 'developer.json'), {
+        schema: 'hsapi.developerClientCredentialsTokenCache.v1',
+        family: AUTH_FAMILIES.DEVELOPER,
+        accessToken: 'TEMP_DEVELOPER_SECRET_MUST_BE_REMOVED'
+      }),
+      /simulated atomic replacement failure/
+    );
+  } finally {
+    fs.renameSync = originalRenameSync;
+  }
+  assert.deepStrictEqual(
+    fs.readdirSync(cacheDir),
+    [],
+    'failed atomic replacements must not leave token-bearing temp files behind'
+  );
+});
+
+test('OAuth caches inside the package are neither used nor read by doctor and whoami', async () => {
+  const cachePath = path.join(
+    WORKSPACE_ROOT,
+    `.hsapi-test-unsafe-oauth-cache-${process.pid}-${Date.now()}.json`
+  );
+  const sentinel = 'UNSAFE_IN_PACKAGE_OAUTH_CACHE_SENTINEL_DO_NOT_USE';
+  fs.writeFileSync(cachePath, JSON.stringify({
+    schema: 'hsapi.oauthTokenCache.v2',
+    family: AUTH_FAMILIES.OAUTH,
+    tokenType: 'bearer',
+    accessToken: sentinel,
+    refreshToken: 'unsafe-in-package-refresh-token',
+    expiresIn: 1800,
+    expiresAt: '2999-01-01T00:00:00.000Z',
+    refreshedAt: '2026-07-18T00:00:00.000Z'
+  }, null, 2));
+
+  try {
+    const config = writeTempConfig(baseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          clientIdEnv: 'HSAPI_UNSAFE_CACHE_CLIENT_ID',
+          clientSecretEnv: 'HSAPI_UNSAFE_CACHE_CLIENT_SECRET',
+          tokenCachePath: cachePath
+        }
+      }
+    });
+    const env = {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: config,
+      HSAPI_UNSAFE_CACHE_CLIENT_ID: 'unsafe-cache-client-id',
+      HSAPI_UNSAFE_CACHE_CLIENT_SECRET: 'unsafe-cache-client-secret'
+    };
+
+    const before = requests.length;
+    const useResult = await run(['crm', 'list', 'contacts', '--limit', '1'], env);
+    assert.notStrictEqual(useResult.status, 0);
+    assert.match(useResult.stderr, /OAuth token cache must live outside the hsapi package/);
+    assert(!useResult.stdout.includes(sentinel), 'unsafe OAuth cache content must not appear in command stdout');
+    assert(!useResult.stderr.includes(sentinel), 'unsafe OAuth cache content must not appear in command stderr');
+    assert.strictEqual(requests.length, before, 'an OAuth cache inside the package must not be used for a request');
+
+    const doctorResult = await run(['auth', 'doctor', '--portal', 'test'], env);
+    assert.notStrictEqual(doctorResult.status, 0);
+    assert.strictEqual(doctorResult.stderr, '');
+    const doctorOutput = JSON.parse(doctorResult.stdout);
+    const outsidePackageCheck = doctorOutput.profiles[0].checks.find(
+      (check) => check.id === 'auth.oauth.tokenCachePath.outside_package'
+    );
+    assert(outsidePackageCheck, 'auth doctor must report the OAuth cache path safety check');
+    assert.strictEqual(outsidePackageCheck.status, 'fail');
+    const cacheStatusCheck = doctorOutput.profiles[0].checks.find(
+      (check) => check.id === 'oauth.token_cache.status'
+    );
+    assert(cacheStatusCheck, 'auth doctor must report the OAuth cache status');
+    assert.strictEqual(cacheStatusCheck.tokenCache.status, 'invalid');
+    assert.match(cacheStatusCheck.tokenCache.error, /resolves inside the package; credentials were not read/);
+    assert(!doctorResult.stdout.includes(sentinel), 'auth doctor must not read or print unsafe cache content');
+    assert(!doctorResult.stderr.includes(sentinel), 'auth doctor stderr must not contain unsafe cache content');
+
+    const whoamiResult = await run(['auth', 'whoami', '--portal', 'test'], env);
+    assert.strictEqual(whoamiResult.status, 0, whoamiResult.stderr || whoamiResult.stdout);
+    const whoamiOutput = parseJsonOutput(whoamiResult);
+    assert.strictEqual(whoamiOutput.oauth.status, 'invalid');
+    assert.match(whoamiOutput.oauth.error, /resolves inside the package; credentials were not read/);
+    assert(!whoamiResult.stdout.includes(sentinel), 'auth whoami must not read or print unsafe cache content');
+    assert(!whoamiResult.stderr.includes(sentinel), 'auth whoami stderr must not contain unsafe cache content');
+  } finally {
+    fs.rmSync(cachePath, { force: true });
+  }
+});
+
+test('hosted OAuth doctor and login require brokerStartKeyEnv and doctor validates its environment state', async () => {
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-start-key-'));
+  const cachePath = path.join(cacheDir, 'oauth-cache.json');
+  const startKeyEnv = 'HSAPI_HOSTED_START_KEY_TEST_ONLY';
+  const validStartKey = 'K'.repeat(43);
+  const missingFieldConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        mode: 'hosted_broker',
+        brokerUrl: 'https://auth.example.test',
+        tokenCachePath: cachePath
+      }
+    }
+  });
+
+  for (const command of [
+    ['auth', 'doctor', '--portal', 'test'],
+    ['auth', 'login', '--portal', 'test']
+  ]) {
+    const result = await run(command, {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: missingFieldConfig
+    });
+    assert.notStrictEqual(result.status, 0);
+    assert.match(result.stderr, /auth\.oauth\.brokerStartKeyEnv must name the environment variable/);
+  }
+
+  const configuredFieldConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        mode: 'hosted_broker',
+        brokerUrl: 'https://auth.example.test',
+        brokerStartKeyEnv: startKeyEnv,
+        tokenCachePath: cachePath
+      }
+    }
+  });
+  const missingEnv = {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: configuredFieldConfig,
+    [startKeyEnv]: ''
+  };
+  const missingEnvDoctor = await run([
+    'auth',
+    'doctor',
+    '--portal',
+    'test',
+    '--require-env'
+  ], missingEnv);
+  assert.notStrictEqual(missingEnvDoctor.status, 0);
+  assert.strictEqual(missingEnvDoctor.stderr, '');
+  const missingEnvOutput = JSON.parse(missingEnvDoctor.stdout);
+  const missingEnvCheck = missingEnvOutput.profiles[0].checks.find(
+    (check) => check.id === 'oauth.broker_start_key_env'
+  );
+  assert(missingEnvCheck, 'auth doctor must report the broker session-start environment check');
+  assert.strictEqual(missingEnvCheck.status, 'fail');
+  assert.strictEqual(missingEnvCheck.env, startKeyEnv);
+  assert.strictEqual(missingEnvCheck.present, false);
+  assert.strictEqual(missingEnvCheck.valid, false);
+
+  const missingEnvLogin = await run(['auth', 'login', '--portal', 'test'], missingEnv);
+  assert.notStrictEqual(missingEnvLogin.status, 0);
+  assert.match(missingEnvLogin.stderr, new RegExp(`missing ${startKeyEnv}`));
+
+  const malformedStartKey = 'malformed-present-broker-start-key';
+  const malformedEnv = {
+    ...missingEnv,
+    [startKeyEnv]: malformedStartKey
+  };
+  const malformedEnvDoctor = await run([
+    'auth',
+    'doctor',
+    '--portal',
+    'test',
+    '--require-env'
+  ], malformedEnv);
+  assert.notStrictEqual(malformedEnvDoctor.status, 0);
+  assert.strictEqual(malformedEnvDoctor.stderr, '');
+  const malformedEnvOutput = JSON.parse(malformedEnvDoctor.stdout);
+  const malformedEnvCheck = malformedEnvOutput.profiles[0].checks.find(
+    (check) => check.id === 'oauth.broker_start_key_env'
+  );
+  assert.strictEqual(malformedEnvCheck.status, 'fail');
+  assert.strictEqual(malformedEnvCheck.present, true);
+  assert.strictEqual(malformedEnvCheck.valid, false);
+  assert.match(malformedEnvCheck.message, /43-character base64url credential/);
+  assert(!malformedEnvDoctor.stdout.includes(malformedStartKey));
+
+  const malformedEnvLogin = await run(['auth', 'login', '--portal', 'test'], malformedEnv);
+  assert.notStrictEqual(malformedEnvLogin.status, 0);
+  assert.match(malformedEnvLogin.stderr, /43-character base64url broker session-start credential/);
+  assert(!malformedEnvLogin.stderr.includes(malformedStartKey));
+
+  const validEnvDoctor = await run([
+    'auth',
+    'doctor',
+    '--portal',
+    'test',
+    '--require-env'
+  ], {
+    ...missingEnv,
+    [startKeyEnv]: validStartKey
+  });
+  assert.strictEqual(validEnvDoctor.status, 0, validEnvDoctor.stderr || validEnvDoctor.stdout);
+  const validEnvOutput = parseJsonOutput(validEnvDoctor);
+  const validEnvCheck = validEnvOutput.profiles[0].checks.find(
+    (check) => check.id === 'oauth.broker_start_key_env'
+  );
+  assert(validEnvCheck, 'auth doctor must report the configured broker session-start environment');
+  assert.strictEqual(validEnvCheck.status, 'pass');
+  assert.strictEqual(validEnvCheck.present, true);
+  assert.strictEqual(validEnvCheck.valid, true);
+  assert.strictEqual(validEnvOutput.ready, true);
+  assert(!validEnvDoctor.stdout.includes(validStartKey), 'auth doctor must not print the broker session-start credential');
+
+  const hostedProfiles = await run(['profiles', 'list'], {
+    ...missingEnv,
+    [startKeyEnv]: validStartKey,
+    null: 'NULL_ENV_SENTINEL_MUST_NOT_AFFECT_HOSTED_PROFILE'
+  });
+  assert.strictEqual(hostedProfiles.status, 0, hostedProfiles.stderr || hostedProfiles.stdout);
+  const hostedProfilesOutput = parseJsonOutput(hostedProfiles);
+  const hostedOAuth = hostedProfilesOutput.profiles[0].oauth;
+  assert.strictEqual(hostedOAuth.mode, 'hosted_broker');
+  assert.strictEqual(hostedOAuth.brokerUrl, 'https://auth.example.test');
+  assert.strictEqual(hostedOAuth.brokerStartKeyEnv, startKeyEnv);
+  assert.strictEqual(hostedOAuth.brokerStartKeyPresent, true);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientIdEnv'), false);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientIdPresent'), false);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientSecretEnv'), false);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientSecretPresent'), false);
+  assert(!hostedProfiles.stdout.includes(validStartKey), 'profiles list must not print the broker session-start credential');
+  assert(!hostedProfiles.stdout.includes('NULL_ENV_SENTINEL_MUST_NOT_AFFECT_HOSTED_PROFILE'));
+
+  const hostedProfilesMissingKey = await run(['profiles', 'list'], missingEnv);
+  assert.strictEqual(
+    hostedProfilesMissingKey.status,
+    0,
+    hostedProfilesMissingKey.stderr || hostedProfilesMissingKey.stdout
+  );
+  assert.strictEqual(
+    parseJsonOutput(hostedProfilesMissingKey).profiles[0].oauth.brokerStartKeyPresent,
+    false
+  );
+});
+
+test('local OAuth caches are bound to the resolved client app and legacy caches fail closed', async () => {
+  const {
+    OAUTH_MODES,
+    oauthCacheProfileMatch,
+    oauthTokenCacheFromRefreshPayload,
+    redactedOAuthTokenCacheContract
+  } = require('../src/auth-resolvers');
+  const clientIdEnv = 'HSAPI_APP_BINDING_TEST_CLIENT_ID';
+  const priorClientId = process.env[clientIdEnv];
+  const source = {
+    family: AUTH_FAMILIES.OAUTH,
+    mode: OAUTH_MODES.LOCAL,
+    portalId: '999',
+    clientIdEnv,
+    clientSecretEnv: 'HSAPI_APP_BINDING_TEST_CLIENT_SECRET',
+    refreshTokenEnv: null,
+    tokenCachePath: path.join(os.tmpdir(), `hsapi-app-binding-${process.pid}.json`),
+    tokenCachePathDisplay: '~/.config/hsapi/oauth/app-binding-test.json'
+  };
+  const firstClientId = 'local-oauth-app-client-a';
+  const secondClientId = 'local-oauth-app-client-b';
+
+  try {
+    process.env[clientIdEnv] = firstClientId;
+    const cache = oauthTokenCacheFromRefreshPayload({
+      access_token: 'app-bound-access-token',
+      refresh_token: 'app-bound-refresh-token',
+      token_type: 'bearer',
+      expires_in: 1800
+    }, source, Date.now());
+    assert.strictEqual(
+      cache.source.clientIdFingerprint,
+      testOAuthClientIdFingerprint(firstClientId)
+    );
+    assert(!JSON.stringify(cache.source).includes(firstClientId));
+    assert.deepStrictEqual(oauthCacheProfileMatch(cache, source), {
+      ok: true,
+      reason: null
+    });
+
+    const matchingContract = redactedOAuthTokenCacheContract(source, {
+      status: 'read',
+      cache,
+      error: null
+    });
+    assert.strictEqual(matchingContract.status, 'usable');
+    assert.strictEqual(matchingContract.clientIdBound, true);
+    assert(!JSON.stringify(matchingContract).includes(cache.source.clientIdFingerprint));
+    assert(!JSON.stringify(matchingContract).includes('app-bound-access-token'));
+
+    process.env[clientIdEnv] = secondClientId;
+    assert.deepStrictEqual(oauthCacheProfileMatch(cache, source), {
+      ok: false,
+      reason: 'client_id_mismatch'
+    });
+    const mismatchContract = redactedOAuthTokenCacheContract(source, {
+      status: 'read',
+      cache,
+      error: null
+    });
+    assert.strictEqual(mismatchContract.status, 'invalid');
+    assert.strictEqual(mismatchContract.profileMismatchReason, 'client_id_mismatch');
+    assert(!JSON.stringify(mismatchContract).includes(firstClientId));
+    assert(!JSON.stringify(mismatchContract).includes(secondClientId));
+
+    process.env[clientIdEnv] = firstClientId;
+    const legacyCache = {
+      ...cache,
+      source: {
+        mode: OAUTH_MODES.LOCAL,
+        clientIdEnv
+      }
+    };
+    assert.deepStrictEqual(oauthCacheProfileMatch(legacyCache, source), {
+      ok: false,
+      reason: 'client_id_fingerprint_missing'
+    });
+    const legacyContract = redactedOAuthTokenCacheContract(source, {
+      status: 'read',
+      cache: legacyCache,
+      error: null
+    });
+    assert.strictEqual(legacyContract.status, 'invalid');
+    assert.strictEqual(legacyContract.clientIdBound, false);
+    assert.strictEqual(legacyContract.profileMismatchReason, 'client_id_fingerprint_missing');
+
+    delete process.env[clientIdEnv];
+    assert.deepStrictEqual(oauthCacheProfileMatch(cache, source), {
+      ok: false,
+      reason: 'client_id_unavailable'
+    });
+  } finally {
+    if (priorClientId === undefined) delete process.env[clientIdEnv];
+    else process.env[clientIdEnv] = priorClientId;
+  }
+});
+
+test('OAuth refresh lock coalesces concurrent in-process and cross-process refreshes', async () => {
+  const {
+    OAUTH_MODES,
+    OAUTH_TOKEN_CACHE_SCHEMA,
+    resolveOAuthCredential,
+    withOAuthTokenCacheMutationLock,
+    writeOAuthTokenCache
+  } = require('../src/auth-resolvers');
+
+  const oauthDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-oauth-refresh-lock-'));
+  const tokenCachePath = path.join(oauthDir, 'cache.json');
+  const clientIdEnv = 'HSAPI_REFRESH_LOCK_TEST_CLIENT_ID';
+  const clientSecretEnv = 'HSAPI_REFRESH_LOCK_TEST_CLIENT_SECRET';
+  const priorClientId = process.env[clientIdEnv];
+  const priorClientSecret = process.env[clientSecretEnv];
+  let tokenRequestCount = 0;
+  const receivedRefreshTokens = [];
+
+  const refreshServer = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      const url = new URL(req.url, 'http://127.0.0.1');
+      if (req.method !== 'POST' || url.pathname !== '/oauth/2026-03/token') {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not_found' }));
+        return;
+      }
+      tokenRequestCount += 1;
+      const params = new URLSearchParams(body);
+      receivedRefreshTokens.push(params.get('refresh_token'));
+      setTimeout(() => {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({
+          access_token: 'concurrent-refreshed-access-token',
+          refresh_token: 'concurrent-rotated-refresh-token',
+          token_type: 'bearer',
+          expires_in: 1800
+        }));
+      }, 75);
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    refreshServer.once('error', reject);
+    refreshServer.listen(0, '127.0.0.1', resolve);
+  });
+
+  try {
+    const address = refreshServer.address();
+    assert(address && typeof address === 'object');
+    const refreshBaseUrl = `http://127.0.0.1:${address.port}`;
+    const source = {
+      family: AUTH_FAMILIES.OAUTH,
+      mode: OAUTH_MODES.LOCAL,
+      portalId: '999',
+      clientIdEnv,
+      clientSecretEnv,
+      refreshTokenEnv: null,
+      tokenCachePath,
+      tokenCachePathDisplay: tokenCachePath,
+      tokenUrlPath: '/oauth/2026-03/token',
+      profileField: 'auth.oauth',
+      provenance: 'explicit_profile'
+    };
+    const portal = {
+      name: 'refresh-lock-test',
+      portalId: '999',
+      baseUrl: refreshBaseUrl,
+      oauth: source
+    };
+    const auth = {
+      required: true,
+      family: AUTH_FAMILIES.OAUTH,
+      endpointId: 'test.concurrent_oauth_refresh'
+    };
+
+    fs.writeFileSync(tokenCachePath, JSON.stringify({
+      schema: OAUTH_TOKEN_CACHE_SCHEMA,
+      family: AUTH_FAMILIES.OAUTH,
+      tokenType: 'bearer',
+      accessToken: 'expired-concurrent-access-token',
+      refreshToken: 'initial-concurrent-refresh-token',
+      expiresIn: 1800,
+      expiresAt: '2000-01-01T00:00:00.000Z',
+      refreshedAt: '1999-12-31T23:30:00.000Z',
+      source: {
+        mode: OAUTH_MODES.LOCAL,
+        portalId: '999',
+        clientIdEnv,
+        clientIdFingerprint: testOAuthClientIdFingerprint('refresh-lock-client-id'),
+        refreshTokenEnv: null
+      }
+    }, null, 2));
+    process.env[clientIdEnv] = 'refresh-lock-client-id';
+    process.env[clientSecretEnv] = 'refresh-lock-client-secret';
+
+    const [first, second] = await Promise.all([
+      resolveOAuthCredential(portal, auth),
+      resolveOAuthCredential(portal, auth)
+    ]);
+
+    assert.strictEqual(tokenRequestCount, 1, 'concurrent refreshes must make exactly one token request');
+    assert.deepStrictEqual(receivedRefreshTokens, ['initial-concurrent-refresh-token']);
+    assert.strictEqual(first.token, 'concurrent-refreshed-access-token');
+    assert.strictEqual(second.token, 'concurrent-refreshed-access-token');
+    assert.deepStrictEqual(
+      [first.cacheStatus, second.cacheStatus].sort(),
+      ['cache_hit', 'refreshed'],
+      'the waiter must re-read and use the cache written by the refresher'
+    );
+
+    const refreshedCache = JSON.parse(fs.readFileSync(tokenCachePath, 'utf8'));
+    assert.strictEqual(refreshedCache.accessToken, 'concurrent-refreshed-access-token');
+    assert.strictEqual(refreshedCache.refreshToken, 'concurrent-rotated-refresh-token');
+    assert.strictEqual(
+      fs.existsSync(`${tokenCachePath}.refresh.lock`),
+      false,
+      'the refresh sidecar lock must be removed after success'
+    );
+
+    // Exercise the sidecar lock with two independent Node processes as well.
+    // Neither child prints token material; stdout contains only cache status.
+    fs.writeFileSync(tokenCachePath, JSON.stringify({
+      schema: OAUTH_TOKEN_CACHE_SCHEMA,
+      family: AUTH_FAMILIES.OAUTH,
+      tokenType: 'bearer',
+      accessToken: 'expired-cross-process-access-token',
+      refreshToken: 'cross-process-initial-refresh-token',
+      expiresIn: 1800,
+      expiresAt: '2000-01-01T00:00:00.000Z',
+      refreshedAt: '1999-12-31T23:30:00.000Z',
+      source: {
+        mode: OAUTH_MODES.LOCAL,
+        portalId: '999',
+        clientIdEnv,
+        clientIdFingerprint: testOAuthClientIdFingerprint('refresh-lock-client-id'),
+        refreshTokenEnv: null
+      }
+    }, null, 2));
+
+    const authResolversPath = path.join(WORKSPACE_ROOT, 'src', 'auth-resolvers.js');
+    const authPath = path.join(WORKSPACE_ROOT, 'src', 'auth.js');
+    const childScript = `
+const { AUTH_FAMILIES } = require(${JSON.stringify(authPath)});
+const { OAUTH_MODES, resolveOAuthCredential } = require(${JSON.stringify(authResolversPath)});
+const source = {
+  family: AUTH_FAMILIES.OAUTH,
+  mode: OAUTH_MODES.LOCAL,
+  portalId: '999',
+  clientIdEnv: ${JSON.stringify(clientIdEnv)},
+  clientSecretEnv: ${JSON.stringify(clientSecretEnv)},
+  refreshTokenEnv: null,
+  tokenCachePath: process.env.HSAPI_REFRESH_LOCK_CHILD_CACHE,
+  tokenCachePathDisplay: process.env.HSAPI_REFRESH_LOCK_CHILD_CACHE,
+  tokenUrlPath: '/oauth/2026-03/token',
+  profileField: 'auth.oauth',
+  provenance: 'explicit_profile'
+};
+const portal = {
+  name: 'refresh-lock-child',
+  portalId: '999',
+  baseUrl: process.env.HSAPI_REFRESH_LOCK_CHILD_BASE_URL,
+  oauth: source
+};
+resolveOAuthCredential(portal, {
+  required: true,
+  family: AUTH_FAMILIES.OAUTH,
+  endpointId: 'test.cross_process_oauth_refresh'
+}).then((result) => {
+  if (result.token !== 'concurrent-refreshed-access-token') {
+    throw new Error('unexpected refreshed access token');
+  }
+  process.stdout.write(result.cacheStatus);
+}).catch((error) => {
+  process.stderr.write(error.message);
+  process.exitCode = 1;
+});
+`;
+    const runRefreshChild = () => new Promise((resolve) => {
+      const child = spawn(process.execPath, ['-e', childScript], {
+        cwd: WORKSPACE_ROOT,
+        env: {
+          ...process.env,
+          HSAPI_REFRESH_LOCK_CHILD_CACHE: tokenCachePath,
+          HSAPI_REFRESH_LOCK_CHILD_BASE_URL: refreshBaseUrl
+        },
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString();
+      });
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+      });
+      child.on('close', (status) => {
+        resolve({ status, stdout, stderr });
+      });
+    });
+    const childResults = await Promise.all([
+      runRefreshChild(),
+      runRefreshChild()
+    ]);
+    for (const childResult of childResults) {
+      assert.strictEqual(childResult.status, 0, childResult.stderr);
+    }
+    assert.deepStrictEqual(
+      childResults.map((result) => result.stdout).sort(),
+      ['cache_hit', 'refreshed']
+    );
+    assert.strictEqual(tokenRequestCount, 2, 'two cross-process callers must share one additional token request');
+    assert.deepStrictEqual(receivedRefreshTokens, [
+      'initial-concurrent-refresh-token',
+      'cross-process-initial-refresh-token'
+    ]);
+    assert.strictEqual(
+      fs.existsSync(`${tokenCachePath}.refresh.lock`),
+      false,
+      'the cross-process refresh sidecar lock must be removed after success'
+    );
+
+    // Logout must not decide whether a cache exists until after it owns the
+    // same mutation lock. Simulate a refresh/login that creates the cache while
+    // logout is queued behind it, then verify logout removes that new cache.
+    fs.unlinkSync(tokenCachePath);
+    const logoutConfig = writeTempConfig(refreshBaseUrl, {
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          mode: OAUTH_MODES.LOCAL,
+          clientIdEnv,
+          clientSecretEnv,
+          tokenCachePath
+        }
+      }
+    });
+    let markHolderAcquired;
+    const holderAcquired = new Promise((resolve) => {
+      markHolderAcquired = resolve;
+    });
+    let allowHolderWrite;
+    const holderMayWrite = new Promise((resolve) => {
+      allowHolderWrite = resolve;
+    });
+    const holder = withOAuthTokenCacheMutationLock(
+      tokenCachePath,
+      'refresh-lock-test',
+      async () => {
+        markHolderAcquired();
+        await holderMayWrite;
+        writeOAuthTokenCache(tokenCachePath, {
+          schema: OAUTH_TOKEN_CACHE_SCHEMA,
+          family: AUTH_FAMILIES.OAUTH,
+          tokenType: 'bearer',
+          accessToken: 'newly-written-before-logout-access-token',
+          refreshToken: 'newly-written-before-logout-refresh-token',
+          expiresIn: 1800,
+          expiresAt: '2999-01-01T00:00:00.000Z',
+          refreshedAt: '2026-07-18T00:00:00.000Z',
+          source: {
+            mode: OAUTH_MODES.LOCAL,
+            portalId: '999',
+            clientIdEnv,
+            clientIdFingerprint: testOAuthClientIdFingerprint('refresh-lock-client-id'),
+            refreshTokenEnv: null
+          }
+        });
+      }
+    );
+    await holderAcquired;
+    let logoutSettled = false;
+    const logoutPromise = runProgrammatic(['auth', 'logout', '--portal', 'test'], {
+      ...baseEnv,
+      HSAPI_PORTALS_CONFIG: logoutConfig
+    }).then((result) => {
+      logoutSettled = true;
+      return result;
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    const logoutBypassedLock = logoutSettled;
+    allowHolderWrite();
+    await holder;
+    const logoutResult = await logoutPromise;
+    assert.strictEqual(logoutBypassedLock, false, 'logout must wait for an active token-cache mutation');
+    assert.strictEqual(logoutResult.status, 0, logoutResult.stderr || logoutResult.stdout);
+    const logoutOutput = parseJsonOutput(logoutResult);
+    assert.strictEqual(logoutOutput.removed, true, 'logout must re-read and remove the cache written by the preceding lock owner');
+    assert.strictEqual(fs.existsSync(tokenCachePath), false);
+    assert.strictEqual(fs.existsSync(`${tokenCachePath}.refresh.lock`), false);
+  } finally {
+    if (priorClientId === undefined) delete process.env[clientIdEnv];
+    else process.env[clientIdEnv] = priorClientId;
+    if (priorClientSecret === undefined) delete process.env[clientSecretEnv];
+    else process.env[clientSecretEnv] = priorClientSecret;
+    await new Promise((resolve) => refreshServer.close(resolve));
+  }
 });

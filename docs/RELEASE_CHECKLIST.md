@@ -2,7 +2,7 @@
 
 This project is not ready for public release until these checks are complete.
 
-## Private Repo Foundation
+## Source-Available Internal Beta Foundation
 
 - Package source is the implementation source of truth.
 - Workspace wrappers call the package source rather than duplicating it.
@@ -11,12 +11,20 @@ This project is not ready for public release until these checks are complete.
 - Secret redaction gate passes: `npm run release:gates` verifies packaged files do not include token caches, local config paths, token-like values, or JSON secret values.
 - Auth-family coverage gate passes: `npm run release:gates` verifies catalog auth metadata covers `portal_bearer`, `oauth`, `developer`, and intentional unauthenticated endpoints.
 - MCP release gate passes: `npm run release:gates` verifies MCP server files, package bin entries, tool metadata and input schemas, sample MCP config safety, redaction coverage, and local-config exclusion.
+- Portal onboarding gate passes: the package includes the canonical
+  `portal-auth-setup` guide plus minimal ServiceKey, hosted OAuth, and combined
+  templates; the ServiceKey template is copy-ready and no packaged file
+  contains a concrete portal ID.
+- Checkout neutrality gate passes: tracked Worker configuration contains only
+  placeholders, deployment-specific account/app/callback values live in the
+  ignored `wrangler.operator.jsonc`, and deploy scripts require that operator
+  config explicitly.
 - Profile validation gate passes for release fixtures: `hsapi auth doctor --portal <fixture> --require-env` reports no missing credential env vars and no token-cache paths inside the package.
-- README, SECURITY, CONTRIBUTING, AGENTS, CLAUDE, issue templates, PR template, and CI workflow are present and current for the private repo.
+- README, SECURITY, CONTRIBUTING, AGENTS, CLAUDE, issue templates, PR template, and CI workflow are present and current for the source-available internal beta.
 
 ## Before Package Beta
 
-- Keep the GitHub repo private unless an authorized operator explicitly approves public release.
+- Keep package use within the audience allowed by `LICENSE` unless an authorized operator explicitly approves broader distribution and updates the license.
 - Keep `package.json` marked `private: true` unless an authorized operator explicitly approves npm publishing.
 - Decide license before any public release.
 - Add package lock only if dependencies are introduced.

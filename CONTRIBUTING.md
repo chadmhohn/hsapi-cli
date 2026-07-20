@@ -1,6 +1,8 @@
 # Contributing
 
-This package is not ready for outside contributions yet. The current goal is to harden the private GitHub repo and package-beta workflow before any broader release.
+This source-available repository accepts review and contributions, but the
+package remains an internal-use beta under the repository license. Registry
+publication and broader use require a separate release and licensing decision.
 
 ## Local Checks
 

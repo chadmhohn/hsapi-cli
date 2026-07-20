@@ -36,9 +36,15 @@ const {
   DEVELOPER_AUTH_SUBTYPES,
 } = require('../auth');
 const {
+  OAUTH_MODES,
+  assertTokenCacheOutsidePackage,
   hubSpotResponseCategory,
   hubSpotResponseClass,
+  hostedBrokerStartKeyIsValid,
   maybeResolvePortalBearerProfile,
+  oauthCacheBrokerCredential,
+  oauthCacheProfileMatch,
+  oauthCacheRefreshToken,
   oauthTokenCacheFromRefreshPayload,
   readOAuthTokenCache,
   redactedOAuthTokenCacheContract,
@@ -46,8 +52,15 @@ const {
   resolveOAuthProfile,
   resolvePortal,
   resolveProfileDefaultFamily,
+  tokenCachePathIsOutsidePackage,
+  withOAuthTokenCacheMutationLock,
   writeOAuthTokenCache,
 } = require('../auth-resolvers');
+const {
+  exchangeHostedBrokerLogin,
+  revokeHostedBrokerTokens,
+  startHostedBrokerLogin,
+} = require('../oauth-broker');
 const {
   guardedExternalNoAuthFormFetch,
 } = require('../request');
@@ -56,6 +69,7 @@ const {
 } = require('../config-paths');
 
 const DEFAULT_LOGIN_TIMEOUT_MS = 300000;
+const OAUTH_TOKEN_REQUEST_TIMEOUT_MS = 30000;
 const LOGIN_SUCCESS_HTML = '<!doctype html><html><head><meta charset="utf-8"><title>hsapi login</title></head>'
   + '<body style="font-family:system-ui,sans-serif;padding:2rem"><h1>Login complete</h1>'
   + '<p>You can close this tab and return to your terminal.</p></body></html>';
@@ -92,9 +106,33 @@ function doctorEnvCheck(checks, envName, label, options, extra = {}) {
   );
 }
 
+function doctorBrokerStartKeyEnvCheck(checks, envName, options) {
+  const value = envName ? process.env[envName] : null;
+  const present = Boolean(value);
+  const valid = present && hostedBrokerStartKeyIsValid(value);
+  const status = valid ? 'pass' : (present || options.requireEnv ? 'fail' : 'warn');
+  doctorCheck(
+    checks,
+    status,
+    'oauth.broker_start_key_env',
+    valid
+      ? `oauth broker session-start credential environment variable ${envName} is set and valid.`
+      : present
+        ? `oauth broker session-start credential environment variable ${envName} is set but must contain a 43-character base64url credential.`
+        : `oauth broker session-start credential environment variable ${envName} is not set.`,
+    {
+      env: envName,
+      present,
+      valid,
+      family: AUTH_FAMILIES.OAUTH,
+      profileField: 'auth.oauth.brokerStartKeyEnv'
+    }
+  );
+}
+
 function doctorCachePathCheck(checks, cachePath, label, field) {
-  if (!cachePath) return;
-  const insidePackage = isInsidePath(PACKAGE_ROOT, cachePath);
+  if (!cachePath) return false;
+  const insidePackage = !tokenCachePathIsOutsidePackage(cachePath);
   doctorCheck(
     checks,
     insidePackage ? 'fail' : 'pass',
@@ -107,12 +145,19 @@ function doctorCachePathCheck(checks, cachePath, label, field) {
       path: label || cachePath
     }
   );
+  return !insidePackage;
 }
 
 function profileDoctor(name, rawPortal, options) {
   const checks = [];
   const portalBearer = maybeResolvePortalBearerProfile(rawPortal, name);
-  const oauth = resolveOAuthProfile(rawPortal, name);
+  const resolvedOAuth = resolveOAuthProfile(rawPortal, name);
+  const oauth = resolvedOAuth
+    ? {
+      ...resolvedOAuth,
+      portalId: rawPortal.portalId ? String(rawPortal.portalId) : null
+    }
+    : null;
   const developer = resolveDeveloperProfile(rawPortal, name);
   const authDefaultFamily = resolveProfileDefaultFamily(rawPortal, name);
   const authFamilies = [];
@@ -160,44 +205,84 @@ function profileDoctor(name, rawPortal, options) {
   if (oauth) {
     doctorCheck(checks, 'pass', 'oauth.profile', 'oauth profile metadata is configured.', {
       profileField: oauth.profileField,
-      tokenUrlPath: oauth.tokenUrlPath
+      mode: oauth.mode,
+      tokenUrlPath: oauth.tokenUrlPath,
+      brokerUrl: oauth.brokerUrl
     });
-    doctorEnvCheck(checks, oauth.clientIdEnv, 'oauth client ID', options, {
-      id: 'oauth.client_id_env',
-      family: AUTH_FAMILIES.OAUTH,
-      profileField: 'auth.oauth.clientIdEnv'
-    });
-    doctorEnvCheck(checks, oauth.clientSecretEnv, 'oauth client secret', options, {
-      id: 'oauth.client_secret_env',
-      family: AUTH_FAMILIES.OAUTH,
-      profileField: 'auth.oauth.clientSecretEnv'
-    });
-    // refreshTokenEnv is optional (issue #78): login-based profiles persist the
-    // refresh token to the token cache, so a missing env var is a pass, not a
-    // fail. When configured, the usual env presence check applies.
-    if (oauth.refreshTokenEnv) {
-      doctorEnvCheck(checks, oauth.refreshTokenEnv, 'oauth refresh token', options, {
-        id: 'oauth.refresh_token_env',
-        family: AUTH_FAMILIES.OAUTH,
-        profileField: 'auth.oauth.refreshTokenEnv'
-      });
-    } else {
+    if (oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
+      doctorCheck(
+        checks,
+        'pass',
+        'oauth.hosted_broker',
+        'Hosted OAuth broker is configured; HubSpot client credentials and redirect handling stay server-side.',
+        {
+          family: AUTH_FAMILIES.OAUTH,
+          mode: oauth.mode,
+          profileField: 'auth.oauth.brokerUrl',
+          brokerUrl: oauth.brokerUrl
+        }
+      );
+      doctorBrokerStartKeyEnvCheck(checks, oauth.brokerStartKeyEnv, options);
       doctorCheck(
         checks,
         'pass',
         'oauth.refresh_token_env',
-        'auth.oauth.refreshTokenEnv is not set; this profile gets its refresh token from the token cache. Run: hsapi auth login --portal ' + name,
+        'Hosted-broker OAuth uses broker-bound credentials from the token cache; no local refresh-token environment variable is read.',
         {
           family: AUTH_FAMILIES.OAUTH,
-          profileField: 'auth.oauth.refreshTokenEnv',
+          profileField: 'auth.oauth.tokenCachePath',
           present: false,
           refreshTokenSource: 'cache'
         }
       );
+    } else {
+      doctorEnvCheck(checks, oauth.clientIdEnv, 'oauth client ID', options, {
+        id: 'oauth.client_id_env',
+        family: AUTH_FAMILIES.OAUTH,
+        profileField: 'auth.oauth.clientIdEnv'
+      });
+      doctorEnvCheck(checks, oauth.clientSecretEnv, 'oauth client secret', options, {
+        id: 'oauth.client_secret_env',
+        family: AUTH_FAMILIES.OAUTH,
+        profileField: 'auth.oauth.clientSecretEnv'
+      });
+      // refreshTokenEnv is optional (issue #78): login-based profiles persist
+      // the refresh token to the per-user token cache, so a missing env var is
+      // a pass, not a fail. When configured, the usual env check applies.
+      if (oauth.refreshTokenEnv) {
+        doctorEnvCheck(checks, oauth.refreshTokenEnv, 'oauth refresh token', options, {
+          id: 'oauth.refresh_token_env',
+          family: AUTH_FAMILIES.OAUTH,
+          profileField: 'auth.oauth.refreshTokenEnv',
+        });
+      } else {
+        doctorCheck(
+          checks,
+          'pass',
+          'oauth.refresh_token_env',
+          'auth.oauth.refreshTokenEnv is not set; this profile gets its refresh token from the token cache. Run: hsapi auth login --portal ' + name,
+          {
+            family: AUTH_FAMILIES.OAUTH,
+            profileField: 'auth.oauth.refreshTokenEnv',
+            present: false,
+            refreshTokenSource: 'cache'
+          }
+        );
+      }
     }
-    doctorCachePathCheck(checks, oauth.tokenCachePath, oauth.tokenCachePathDisplay, 'auth.oauth.tokenCachePath');
-
-    const oauthCacheRead = readOAuthTokenCache(oauth.tokenCachePath);
+    const oauthCacheOutsidePackage = doctorCachePathCheck(
+      checks,
+      oauth.tokenCachePath,
+      oauth.tokenCachePathDisplay,
+      'auth.oauth.tokenCachePath'
+    );
+    const oauthCacheRead = oauthCacheOutsidePackage
+      ? readOAuthTokenCache(oauth.tokenCachePath)
+      : {
+        status: 'invalid',
+        cache: null,
+        error: 'Token cache path resolves inside the package; credentials were not read.'
+      };
     const oauthCacheContract = redactedOAuthTokenCacheContract(oauth, oauthCacheRead);
     const cacheStatus = oauthCacheContract.status;
     doctorCheck(
@@ -209,8 +294,14 @@ function profileDoctor(name, rawPortal, options) {
         : cacheStatus === 'missing'
           ? `OAuth token cache is not yet present. Run: hsapi auth login --portal ${name} to authenticate.`
           : cacheStatus === 'expired'
-            ? `OAuth access token expired; will auto-refresh on next use if a refresh token is cached. Run: hsapi auth login --portal ${name} to re-authenticate.`
-            : `OAuth token cache is invalid. Run: hsapi auth login --portal ${name}`,
+            ? `OAuth access token expired; will auto-refresh on next use if the required ${oauth.mode === OAUTH_MODES.HOSTED_BROKER ? 'broker-bound credentials are' : 'refresh token is'} cached. Run: hsapi auth login --portal ${name} to re-authenticate.`
+            : oauthCacheContract.profileMismatchReason === 'client_id_unavailable'
+              ? `OAuth token cache cannot be app-identity checked because ${oauth.clientIdEnv} is not set. Set it, then run: hsapi auth login --portal ${name}`
+              : oauthCacheContract.profileMismatchReason === 'client_id_fingerprint_missing'
+                ? `OAuth token cache is a legacy cache without an OAuth app binding. Re-authenticate with: hsapi auth login --portal ${name}`
+                : oauthCacheContract.profileMismatchReason === 'client_id_mismatch'
+                  ? `OAuth token cache belongs to a different OAuth client app. Re-authenticate with: hsapi auth login --portal ${name}`
+                  : `OAuth token cache is invalid. Run: hsapi auth login --portal ${name}`,
       {
         family: AUTH_FAMILIES.OAUTH,
         tokenCache: oauthCacheContract
@@ -498,20 +589,28 @@ async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code, 
   if (codeVerifier) exchangeBody.code_verifier = codeVerifier;
   if (env.clientSecret) exchangeBody.client_secret = env.clientSecret;
   let response;
+  let text;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OAUTH_TOKEN_REQUEST_TIMEOUT_MS);
+  if (typeof timer.unref === 'function') timer.unref();
   try {
     response = await fetch(tokenUrl, {
       method: 'POST',
+      redirect: 'error',
+      signal: controller.signal,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams(exchangeBody)
     });
-  } catch (error) {
-    fail(`auth login token exchange failed for portal "${portal.name}": network_error ${error.message}`);
+    text = await response.text();
+  } catch (_error) {
+    fail(`auth login token exchange failed for portal "${portal.name}": network_error contacting HubSpot OAuth.`);
+  } finally {
+    clearTimeout(timer);
   }
 
-  const text = await response.text();
   let payload = null;
   if (text) {
     try {
@@ -532,7 +631,23 @@ async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code, 
 
 function requireLoginPrerequisites(portal, oauth) {
   if (!oauth) {
-    fail(`auth login: portal "${portal.name}" has no auth.oauth profile. Add auth.oauth with clientIdEnv, clientSecretEnv, tokenCachePath, redirectUrl, and scopes.`);
+    fail(`auth login: portal "${portal.name}" has no auth.oauth profile.`);
+  }
+  if (oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
+    if (!portal.portalId || !/^[1-9][0-9]*$/.test(String(portal.portalId))) {
+      fail(`auth login: portal "${portal.name}" must define a numeric portalId for hosted-broker account binding.`);
+    }
+    if (!oauth.brokerUrl) {
+      fail(`auth login: portal "${portal.name}" is missing required hosted-broker configuration: auth.oauth.brokerUrl.`);
+    }
+    const brokerStartKey = process.env[oauth.brokerStartKeyEnv];
+    if (!brokerStartKey) {
+      fail(`auth login: portal "${portal.name}" is missing ${oauth.brokerStartKeyEnv} (auth.oauth.brokerStartKeyEnv).`);
+    }
+    if (!hostedBrokerStartKeyIsValid(brokerStartKey)) {
+      fail(`auth login: ${oauth.brokerStartKeyEnv} must contain the 43-character base64url broker session-start credential.`);
+    }
+    return { brokerStartKey };
   }
   const missing = [];
   const clientId = process.env[oauth.clientIdEnv];
@@ -547,22 +662,113 @@ function requireLoginPrerequisites(portal, oauth) {
   return { clientId, clientSecret };
 }
 
-async function runAuthLogin(flags) {
-  const { config } = loadConfig();
-  const portal = resolvePortal(config, flags);
-  const oauth = portal.oauth;
+function loginTimeoutFromFlags(flags) {
+  return flags.timeout !== undefined
+    ? (optionalNumber(flags.timeout) || DEFAULT_LOGIN_TIMEOUT_MS)
+    : DEFAULT_LOGIN_TIMEOUT_MS;
+}
+
+function oauthPkceMaterial() {
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  return {
+    codeVerifier,
+    codeChallenge: crypto.createHash('sha256').update(codeVerifier).digest('base64url')
+  };
+}
+
+function waitForBrokerPoll(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function runHostedBrokerAuthLogin(portal, oauth, flags) {
+  assertTokenCacheOutsidePackage(oauth.tokenCachePath, 'OAuth token cache');
+  const { brokerStartKey } = requireLoginPrerequisites(portal, oauth);
+  const timeoutMs = loginTimeoutFromFlags(flags);
+  const { codeVerifier, codeChallenge } = oauthPkceMaterial();
+  const consumeSecret = crypto.randomBytes(32).toString('base64url');
+  const consumeSecretHash = crypto.createHash('sha256').update(consumeSecret).digest('base64url');
+  let session;
+  try {
+    session = await startHostedBrokerLogin(oauth, {
+      codeChallenge,
+      consumeSecretHash,
+      accountId: portal.portalId,
+      brokerStartKey
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+
+  const sessionTimeoutMs = session.expiresIn
+    ? Math.min(timeoutMs, session.expiresIn * 1000)
+    : timeoutMs;
+  const deadline = Date.now() + sessionTimeoutMs;
+  let pollIntervalMs = Math.min(Math.max((session.intervalSeconds || 1) * 1000, 500), 5000);
+
+  // The URL contains the broker-created OAuth state but never the consume
+  // secret, verifier, HubSpot client secret, or resulting tokens.
+  writeStderr(`Opening browser for HubSpot login (portal "${portal.name}", hosted broker).\nIf it does not open, visit:\n${session.authorizationUrl.toString()}\n`);
+  openBrowser(session.authorizationUrl);
+
+  while (Date.now() < deadline) {
+    let exchange;
+    try {
+      exchange = await exchangeHostedBrokerLogin(oauth, {
+        sessionId: session.sessionId,
+        consumeSecret,
+        codeVerifier
+      });
+    } catch (error) {
+      fail(error.message);
+    }
+    if (exchange.status === 'complete') {
+      if (!exchange.token.refreshToken || !exchange.token.brokerCredential) {
+        fail(`auth login broker token exchange failed for portal "${portal.name}": response did not include broker-bound refresh credentials.`);
+      }
+      const cache = await withOAuthTokenCacheMutationLock(
+        oauth.tokenCachePath,
+        portal.name,
+        async () => {
+          const candidate = oauthTokenCacheFromRefreshPayload(exchange.token, oauth);
+          const profileMatch = oauthCacheProfileMatch(candidate, oauth);
+          if (!profileMatch.ok) {
+            fail(`auth login broker token exchange failed for portal "${portal.name}": broker response did not match the configured OAuth profile (${profileMatch.reason}).`);
+          }
+          writeOAuthTokenCache(oauth.tokenCachePath, candidate);
+          return candidate;
+        }
+      );
+      printJson({
+        ok: true,
+        portal: portal.name,
+        action: 'login',
+        oauthMode: oauth.mode,
+        tokenCache: redactedOAuthTokenCacheContract(oauth, { status: 'read', cache, error: null }),
+        scopeSource: 'hosted_broker'
+      });
+      return;
+    }
+    if (exchange.intervalSeconds) {
+      pollIntervalMs = Math.min(Math.max(exchange.intervalSeconds * 1000, 500), 5000);
+    }
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) break;
+    await waitForBrokerPoll(Math.min(pollIntervalMs, remainingMs));
+  }
+  fail(`auth login: timed out after ${sessionTimeoutMs}ms waiting for hosted OAuth broker completion.`);
+}
+
+async function runLocalAuthLogin(portal, oauth, flags) {
+  assertTokenCacheOutsidePackage(oauth.tokenCachePath, 'OAuth token cache');
   const env = requireLoginPrerequisites(portal, oauth);
   const { port, path: callbackPath } = parseLoopbackRedirect(oauth.redirectUrl, portal.name);
 
-  const timeoutMs = flags.timeout !== undefined
-    ? (optionalNumber(flags.timeout) || DEFAULT_LOGIN_TIMEOUT_MS)
-    : DEFAULT_LOGIN_TIMEOUT_MS;
+  const timeoutMs = loginTimeoutFromFlags(flags);
 
   const state = crypto.randomBytes(16).toString('hex');
   // PKCE (RFC 7636, S256): HubSpot user-level apps require a code challenge on the
   // authorize request; the matching verifier is sent at token exchange.
-  const codeVerifier = crypto.randomBytes(32).toString('base64url');
-  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+  const { codeVerifier, codeChallenge } = oauthPkceMaterial();
   const authorizeUrl = buildAuthorizeUrl({
     authorizeUrlBase: oauth.authorizeUrlBase,
     clientId: env.clientId,
@@ -580,8 +786,26 @@ async function runAuthLogin(flags) {
 
   const code = await awaitOAuthCallback({ port, path: callbackPath, expectedState: state, timeoutMs });
   const payload = await exchangeAuthorizationCode(portal, oauth, env, oauth.redirectUrl, code, codeVerifier);
-  const cache = oauthTokenCacheFromRefreshPayload(payload, oauth);
-  writeOAuthTokenCache(oauth.tokenCachePath, cache);
+  const cache = await withOAuthTokenCacheMutationLock(
+    oauth.tokenCachePath,
+    portal.name,
+    async () => {
+      const candidate = oauthTokenCacheFromRefreshPayload(
+        payload,
+        oauth,
+        Date.now(),
+        null,
+        null,
+        env.clientId
+      );
+      const profileMatch = oauthCacheProfileMatch(candidate, oauth);
+      if (!profileMatch.ok) {
+        fail(`auth login token exchange failed for portal "${portal.name}": response did not match the configured OAuth profile (${profileMatch.reason}).`);
+      }
+      writeOAuthTokenCache(oauth.tokenCachePath, candidate);
+      return candidate;
+    }
+  );
 
   printJson({
     ok: true,
@@ -593,7 +817,19 @@ async function runAuthLogin(flags) {
   });
 }
 
-function runAuthLogout(flags) {
+async function runAuthLogin(flags) {
+  const { config } = loadConfig();
+  const portal = resolvePortal(config, flags);
+  const oauth = portal.oauth;
+  if (!oauth) requireLoginPrerequisites(portal, oauth);
+  if (oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
+    await runHostedBrokerAuthLogin(portal, oauth, flags);
+    return;
+  }
+  await runLocalAuthLogin(portal, oauth, flags);
+}
+
+async function runAuthLogout(flags) {
   const { config } = loadConfig();
   const portal = resolvePortal(config, flags);
   const oauth = portal.oauth;
@@ -601,16 +837,65 @@ function runAuthLogout(flags) {
     fail(`auth logout: portal "${portal.name}" has no auth.oauth profile with a tokenCachePath.`);
   }
   const cachePath = oauth.tokenCachePath;
+  assertTokenCacheOutsidePackage(cachePath, 'OAuth token cache');
   let removed = false;
-  if (cachePath && fs.existsSync(cachePath)) {
-    fs.rmSync(cachePath);
-    removed = true;
-  }
+  let remoteRevocation = oauth.mode === OAUTH_MODES.HOSTED_BROKER
+    ? {
+      attempted: false,
+      status: 'not_attempted',
+      error: null
+    }
+    : null;
+  await withOAuthTokenCacheMutationLock(cachePath, portal.name, async () => {
+    // Re-read only after acquiring the cache lock. A refresh or login may have
+    // replaced both the access and refresh credentials while logout waited.
+    if (fs.existsSync(cachePath)) {
+      if (oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
+        const cacheRead = readOAuthTokenCache(cachePath);
+        const refreshToken = oauthCacheRefreshToken(cacheRead.cache);
+        const brokerCredential = oauthCacheBrokerCredential(cacheRead.cache);
+        const profileMatch = oauthCacheProfileMatch(cacheRead.cache, oauth);
+        if (!profileMatch.ok) {
+          remoteRevocation = {
+            attempted: false,
+            status: 'not_attempted',
+            error: `cache_profile_mismatch:${profileMatch.reason}`
+          };
+        } else if (!refreshToken || !brokerCredential) {
+          remoteRevocation = {
+            attempted: false,
+            status: 'not_attempted',
+            error: 'broker_bound_credentials_missing'
+          };
+        } else {
+          remoteRevocation.attempted = true;
+          try {
+            await revokeHostedBrokerTokens(oauth, {
+              refreshToken,
+              brokerCredential
+            });
+            remoteRevocation.status = 'revoked';
+          } catch (error) {
+            remoteRevocation.status = 'failed';
+            remoteRevocation.error = error.message;
+          }
+        }
+      }
+      // Logout always removes the local bearer and refresh credentials. Remote
+      // revocation is best-effort and reported separately; a network outage must
+      // not leave a usable local session behind.
+      fs.rmSync(cachePath);
+      removed = true;
+    }
+  });
   printJson({
     ok: true,
     portal: portal.name,
     action: 'logout',
     removed,
+    revoked: remoteRevocation ? remoteRevocation.status === 'revoked' : false,
+    remoteRevocation,
+    oauthMode: oauth.mode,
     path: oauth.tokenCachePathDisplay || cachePath
   });
 }
@@ -651,11 +936,23 @@ function runAuthWhoami(flags) {
   };
 
   if (portal.oauth) {
-    const oauthCacheRead = readOAuthTokenCache(portal.oauth.tokenCachePath);
+    const oauthCacheRead = tokenCachePathIsOutsidePackage(portal.oauth.tokenCachePath)
+      ? readOAuthTokenCache(portal.oauth.tokenCachePath)
+      : {
+        status: 'invalid',
+        cache: null,
+        error: 'Token cache path resolves inside the package; credentials were not read.'
+      };
     const oauthCacheContract = redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead);
     result.oauth = oauthCacheContract;
     if (oauthCacheContract.status !== 'usable') {
-      result.oauth.hint = `Run: hsapi auth login --portal ${portal.name}`;
+      result.oauth.hint = oauthCacheContract.profileMismatchReason === 'client_id_unavailable'
+        ? `Set ${portal.oauth.clientIdEnv}, then run: hsapi auth login --portal ${portal.name}`
+        : oauthCacheContract.profileMismatchReason === 'client_id_fingerprint_missing'
+          ? `Legacy cache is not bound to an OAuth client app. Re-authenticate with: hsapi auth login --portal ${portal.name}`
+          : oauthCacheContract.profileMismatchReason === 'client_id_mismatch'
+            ? `Cache belongs to a different OAuth client app. Re-authenticate with: hsapi auth login --portal ${portal.name}`
+            : `Run: hsapi auth login --portal ${portal.name}`;
     }
   }
 
@@ -682,16 +979,16 @@ async function runAuth(action, rest, flags) {
     return;
   }
 
-  // Local, per-user loopback flows (issue #77). These resolve a real configured
-  // portal (not the synthetic auth base portal) and never call a HubSpot
-  // endpoint via the catalog, so they have no catalog entry.
+  // Per-user local-loopback or hosted-broker flows. These resolve a real
+  // configured portal (not the synthetic auth base portal) and never call a
+  // HubSpot endpoint through the catalog, so they have no catalog entry.
   if (action === 'login') {
     await runAuthLogin(flags);
     return;
   }
 
   if (action === 'logout') {
-    runAuthLogout(flags);
+    await runAuthLogout(flags);
     return;
   }
 

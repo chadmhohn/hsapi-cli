@@ -52,7 +52,9 @@ const SERVER_INSTRUCTIONS = [
   'better in audit logs and avoid raw-body encoding mistakes. Use showRequest: true to',
   'inspect any call before running it. Output is budgeted (maxResults/maxChars defaults);',
   'use select/pick/discovery projections to keep responses small. Credentials resolve from',
-  'environment variables named in the portals config; token values never appear in output.'
+  'environment variables named in the portals config; token values never appear in output.',
+  'For missing profiles or auth onboarding, first call hsapi_context_doc with',
+  'name "portal-auth-setup", then use hsapi_profiles_list and hsapi_auth_doctor.'
 ].join(' ');
 
 const TOOLS = [
@@ -106,7 +108,7 @@ const TOOLS = [
   },
   {
     name: 'hsapi_context_doc',
-    description: 'Read a packaged HubSpot API context doc (endpoint gotchas, auth boundaries, request shapes). Call with no name to list available docs; pass name as a doc basename like "crm-records" or a catalog contextUrl like "docs/hubspot-api-context/associations.md".',
+    description: 'Read a packaged HubSpot API context doc (portal/auth onboarding, endpoint gotchas, auth boundaries, request shapes). For profile setup use "portal-auth-setup". Call with no name to list available docs; pass a doc basename or catalog contextUrl.',
     annotations: { title: 'HubSpot API context docs', readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: 'object',

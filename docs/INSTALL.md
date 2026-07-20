@@ -13,7 +13,7 @@ npm install -g .
 From a git ref:
 
 ```bash
-npm install -g git+ssh://git@github.com/your-org/hsapi-cli.git#<tag-or-branch>
+npm install -g git+https://github.com/chadmhohn/hsapi-cli.git#<tag-or-branch>
 ```
 
 From a release tarball:
@@ -29,11 +29,40 @@ From a GitHub Release (preferred once tags exist):
 
 Releases are produced by `.github/workflows/release.yml`: pushing a `v*` tag runs the full test suite, stamps the package version from the tag, packs, and attaches the tarball to a GitHub Release.
 
+A curl-based release install has the same result:
+
+```bash
+VERSION="<released-version>"
+curl -fL -o "hsapi-cli-${VERSION}.tgz" \
+  "https://github.com/chadmhohn/hsapi-cli/releases/download/v${VERSION}/hsapi-cli-${VERSION}.tgz"
+npm install -g "./hsapi-cli-${VERSION}.tgz"
+```
+
+For an ephemeral or MCP-managed launch, npm can execute a pinned git package
+without a global install:
+
+```bash
+npx --yes --package=github:chadmhohn/hsapi-cli#v<released-version> hsapi-mcp
+```
+
+Pin a reviewed tag or commit. Do not use an unpinned branch for a desktop MCP
+process. There is no bare `npx hsapi-cli` flow until a registry release exists.
+For a continuously configured desktop client, a global release-tarball install
+is easier to audit and update.
+
+Npm's supported package specs include local tarballs, tarball URLs, and git
+URLs: https://docs.npmjs.com/cli/v11/using-npm/package-spec
+
 ## Update
 
 Update by reinstalling the newer tag, branch, or tarball. That keeps the same command surface while replacing the package contents.
 
-Once the package is distributed through a registry, standard npm updates can be used:
+Package installs and upgrades never create or replace the external portal
+configuration or OAuth token cache. Back up operator-managed configuration
+normally, but do not copy it into the package directory.
+
+There is currently no npm-registry release. If the package is distributed
+through a registry later, standard npm updates can be used:
 
 ```bash
 npm update -g hsapi-cli
@@ -46,26 +75,75 @@ After install or update:
 ```bash
 hsapi --help
 hsapi profiles list
-hsapi auth doctor --portal example
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example
+hsapi account details --portal service-key-example --show-request
 command -v hsapi-mcp
 ```
 
 ## Configure Auth Families
 
-Copy `examples/portals.sample.json` to a private path outside the package, then set `HSAPI_PORTALS_CONFIG` to that private file. Keep only environment variable names in JSON; put credential values in your shell, secret manager, or CI secret store.
+Start with `docs/hubspot-api-context/portal-auth-setup.md`. It is the canonical
+guide for people and assistants and is also available through
+`hsapi_context_doc` as `portal-auth-setup`.
+
+Choose one portal-neutral template:
+
+- ServiceKey/private-app only: `examples/portals.sample.json`
+- Hosted OAuth only: `examples/portals.oauth-hosted.sample.json`
+- Hosted OAuth plus an explicitly approved ServiceKey:
+  `examples/portals.oauth-service-key.sample.json`
+
+Copy the chosen template to a private path outside the package, then set
+`HSAPI_PORTALS_CONFIG` to that private file. JSON may contain non-secret
+profile metadata such as IDs, URLs, cache paths, and environment variable
+names; put credential values in your shell, secret manager, or CI secret store.
+When `HSAPI_PORTALS_CONFIG` is absent, the CLI checks the per-user
+`~/.config/hsapi/portals.json` path before the legacy checkout-local path.
+
+`ServiceKey` maps to `auth.portalBearer`: it is a HubSpot private-app access
+token loaded from the environment named by `auth.portalBearer.tokenEnv`. It is
+not an OAuth client secret.
 
 `hsapi` uses explicit auth families:
 
 | Auth family | Profile fields | Typical commands |
 | --- | --- | --- |
 | `portal_bearer` | `auth.portalBearer.tokenEnv` or legacy `tokenEnv` | CRM, CMS, files, properties, associations, account details, most account-scoped typed commands |
-| `oauth` | `auth.oauth.clientIdEnv`, `auth.oauth.clientSecretEnv`, `auth.oauth.refreshTokenEnv`, `auth.oauth.tokenCachePath` | OAuth-installed-app endpoints and `hsapi auth token|refresh|introspect|revoke` helpers |
+| `oauth` | Hosted: `auth.oauth.mode`, `auth.oauth.brokerUrl`, `auth.oauth.brokerStartKeyEnv`, `auth.oauth.tokenCachePath`; local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` | Browser login, refresh/logout, and OAuth-installed-app endpoints |
 | `developer/personal_access_key` | `auth.developer.personalAccessKeyEnv` | Developer-tooling surfaces that explicitly require a personal access key |
 | `developer/developer_api_key` | `auth.developer.developerApiKeyEnv`, sometimes `auth.developer.appIdEnv` | Classic app webhooks and app-management endpoints documented with `hapikey` |
 | `developer/client_credentials` | `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, `auth.developer.tokenCachePath` | App-level developer APIs such as Webhooks Journal |
 
-Run `hsapi auth doctor --portal <name>` after editing a profile. It validates profile fields, reports missing credential environment variables, and checks that OAuth/developer token-cache paths live outside the package without printing secret values or making HubSpot calls. Add `--require-env` when the command should fail if configured credential env vars are not set.
+Run `hsapi auth doctor --portal <name>` after editing a profile. It validates
+profile fields, reports missing credential environment variables, and checks
+that OAuth/developer token-cache paths live outside the package without
+printing secret values or making HubSpot calls. Add `--require-env` when the
+command should fail if required local environment variables are not set. A
+complete `hosted_broker` profile passes without local HubSpot client
+credentials; it requires a numeric `portalId`, an HTTPS `brokerUrl`, a
+`brokerStartKeyEnv`, its injected value, and a token-cache path.
+
+For a hosted user login:
+
+```bash
+hsapi auth login --portal <name>
+hsapi auth whoami --portal <name>
+```
+
+The operator must provision the broker separately, keep the HubSpot client
+secret in its server-side secret store, and securely issue the independent
+broker session-start credential to enrolled users. See `docs/OAUTH_SETUP.md`
+and `cloudflare/hsapi-oauth-broker/README.md`.
+
+An enrolled teammate needs only the operator-issued external profile, the
+broker session-start credential injected under the profile's
+`brokerStartKeyEnv`, and their normal HubSpot browser login. They do not receive
+the HubSpot app client ID or client secret.
+
+An assistant must never ask a user to paste a ServiceKey, client secret, broker
+credential, authorization code, or token cache into chat. It should ask the
+user to inject the value locally, then use `auth doctor` and the read-only
+identity checks.
 
 Before running an unfamiliar command, inspect its auth requirement:
 

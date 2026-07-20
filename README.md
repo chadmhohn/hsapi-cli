@@ -4,13 +4,19 @@ Portal-aware HubSpot API CLI for agents and RevOps operators.
 
 `hsapi-cli` packages the `hsapi` workbench as an installable HubSpot CLI and MCP server. The primary command is `hsapi`; `hsapi-mcp` starts the MCP server. The legacy `hubspot-agent-cli` binary alias remains available for compatibility.
 
-This package is a private beta build. It stays `private: true` until a release decision is made.
+This is a source-available, internal-use beta. The npm package remains
+`private: true`; tagged builds are distributed as GitHub Release tarballs under
+the repository license until a registry/public-licensing decision is made.
 
 ## Install and Update
 
 For the full install/update flow, read `docs/INSTALL.md`.
 
 Agent runtimes should start with `AGENTS.md` or `CLAUDE.md`.
+For portal and auth onboarding, both humans and assistants should use
+`docs/hubspot-api-context/portal-auth-setup.md`. It explains the
+ServiceKey/private-app and hosted OAuth paths without containing any real
+portal configuration.
 
 Quick install from a checkout:
 
@@ -21,42 +27,111 @@ npm install -g .
 ## Safety Model
 
 - Portal credentials are never stored in package files.
-- Each portal profile points to its own token environment variable.
+- Each portal profile declares its own credential sources; secret values stay
+  in environment injection, an external token cache, or the hosted broker.
 - Mutating requests require `--yes`.
-- Use `--show-request` to inspect method, URL, query, body, portal, token env var, and endpoint metadata without making a HubSpot request.
+- Use `--show-request` to inspect method, URL, query, body, portal, redacted
+  credential provenance, and endpoint metadata without making a HubSpot
+  request or refreshing a token. Hosted profiles may read redacted cache state.
 - Generic `POST --read-only` only works for catalog-marked read-only POST endpoints.
 - Absolute URLs must match the selected portal API origin before a bearer token is sent.
 
 ## Configure a Portal
 
-Copy `examples/portals.sample.json` to a private location outside the package and edit it for your portal:
+Choose the smallest portal-neutral template that matches the operator's
+intended auth:
+
+- ServiceKey/private-app only: `examples/portals.sample.json`
+- Hosted OAuth only: `examples/portals.oauth-hosted.sample.json`
+- Hosted OAuth plus an approved ServiceKey:
+  `examples/portals.oauth-service-key.sample.json`
+
+`ServiceKey` is the team-facing name for a HubSpot private-app access token. It
+maps to `auth.portalBearer.tokenEnv`; the config stores only the environment
+variable name.
+
+From a checkout, copy one template to a private location outside the package:
 
 ```bash
 cp examples/portals.sample.json ~/.config/hsapi/portals.json
 export HSAPI_PORTALS_CONFIG=~/.config/hsapi/portals.json
-export HUBSPOT_ACCESS_TOKEN_EXAMPLE="<your-private-app-token>"
-export HUBSPOT_CLIENT_ID_EXAMPLE="<your-oauth-client-id>"
-export HUBSPOT_CLIENT_SECRET_EXAMPLE="<your-oauth-client-secret>"
-export HUBSPOT_REFRESH_TOKEN_EXAMPLE="<your-oauth-refresh-token>"
-export HUBSPOT_PERSONAL_ACCESS_KEY_EXAMPLE="<your-hubspot-cli-personal-access-key>"
-export HUBSPOT_DEVELOPER_API_KEY_EXAMPLE="<your-developer-api-key>"
-export HUBSPOT_APP_ID_EXAMPLE="<your-developer-app-id>"
+export HUBSPOT_SERVICE_KEY_EXAMPLE="<set-locally-from-your-secret-channel>"
 ```
 
-The config stores labels, portal IDs, API base URLs, token environment variable names, and optional OAuth cache paths. New portal-bearer profiles should use `auth.portalBearer.tokenEnv`; legacy top-level `tokenEnv` profiles remain supported. OAuth-backed profiles use `auth.oauth.clientIdEnv`, `auth.oauth.clientSecretEnv`, `auth.oauth.refreshTokenEnv`, and `auth.oauth.tokenCachePath` to refresh short-lived installed-app access tokens. Developer profiles use `auth.developer.personalAccessKeyEnv` for HubSpot CLI/local developer-tooling surfaces, `auth.developer.developerApiKeyEnv` plus `auth.developer.appIdEnv` for app-management endpoints that explicitly require developer API key query parameters, and `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, and `auth.developer.tokenCachePath` for app-level OAuth client-credentials endpoints such as Webhooks Journal. Config files must not store token values, client secrets, customer data, or cache contents.
+After a global git or tarball install, run `hsapi --help` and copy the absolute
+ServiceKey or hosted-OAuth template path printed there; do not assume the
+current directory contains `examples/`.
+
+For hosted OAuth, copy the hosted template instead and use only the exact
+portal ID, broker URL, and broker admission credential issued by the app
+operator. Do not add local HubSpot client credentials.
+
+The normal per-user default is `~/.config/hsapi/portals.json`
+(`%USERPROFILE%\.config\hsapi\portals.json` on Windows). An explicit
+`HSAPI_PORTALS_CONFIG` takes precedence. Package installs and upgrades never create or overwrite
+this file; operators distribute the non-secret profile
+metadata and broker admission credential through their approved configuration
+and secret channels.
+
+The config stores labels, portal IDs, API base URLs, credential environment
+variable names, hosted-broker URLs, and token-cache paths. New portal-bearer
+profiles should use `auth.portalBearer.tokenEnv`; legacy top-level `tokenEnv`
+profiles remain supported. OAuth profiles can use `mode: "hosted_broker"` with
+`brokerUrl`, `brokerStartKeyEnv`, and `tokenCachePath`, which keeps the HubSpot
+app secret off the user's machine, or `mode: "local"` with client credential
+environment-variable names and an exact loopback redirect. Developer profiles
+use `auth.developer.personalAccessKeyEnv` for HubSpot CLI/local
+developer-tooling surfaces, `auth.developer.developerApiKeyEnv` plus
+`auth.developer.appIdEnv` for app-management endpoints that explicitly require
+developer API key query parameters, and `auth.developer.clientIdEnv`,
+`auth.developer.clientSecretEnv`, and `auth.developer.tokenCachePath` for
+app-level OAuth client-credentials endpoints such as Webhooks Journal. Config
+files must not store token values, client secrets, customer data, or cache
+contents.
 
 Validate profile wiring offline before running live commands:
 
 ```bash
-hsapi auth doctor --portal example
-hsapi auth doctor --portal example --require-env
+hsapi auth doctor --portal service-key-example
+hsapi auth doctor --portal service-key-example --require-env
 ```
 
 `auth doctor` reports configured auth families, missing environment variables, and token-cache path safety without printing secret values or calling HubSpot. Use `--require-env` when a release or deployment gate should fail if a configured credential environment variable is missing.
 
+For browser-based user OAuth:
+
+```bash
+hsapi auth login --portal oauth-hosted-example
+hsapi auth whoami --portal oauth-hosted-example
+```
+
+Hosted mode needs no local HubSpot client ID or client secret. It does require
+an independently issued broker session-start credential in the environment
+named by `brokerStartKeyEnv`; this prevents arbitrary callers from creating
+consent sessions. The broker is fixed to one app, portal, redirect, and scope
+set, and the CLI rejects a returned token whose hub ID does not match the
+profile. See `docs/hubspot-api-context/portal-auth-setup.md` for the
+assistant-safe decision flow and `docs/OAUTH_SETUP.md` for broker operations
+and the live user-level scope matrix.
+
+For an enrolled teammate, the controlled-beta sequence is:
+
+```bash
+hsapi auth doctor --portal oauth-hosted-example --require-env
+hsapi auth login --portal oauth-hosted-example
+hsapi auth whoami --portal oauth-hosted-example
+```
+
+Do not invent or download a broker profile from an untrusted URL. The broker
+URL is a credential destination and must come from the app operator.
+
 For package-beta test coverage across multiple HubSpot tiers, use `examples/portals.test-matrix.sample.json` and `docs/TEST_PORTAL_MATRIX.md` as the fixture contract. Keep the real matrix config outside the package, and reserve live writes for the `disposable_write` fixture with an explicit write-test gate.
 
-Auth-mode implementation planning lives in `docs/hubspot-api-context/auth-modes-project-plan.md`. The key rule: endpoint auth requirements must be explicit, and `hsapi` must never silently fall back between portal bearer, OAuth, and developer auth families.
+Current auth onboarding lives in
+`docs/hubspot-api-context/portal-auth-setup.md`. The historical implementation
+plan remains in `docs/hubspot-api-context/auth-modes-project-plan.md`. The key
+rule is unchanged: endpoint auth requirements are explicit, and `hsapi` never
+silently falls back between portal bearer, OAuth, and developer auth families.
 
 Endpoint catalog entries declare auth metadata with one of the shared auth families: `portal_bearer`, `oauth`, or `developer`. Developer endpoints also declare one of `personal_access_key`, `developer_api_key`, or `client_credentials`. Public endpoints that intentionally send no credential must opt out with `auth.required: false`; missing or unknown endpoint auth metadata is rejected before a request is sent. `--show-request` reports the resolved auth family, subtype, catalog/default provenance, credential source names such as environment variable names, and redacted OAuth token-cache expiry metadata without printing secret values or refreshing live tokens.
 
@@ -72,13 +147,13 @@ Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-proj
 
 ## MCP Server Usage
 
-Operational MCP docs live in `docs/MCP.md`; sample OpenClaw and generic MCP client config lives in `examples/mcp-server.sample.json`. For local Codex Desktop and Claude Desktop setup from a shared GitHub checkout, use `docs/DESKTOP_MCP_QUICKSTART.md`.
+Operational MCP docs live in `docs/MCP.md`; sample OpenClaw and generic MCP client config lives in `examples/mcp-server.sample.json`. For local Codex Desktop and Claude Desktop setup from a checkout or installed package, use `docs/DESKTOP_MCP_QUICKSTART.md`.
 
 Use direct CLI mode when an operator or agent can run shell commands:
 
 ```bash
-hsapi account details --portal example --show-request
-hsapi crm list contacts --portal example --properties email --max-results 5
+hsapi account details --portal service-key-example --show-request
+hsapi crm list contacts --portal service-key-example --properties email --max-results 5
 ```
 
 Use MCP server mode when OpenClaw or another MCP client should expose bounded HubSpot tools over stdio:
@@ -89,7 +164,18 @@ hsapi-mcp
 hsapi mcp serve
 ```
 
-Both modes use the same portal config, auth families, endpoint catalog, request preview, mutation gates, output limits, and redaction behavior. Keep `HSAPI_PORTALS_CONFIG` pointed at a private config outside the package; that config stores environment variable names, not credential values. MCP client config should pass `HSAPI_PORTALS_CONFIG` and optionally `HSAPI_PORTAL`; actual HubSpot tokens, OAuth refresh tokens, client secrets, developer API keys, personal access keys, and token caches must come from env injection, an OpenClaw-supported SecretRef path, a wrapper, or another secret manager.
+Both modes use the same portal config, auth families, endpoint catalog, request
+preview, mutation gates, output limits, and redaction behavior. Keep
+`HSAPI_PORTALS_CONFIG` pointed at a private config outside the package; that
+config stores environment variable names and non-secret broker URLs, not
+credential values. MCP client config should pass `HSAPI_PORTALS_CONFIG` and
+  optionally `HSAPI_PORTAL`. In hosted OAuth mode, users keep the token cache in
+  an operating-system-protected per-user directory plus the independently
+  issued session-start credential; the HubSpot app client secret stays in the
+  broker's secret store. Other HubSpot tokens,
+local-mode client secrets, developer API keys, and personal access keys must
+come from environment injection, an OpenClaw-supported SecretRef path, a
+wrapper, or another secret manager.
 
 For cutover prep, `docs/MCP.md` documents a neutral token-source wrapper and reversible local migration runbook. The final OpenClaw cutover runbook is `docs/OPENCLAW_MCP_CUTOVER.md`, with a repo-safe payload template in `examples/openclaw-cutover.mcp.sample.json`. The neutral samples are `examples/neutral-token-wrapper.sample.sh` and `examples/portals.multi-portal.sample.json`; they preserve separate portal profile configuration without storing token values.
 
@@ -98,7 +184,7 @@ For cutover prep, `docs/MCP.md` documents a neutral token-source wrapper and rev
 | Auth family | Used for | Profile fields |
 | --- | --- | --- |
 | `portal_bearer` | Account-scoped HubSpot APIs such as CRM, CMS, files, properties, associations, forms secure-submit, automation, and most typed commands. | `auth.portalBearer.tokenEnv` or legacy `tokenEnv` |
-| `oauth` | OAuth helper commands and installed-app endpoint execution for catalog entries marked `auth.family: oauth`. | `auth.oauth.clientIdEnv`, `auth.oauth.clientSecretEnv`, `auth.oauth.refreshTokenEnv`, `auth.oauth.tokenCachePath` |
+| `oauth` | Browser login, refresh/logout, and installed-app endpoint execution. | Hosted: `auth.oauth.mode`, `brokerUrl`, `brokerStartKeyEnv`, `tokenCachePath`; local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` |
 | `developer/personal_access_key` | HubSpot CLI or local developer-tooling surfaces that explicitly require a personal access key. | `auth.developer.personalAccessKeyEnv` |
 | `developer/developer_api_key` | Classic app-management endpoints documented with `hapikey`; current typed usage is classic app webhooks. | `auth.developer.developerApiKeyEnv`, sometimes `auth.developer.appIdEnv` |
 | `developer/client_credentials` | App-level developer APIs such as Webhooks Journal. | `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, `auth.developer.tokenCachePath` |
@@ -132,13 +218,13 @@ The disposable-write runner refuses non-disposable fixture roles, requires the `
 
 ```bash
 hsapi profiles list
-hsapi auth doctor --portal example
-hsapi account details --portal example --show-request
+hsapi auth doctor --portal service-key-example
+hsapi account details --portal service-key-example --show-request
 hsapi catalog coverage
 hsapi catalog commands --pick commands[].command,commands[].auth.family,commands[].auth.subtype
-hsapi request GET /crm/v3/owners --portal example --query limit=10
-hsapi properties list deals --portal example --names-only
-hsapi properties names deals --portal example
+hsapi request GET /crm/v3/owners --portal service-key-example --query limit=10
+hsapi properties list deals --portal service-key-example --names-only
+hsapi properties names deals --portal service-key-example
 hsapi crm object-types --family commerce
 hsapi crm object-types --family activity
 hsapi crm search companies --filter hs_object_id:GT:0 --count-only
@@ -176,8 +262,8 @@ hsapi project deploy --account example --project "my-project" --build 5 --show-r
   hsapi forms list --form-types hubspot --limit 10 --show-request
   hsapi forms submissions form-guid-123 --limit 20 --show-request
   hsapi forms secure-submit 123456 form-guid-123 --fields '[{"name":"email","value":"ada@example.com"}]' --show-request
-  hsapi cms doctor --portal example
-  hsapi cms doctor --portal example --content-id 123 --type SITE_PAGE
+  hsapi cms doctor --portal service-key-example
+  hsapi cms doctor --portal service-key-example --content-id 123 --type SITE_PAGE
   hsapi cms site-pages list --state PUBLISHED_OR_SCHEDULED --show-request
   hsapi cms blog-posts create --name "Draft post" --content-group-id 123 --post-body "<p>Hello</p>" --show-request
   hsapi cms redirects create --route-prefix /old --destination /new --redirect-style 301 --show-request
@@ -241,7 +327,7 @@ hsapi properties create deals \
 HubSpot 401 and 403 responses mean different things by auth family:
 
 - `portal_bearer`: a 401 usually means the private/static app token env var is missing, revoked, or invalid for that portal. A 403 usually means missing private-app scopes, a portal subscription/tier block, or a feature that exists in HubSpot docs but is not enabled for that portal.
-- `oauth`: a 401 usually points to an invalid client secret, expired/revoked refresh token, failed refresh, or unusable token cache. A 403 usually means the installed app lacks scopes, the app was not installed for that account, or the portal tier blocks the feature.
+- `oauth`: a 401 usually points to an expired/revoked refresh token, failed refresh, unusable cache, broker credential mismatch, or (in local mode) invalid app credentials. A 403 can mean a missing grant or portal entitlement, but HubSpot also returns an explicit `User level OAuth token is not allowed for this endpoint.` when the scope is visible/granted yet the endpoint rejects this token type.
 - `developer/developer_api_key`: a 401 usually means the developer API key env var is missing or invalid. A 403 can mean the app/account is not allowed to manage that developer surface or the endpoint does not accept that developer credential shape.
 - `developer/personal_access_key`: a 401 usually means the personal access key is missing or invalid. A 403 can mean HubSpot rejected user-level developer auth for an account API endpoint; do not retry by falling back to portal bearer unless catalog metadata requires `portal_bearer`.
 - `developer/client_credentials`: a 401 usually means the developer app client ID/secret pair is invalid. A 403 usually means the app-level token lacks required developer scopes or the developer feature is unavailable.

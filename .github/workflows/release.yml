@@ -20,10 +20,16 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Test
         run: npm test
+
+      - name: Check Cloudflare OAuth Worker
+        working-directory: cloudflare/hsapi-oauth-broker
+        run: |
+          npm ci
+          npm run check
 
       - name: Stamp version from tag
         run: |

@@ -44,11 +44,10 @@ const {
 } = require('../crm-object-types');
 
 // Build the per-request endpoint metadata for a CRM CRUD data op, carrying the
-// object's tokenAudience so the least-privilege resolver (issue #80) routes it
-// correctly. For reads and writes the audience follows the OBJECT (user-capable
-// standard object -> 'user'; custom / non-capable standard / unresolved ->
-// 'admin'). DELETE is always 'admin': HubSpot user-level OAuth apps return 403
-// on any CRM delete regardless of object type (live-validated 2026-06-30).
+// operation-aware tokenAudience so the least-privilege resolver routes it
+// correctly. GET and catalog-marked read-only POST operations use the readable
+// object set; mutations use the narrower write-capable set. Destructive,
+// uncataloged, custom, and unresolved operations remain admin-only.
 //
 // The CRM object CRUD endpoints are cataloged generically (path template
 // {objectType}, declared portal_bearer + admin), so per-object audience can't
@@ -58,9 +57,13 @@ const {
 // family stays portal_bearer: that is the non-user credential used when the
 // portal has no OAuth identity, so portal_bearer-only profiles are unaffected.
 function crmAudienceEndpoint(resolution, method, path) {
-  const tokenAudience = method === 'DELETE' ? 'admin' : crmObjectTokenAudience(resolution);
   const catalogEndpoint = findEndpointDefinition(method, path);
   if (catalogEndpoint && catalogEndpoint.auth) {
+    const tokenAudience = crmObjectTokenAudience(resolution, {
+      method: catalogEndpoint.method,
+      readOnlyPost: catalogEndpoint.readOnlyPost,
+      risk: catalogEndpoint.risk
+    });
     return {
       ...catalogEndpoint,
       auth: { ...catalogEndpoint.auth, tokenAudience }
@@ -70,7 +73,7 @@ function crmAudienceEndpoint(resolution, method, path) {
     auth: {
       required: true,
       family: AUTH_FAMILIES.PORTAL_BEARER,
-      tokenAudience,
+      tokenAudience: 'admin',
       fallback: 'none'
     }
   };
@@ -325,9 +328,9 @@ async function runCrm(portal, action, rest, flags) {
   if (!objectTypeInput) fail('Missing CRM object type.');
   const objectResolution = resolveCrmObjectType(objectTypeInput);
   const objectType = objectResolution.pathObjectType;
-  // Per-op endpoint metadata carrying the object's tokenAudience, threaded into
-  // every data op so the resolver routes user-capable objects to OAuth (when the
-  // portal has it) and everything else to the admin credential. Issue #80.
+  // Per-op endpoint metadata carrying the operation-aware tokenAudience,
+  // threaded into every data op so supported reads/writes can use OAuth while
+  // read-only or destructive object operations stay on the admin credential.
   const audienceEndpointFor = (method, path) => crmAudienceEndpoint(objectResolution, method, path);
 
   if (action === 'list') {
