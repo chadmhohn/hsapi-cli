@@ -14,6 +14,26 @@
   ],
   "surfaces": [
     {
+      "family": "first_party.reports",
+      "name": "first_party.reports.agent_cli_bridge",
+      "surfaceType": "external-cli-bridge",
+      "risk": "mutation",
+      "status": "typed",
+      "docsUrl": "https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide",
+      "contextUrl": "docs/hubspot-api-context/agent-cli-bridge.md",
+      "scopeNotes": "Saved-report reads and writes delegate to the separately installed HubSpot Agent CLI because no equivalent public app endpoint is documented. HSAPI preserves portal identity checks and mutation gates."
+    },
+    {
+      "family": "first_party.views",
+      "name": "first_party.views.agent_cli_bridge",
+      "surfaceType": "external-cli-bridge",
+      "risk": "mutation",
+      "status": "typed",
+      "docsUrl": "https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide",
+      "contextUrl": "docs/hubspot-api-context/agent-cli-bridge.md",
+      "scopeNotes": "CRM saved-view reads and writes delegate to the separately installed HubSpot Agent CLI because no equivalent public app endpoint is documented. HSAPI preserves portal identity checks and mutation gates."
+    },
+    {
       "family": "marketing.ctas",
       "name": "marketing.ctas.javascript_sdk",
       "surfaceType": "javascript-sdk",

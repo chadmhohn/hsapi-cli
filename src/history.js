@@ -68,6 +68,36 @@ function recordMutationHistory(portal, method, url, endpoint, response) {
   }
 }
 
+function recordDelegatedMutationHistory(portal, details, result) {
+  if (!historyEnabled()) return;
+  const filePath = historyFilePath();
+  if (!filePath) return;
+  const entry = {
+    ts: new Date().toISOString(),
+    portal: portal.name,
+    portalId: portal.portalId || (details && details.actualPortalId) || null,
+    method: 'DELEGATE',
+    url: null,
+    endpointId: details && details.surfaceId || null,
+    risk: details && details.risk || null,
+    status: result && result.exitCode,
+    ok: Boolean(result && result.ok),
+    requestId: null,
+    provider: details && details.provider || null,
+    commandFamily: details && details.commandFamily || null,
+    action: details && details.action || null,
+    // Delegated positional arguments can contain CRM SQL, names, and filters.
+    // Keep only the stable command identity in the audit record.
+    argv: ['hsapi', details && details.commandFamily, details && details.action].filter(Boolean)
+  };
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true, mode: 0o700 });
+    fs.appendFileSync(filePath, `${JSON.stringify(entry)}\n`, { mode: 0o600 });
+  } catch (error) {
+    if (process.env.HSAPI_DEBUG) writeStderr(`history write failed: ${error.message}`);
+  }
+}
+
 function parseHistorySince(raw) {
   if (raw === undefined || raw === true || raw === '') return null;
   const text = String(raw).trim();
@@ -86,6 +116,7 @@ module.exports = {
   historyEnabled,
   historyFilePath,
   parseHistorySince,
+  recordDelegatedMutationHistory,
   recordMutationHistory,
   redactedHistoryArgv,
   setHistoryArgv

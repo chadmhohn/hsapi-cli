@@ -24,6 +24,11 @@ const STATIC_COMMAND_LINES = [
   'hsapi project doctor --account <account>',
   'hsapi project list|info|list-builds|logs|validate|lint ... --account <account>',
   'hsapi project upload|deploy|delete|create|add|download|migrate|install-deps|update-deps ... --account <account> [--yes]',
+  'hsapi agent-cli doctor [--portal <name>] [--agent-auth oauth|service-key]',
+  'hsapi reports list|get|fetch-dataset|insights ... [--portal <name>] [--agent-auth oauth|service-key]',
+  'hsapi reports create|clone|favorite|unfavorite|delete ... [--portal <name>] [--agent-auth oauth|service-key] [--yes]',
+  'hsapi views list|get ... [--portal <name>] [--agent-auth oauth|service-key]',
+  'hsapi views create|update|replace-field|delete ... [--portal <name>] [--agent-auth oauth|service-key] [--yes]',
   'hsapi auth doctor [--portal <name>] [--require-env]',
   'hsapi auth login [--portal <name>] [--timeout <milliseconds>]',
   'hsapi auth whoami [--portal <name>]',
@@ -101,6 +106,7 @@ Notes:
   - Tokens are read from env vars declared in the portal config; secrets are not stored in config.
   - Mutating requests require --yes. Use request/crm update without --yes to preview.
   - Some HubSpot read endpoints use POST. Generic --read-only is allowed only for catalog-marked read-only POST endpoints.
+  - Saved reports/views delegate to HubSpot's separately installed Agent CLI 0.10+. OAuth delegation verifies hubspot whoami against the selected HSAPI profile; agentCli.authMode can set the profile default and --agent-auth overrides it. ServiceKey is never an automatic fallback.
   - Add --show-request to inspect the exact request without sending it to HubSpot.`;
 }
 

@@ -52,6 +52,39 @@ These tools are stateless and never call HubSpot:
   `portal-auth-setup` first.
 - `hsapi_command_help`: return help text for a catalog command without executing it.
 
+### First-party report/view tools
+
+These capability-specific tools delegate only saved reports and CRM saved
+views to HubSpot Agent CLI `0.10.0+`. They keep HSAPI portal selection,
+redaction, output budgets, and preview/confirmation gates. Before execution,
+HSAPI checks `hubspot whoami` against the selected profile; OAuth is the Agent
+CLI's separate single-account cache, while `service-key` mode must be selected
+explicitly in `agentCli.authMode` or the MCP call. An MCP `authMode` argument
+overrides the selected profile; omitting it uses the profile and then defaults
+to OAuth.
+
+- `hsapi_agent_cli_doctor` (`readOnlyHint: true`): verify version, auth mode,
+  and selected-account binding.
+- `hsapi_reports_read` (`readOnlyHint: true`): list, get, fetch a dataset, or
+  generate insights for a saved report.
+- `hsapi_views_read` (`readOnlyHint: true`): list or get CRM saved views.
+- `hsapi_reports_write`: create, clone, favorite, unfavorite, or run the
+  digest-guarded delete flow.
+- `hsapi_views_write`: create, update, replace a field, or run the
+  digest-guarded delete flow.
+
+Write tools return HSAPI's blocked delegated-command preview until
+`confirmMutation: true`. Native Agent CLI `dryRun`, `digest`, and exact-name
+confirmation inputs remain required where HubSpot requires them. The binary is
+installed and updated separately; see
+`docs/hubspot-api-context/agent-cli-bridge.md`.
+
+Agent capability tools parse structured output once and do not echo the same
+payload as raw stdout. Their default MCP result budget is 10 list items and
+60,000 serialized characters. `maxResults`, `maxChars`, and
+`includeTruncated` can adjust that envelope without changing the delegated
+HubSpot command.
+
 ### Execute tools — read-only variants (`readOnlyHint: true` — always-approvable)
 
 Use these for all read operations. They permanently block mutations and are safe to always-approve in any MCP client that respects `readOnlyHint`:

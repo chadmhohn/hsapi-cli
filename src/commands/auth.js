@@ -48,6 +48,7 @@ const {
   oauthTokenCacheFromRefreshPayload,
   readOAuthTokenCache,
   redactedOAuthTokenCacheContract,
+  resolveAgentCliProfile,
   resolveDeveloperProfile,
   resolveOAuthProfile,
   resolvePortal,
@@ -129,6 +130,7 @@ function profileDoctor(name, rawPortal, options) {
   const portalBearer = maybeResolvePortalBearerProfile(rawPortal, name);
   const oauth = resolveOAuthProfile(rawPortal, name);
   const developer = resolveDeveloperProfile(rawPortal, name);
+  const agentCli = resolveAgentCliProfile(rawPortal, name);
   const authDefaultFamily = resolveProfileDefaultFamily(rawPortal, name);
   const authFamilies = [];
 
@@ -155,6 +157,23 @@ function profileDoctor(name, rawPortal, options) {
         : `auth.defaultFamily ${authDefaultFamily} is not backed by a configured auth family on this profile.`,
       {
         authDefaultFamily
+      }
+    );
+  }
+
+  if (agentCli) {
+    const missingServiceKey = agentCli.authMode === 'service-key' && !portalBearer;
+    doctorCheck(
+      checks,
+      missingServiceKey ? 'fail' : 'pass',
+      'agent_cli.auth_mode',
+      missingServiceKey
+        ? 'agentCli.authMode service-key requires auth.portalBearer on the same profile.'
+        : `Agent CLI delegation defaults to ${agentCli.authMode}; an explicit call can override it.`,
+      {
+        authMode: agentCli.authMode,
+        profileField: agentCli.profileField,
+        provenance: agentCli.provenance
       }
     );
   }
@@ -402,6 +421,7 @@ function profileDoctor(name, rawPortal, options) {
     baseUrl: rawPortal.baseUrl || 'https://api.hubapi.com',
     authFamilies,
     authDefaultFamily,
+    agentCli,
     ready: !summary.fail && !summary.warn,
     checks,
     summary

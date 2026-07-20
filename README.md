@@ -159,6 +159,40 @@ CMS REST API commands and HubSpot Projects use separate auth surfaces. Use `hsap
 
 For explicit HubSpot Projects delegation, use `hsapi project doctor --account <account>` first. The project bridge requires `--account`, reports that it is delegating to the official HubSpot CLI, previews delegated argv with `--show-request`, and blocks mutating or deploy-style commands such as upload/deploy/delete unless `--yes` is present. See `docs/hubspot-api-context/projects.md`.
 
+## First-party Reports and Saved Views
+
+HSAPI can optionally delegate the two first-party-only capability families to
+HubSpot's separate Agent CLI: saved reports and CRM index-page saved views.
+The `hubspot` binary is not bundled or auto-installed; install HubSpot Agent
+CLI `0.10.0` or newer separately, then verify the selected portal:
+
+```bash
+hsapi agent-cli doctor --portal <profile>
+hsapi reports list --portal <profile>
+hsapi views list deals --portal <profile>
+```
+
+HSAPI remains the portal selector, safety gate, output envelope, and MCP
+server. Agent CLI OAuth is a separate single-account cache, so HSAPI runs
+`hubspot whoami` before every delegated command and refuses an account mismatch
+against the selected profile's `portalId` or HSAPI OAuth-cache `hubId` binding.
+Set `agentCli.authMode` to `oauth` or `service-key` on a portal profile to choose
+the default delegated identity; `--agent-auth` is an explicit per-call
+override. ServiceKey mode still requires that selected profile to declare
+`auth.portalBearer`, and it is never an automatic OAuth fallback. Mutations
+remain blocked without `--yes`, and HubSpot's native dry-run/digest rules still
+apply.
+
+Structured Agent CLI output is parsed once rather than repeated as raw stdout.
+`--max-results` understands saved-report and saved-view list payloads, while MCP
+uses a 10-item default plus the normal character budget. Use explicit larger
+budgets only when the caller genuinely needs complete view definitions.
+
+The dedicated MCP tools are `hsapi_agent_cli_doctor`, `hsapi_reports_read`,
+`hsapi_reports_write`, `hsapi_views_read`, and `hsapi_views_write`. See
+`docs/hubspot-api-context/agent-cli-bridge.md` for the provider and auth
+boundary.
+
 ## MCP Adapter Planning
 
 Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-project-plan.md. The target is one shared HubSpot config/auth/catalog/request core with two surfaces: direct hsapi CLI usage and a stdio MCP server for OpenClaw or other MCP clients. Live replacement of existing HubSpot MCP entries requires neutral token sourcing plus explicit operator approval for any Gateway restart.

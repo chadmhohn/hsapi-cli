@@ -13,6 +13,7 @@ const SUPPORTED_PROTOCOL_VERSIONS = Object.freeze(['2024-11-05', '2025-03-26', '
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const READ_RISKS = new Set(['read', 'sensitive-read']);
 const DEFAULT_MCP_MAX_RESULTS = 50;
+const DEFAULT_AGENT_MCP_MAX_RESULTS = 10;
 const DEFAULT_MCP_MAX_CHARS = 60000;
 const MAX_MCP_MAX_RESULTS = 500;
 const MAX_MCP_MAX_CHARS = 200000;
@@ -53,6 +54,8 @@ const SERVER_INSTRUCTIONS = [
   'inspect any call before running it. Output is budgeted (maxResults/maxChars defaults);',
   'use select/pick/discovery projections to keep responses small. Credentials resolve from',
   'environment variables named in the portals config; token values never appear in output.',
+  'Saved-report and CRM-view capabilities use the dedicated hsapi_reports_* and hsapi_views_*',
+  'tools, which delegate to HubSpot\'s separately installed Agent CLI after a portal identity check.',
   'For missing profiles or auth onboarding, first call hsapi_context_doc with',
   'name "portal-auth-setup", then use hsapi_profiles_list and hsapi_auth_doctor.'
 ].join(' ');
@@ -129,6 +132,135 @@ const TOOLS = [
         command: { type: 'string', description: 'Command words without the hsapi prefix, for example "crm search".' }
       },
       required: ['command'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_agent_cli_doctor',
+    description: 'Verify that HubSpot Agent CLI 0.10+ is installed, authenticated, and bound to the selected HSAPI portal before using saved-report or CRM-view tools.',
+    annotations: { title: 'HubSpot Agent CLI bridge doctor', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        portal: { type: 'string', description: 'Optional HSAPI portal profile name.' },
+        authMode: { type: 'string', enum: ['oauth', 'service-key'], description: 'Optional override. Otherwise uses the selected profile agentCli.authMode, then oauth.' },
+        showRequest: { type: 'boolean', description: 'Preview the offline doctor checks without running the Agent CLI.' }
+      },
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_reports_read',
+    description: 'Read HubSpot saved reports through the official Agent CLI: list, get, fetch_dataset, or insights. HSAPI verifies the delegated account matches the selected portal.',
+    annotations: { title: 'Read saved HubSpot reports', readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get', 'fetch_dataset', 'insights'] },
+        id: { type: 'string', description: 'Report ID for get, fetch_dataset, or insights.' },
+        limit: { type: 'integer', minimum: 1, maximum: 100 },
+        after: { type: 'string', description: 'Optional reports-list paging offset.' },
+        portal: { type: 'string', description: 'Optional HSAPI portal profile name.' },
+        authMode: { type: 'string', enum: ['oauth', 'service-key'], description: 'Optional override. Otherwise uses the selected profile agentCli.authMode, then oauth.' },
+        showRequest: { type: 'boolean' },
+        compact: { type: 'boolean' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500 },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000 },
+        includeTruncated: { type: 'boolean' }
+      },
+      required: ['action'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_reports_write',
+    description: 'Create, clone, favorite, unfavorite, or delete HubSpot saved reports through the official Agent CLI. Mutations are preview-first and require confirmMutation; delete also supports the Agent CLI digest dry-run flow.',
+    annotations: { title: 'Manage saved HubSpot reports', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['create', 'clone', 'favorite', 'unfavorite', 'delete'] },
+        query: { type: 'string', description: 'CRM SQL query for create.' },
+        id: { type: 'string', description: 'Report ID for clone, favorite, unfavorite, or delete.' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        chartType: { type: 'string', enum: ['TABLE', 'BAR', 'HORIZONTAL_BAR', 'LINE', 'PIE', 'COLUMN', 'VERTICAL_BAR', 'AREA', 'DONUT', 'DATA_WELL', 'KPI'] },
+        accessClassification: { type: 'string', enum: ['EVERYONE', 'PRIVATE', 'SPECIFIC', 'NONE'] },
+        permissionLevel: { type: 'string', enum: ['VIEW', 'EDIT', 'CREATE_AND_OWN', 'NONE'] },
+        dateRange: { type: 'string', enum: ['ALL', 'THIS_DAY', 'LAST_DAY', 'NEXT_DAY', 'THIS_WEEK', 'LAST_WEEK', 'NEXT_WEEK', 'THIS_MONTH', 'LAST_MONTH', 'NEXT_MONTH', 'THIS_QUARTER', 'LAST_QUARTER', 'NEXT_QUARTER', 'THIS_YEAR', 'LAST_YEAR', 'NEXT_YEAR'] },
+        filterOwners: { type: 'array', items: { type: 'string' }, maxItems: 100 },
+        filterTeams: { type: 'array', items: { type: 'string' }, maxItems: 100 },
+        dryRun: { type: 'boolean', description: 'For delete, execute HubSpot Agent CLI --dry-run to obtain its safety digest.' },
+        digest: { type: 'string' },
+        confirm: { type: 'string', description: 'For delete, exact report name required by the Agent CLI.' },
+        portal: { type: 'string' },
+        authMode: { type: 'string', enum: ['oauth', 'service-key'], description: 'Optional override. Otherwise uses the selected profile agentCli.authMode, then oauth.' },
+        showRequest: { type: 'boolean' },
+        confirmMutation: { type: 'boolean', description: 'Execute a non-dry-run mutation after reviewing the blocked preview.' },
+        compact: { type: 'boolean' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500 },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000 },
+        includeTruncated: { type: 'boolean' }
+      },
+      required: ['action'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_views_read',
+    description: 'List or get saved CRM index-page views through the official HubSpot Agent CLI, with selected-portal identity verification.',
+    annotations: { title: 'Read saved HubSpot CRM views', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get'] },
+        objectType: { type: 'string', description: 'contacts, companies, deals, tickets, or a raw object type ID.' },
+        viewId: { type: 'string', description: 'Required for get.' },
+        portal: { type: 'string' },
+        authMode: { type: 'string', enum: ['oauth', 'service-key'], description: 'Optional override. Otherwise uses the selected profile agentCli.authMode, then oauth.' },
+        showRequest: { type: 'boolean' },
+        compact: { type: 'boolean' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500 },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000 },
+        includeTruncated: { type: 'boolean' }
+      },
+      required: ['action', 'objectType'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'hsapi_views_write',
+    description: 'Create, update, replace a field in, or delete a saved CRM view through the official HubSpot Agent CLI. Mutations are preview-first; Agent CLI dry-run and digest controls remain enforced.',
+    annotations: { title: 'Manage saved HubSpot CRM views', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['create', 'update', 'replace_field', 'delete'] },
+        objectType: { type: 'string' },
+        viewId: { type: 'string', description: 'Required except for create.' },
+        name: { type: 'string', description: 'Required for create.' },
+        columns: { type: 'array', items: { type: 'string' }, maxItems: 200 },
+        sort: { type: 'string' },
+        filtersFile: { type: 'string', description: 'Optional local JSON filter-groups file for create.' },
+        add: { type: 'array', items: { type: 'string' }, maxItems: 200 },
+        remove: { type: 'array', items: { type: 'string' }, maxItems: 200 },
+        reorder: { type: 'array', items: { type: 'string' }, maxItems: 200 },
+        from: { type: 'string', description: 'Existing property for replace_field.' },
+        to: { type: 'string', description: 'Replacement property for replace_field.' },
+        dryRun: { type: 'boolean' },
+        digest: { type: 'string' },
+        confirm: { type: 'string', description: 'For delete, exact view name required by the Agent CLI.' },
+        force: { type: 'boolean' },
+        portal: { type: 'string' },
+        authMode: { type: 'string', enum: ['oauth', 'service-key'], description: 'Optional override. Otherwise uses the selected profile agentCli.authMode, then oauth.' },
+        showRequest: { type: 'boolean' },
+        confirmMutation: { type: 'boolean' },
+        compact: { type: 'boolean' },
+        maxResults: { type: 'integer', minimum: 0, maximum: 500 },
+        maxChars: { type: 'integer', minimum: 1000, maximum: 200000 },
+        includeTruncated: { type: 'boolean' }
+      },
+      required: ['action', 'objectType'],
       additionalProperties: false
     }
   },
@@ -451,7 +583,10 @@ function integerArg(args, name, defaultValue, min, max) {
 function outputArgv(args = {}, options = {}) {
   const argv = [];
   if (boolArg(args, 'compact', true)) argv.push('--agent');
-  argv.push('--max-results', String(integerArg(args, 'maxResults', DEFAULT_MCP_MAX_RESULTS, 0, MAX_MCP_MAX_RESULTS)));
+  const defaultMaxResults = options.defaultMaxResults === undefined
+    ? DEFAULT_MCP_MAX_RESULTS
+    : options.defaultMaxResults;
+  argv.push('--max-results', String(integerArg(args, 'maxResults', defaultMaxResults, 0, MAX_MCP_MAX_RESULTS)));
   argv.push('--max-chars', String(integerArg(args, 'maxChars', DEFAULT_MCP_MAX_CHARS, 1000, MAX_MCP_MAX_CHARS)));
   if (boolArg(args, 'includeTruncated', true)) argv.push('--include-truncated');
   if (options.projection === false) return argv;
@@ -537,6 +672,120 @@ function requestArgv(args) {
   if (boolArg(args, 'paginate', false)) argv.push('--paginate');
   if (boolArg(args, 'readOnly', false)) argv.push('--read-only');
   return argv;
+}
+
+function enumArg(value, label, allowed) {
+  const normalized = stringArg(value, label);
+  if (!allowed.includes(normalized)) {
+    throw new Error(label + ' must be one of: ' + allowed.join(', ') + '.');
+  }
+  return normalized;
+}
+
+function optionalStringListArg(value, label) {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value)) throw new Error(label + ' must be an array of strings.');
+  return value.map((item, index) => stringArg(item, label + '[' + index + ']'));
+}
+
+function pushOptionalFlag(argv, flag, value) {
+  if (value === undefined || value === null) return;
+  argv.push('--' + flag);
+  if (value !== true) argv.push(String(value));
+}
+
+function agentCapabilityCommonArgv(args, options = {}) {
+  const argv = [];
+  if (args.portal !== undefined && args.portal !== null) argv.push('--portal', stringArg(args.portal, 'portal'));
+  if (args.authMode !== undefined && args.authMode !== null) {
+    argv.push('--agent-auth', enumArg(args.authMode, 'authMode', ['oauth', 'service-key']));
+  }
+  if (boolArg(args, 'showRequest', false)) argv.push('--show-request');
+  if (options.write && boolArg(args, 'confirmMutation', false)) argv.push('--yes');
+  argv.push(...outputArgv(args, {
+    projection: false,
+    defaultMaxResults: DEFAULT_AGENT_MCP_MAX_RESULTS
+  }));
+  return argv;
+}
+
+function agentReportsReadArgv(args) {
+  const action = enumArg(args.action, 'action', ['list', 'get', 'fetch_dataset', 'insights']);
+  const delegatedAction = action === 'fetch_dataset' ? 'fetch-dataset' : action;
+  const argv = ['reports', delegatedAction];
+  if (action !== 'list') argv.push(stringArg(args.id, 'id'));
+  if (action === 'list') {
+    if (args.limit !== undefined && args.limit !== null) argv.push('--limit', String(integerArg(args, 'limit', 100, 1, 100)));
+    pushOptionalFlag(argv, 'after', args.after === undefined ? undefined : stringArg(args.after, 'after'));
+  }
+  return [...argv, ...agentCapabilityCommonArgv(args)];
+}
+
+function agentReportsWriteArgv(args) {
+  const action = enumArg(args.action, 'action', ['create', 'clone', 'favorite', 'unfavorite', 'delete']);
+  const argv = ['reports', action];
+  if (action === 'create') argv.push(stringArg(args.query, 'query'));
+  else argv.push(stringArg(args.id, 'id'));
+  pushOptionalFlag(argv, 'name', args.name === undefined ? undefined : stringArg(args.name, 'name'));
+  pushOptionalFlag(argv, 'description', args.description === undefined ? undefined : stringArg(args.description, 'description'));
+  pushOptionalFlag(argv, 'chart-type', args.chartType);
+  pushOptionalFlag(argv, 'access-classification', args.accessClassification);
+  pushOptionalFlag(argv, 'permission-level', args.permissionLevel);
+  pushOptionalFlag(argv, 'date-range', args.dateRange);
+  const owners = optionalStringListArg(args.filterOwners, 'filterOwners');
+  const teams = optionalStringListArg(args.filterTeams, 'filterTeams');
+  if (owners && owners.length) argv.push('--filter-owners', owners.join(','));
+  if (teams && teams.length) argv.push('--filter-teams', teams.join(','));
+  if (boolArg(args, 'dryRun', false)) argv.push('--dry-run');
+  pushOptionalFlag(argv, 'digest', args.digest === undefined ? undefined : stringArg(args.digest, 'digest'));
+  pushOptionalFlag(argv, 'confirm', args.confirm === undefined ? undefined : stringArg(args.confirm, 'confirm'));
+  return [...argv, ...agentCapabilityCommonArgv(args, { write: true })];
+}
+
+function agentViewsReadArgv(args) {
+  const action = enumArg(args.action, 'action', ['list', 'get']);
+  const argv = ['views', action, stringArg(args.objectType, 'objectType')];
+  if (action === 'get') argv.push(stringArg(args.viewId, 'viewId'));
+  return [...argv, ...agentCapabilityCommonArgv(args)];
+}
+
+function agentViewsWriteArgv(args) {
+  const action = enumArg(args.action, 'action', ['create', 'update', 'replace_field', 'delete']);
+  const delegatedAction = action === 'replace_field' ? 'replace-field' : action;
+  const argv = ['views', delegatedAction, stringArg(args.objectType, 'objectType')];
+  if (action !== 'create') argv.push(stringArg(args.viewId, 'viewId'));
+  pushOptionalFlag(argv, 'name', args.name === undefined ? undefined : stringArg(args.name, 'name'));
+  const listFlags = [
+    ['columns', args.columns],
+    ['add', args.add],
+    ['remove', args.remove],
+    ['reorder', args.reorder]
+  ];
+  for (const [flag, value] of listFlags) {
+    const list = optionalStringListArg(value, flag);
+    if (list && list.length) argv.push('--' + flag, list.join(','));
+  }
+  pushOptionalFlag(argv, 'sort', args.sort === undefined ? undefined : stringArg(args.sort, 'sort'));
+  pushOptionalFlag(argv, 'filters-file', args.filtersFile === undefined ? undefined : stringArg(args.filtersFile, 'filtersFile'));
+  pushOptionalFlag(argv, 'from', args.from === undefined ? undefined : stringArg(args.from, 'from'));
+  pushOptionalFlag(argv, 'to', args.to === undefined ? undefined : stringArg(args.to, 'to'));
+  if (boolArg(args, 'dryRun', false)) argv.push('--dry-run');
+  if (boolArg(args, 'force', false)) argv.push('--force');
+  pushOptionalFlag(argv, 'digest', args.digest === undefined ? undefined : stringArg(args.digest, 'digest'));
+  pushOptionalFlag(argv, 'confirm', args.confirm === undefined ? undefined : stringArg(args.confirm, 'confirm'));
+  return [...argv, ...agentCapabilityCommonArgv(args, { write: true })];
+}
+
+async function runAgentCapabilityTool(argv) {
+  const envelope = await runHsapiEnvelope(argv);
+  if (envelope.output && typeof envelope.output === 'object' && !Array.isArray(envelope.output)) {
+    return {
+      ...envelope.output,
+      status: envelope.status,
+      stderr: envelope.stderr || undefined
+    };
+  }
+  return envelope;
 }
 
 function previewArgv(argv, args = {}) {
@@ -907,6 +1156,27 @@ async function callTool(name, args = {}) {
     if (args.portal) argv.push('--portal', String(args.portal));
     if (args.requireEnv) argv.push('--require-env');
     return runHsapiJson(argv);
+  }
+
+  if (name === 'hsapi_agent_cli_doctor') {
+    const argv = ['agent-cli', 'doctor', ...agentCapabilityCommonArgv(args)];
+    return runAgentCapabilityTool(argv);
+  }
+
+  if (name === 'hsapi_reports_read') {
+    return runAgentCapabilityTool(agentReportsReadArgv(args));
+  }
+
+  if (name === 'hsapi_reports_write') {
+    return runAgentCapabilityTool(agentReportsWriteArgv(args));
+  }
+
+  if (name === 'hsapi_views_read') {
+    return runAgentCapabilityTool(agentViewsReadArgv(args));
+  }
+
+  if (name === 'hsapi_views_write') {
+    return runAgentCapabilityTool(agentViewsWriteArgv(args));
   }
 
   if (name === 'hsapi_command_execute') {

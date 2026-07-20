@@ -7,8 +7,8 @@ Generated: 2026-05-10
 - Catalog-only endpoints: 322
 - Catalog-only non-HTTP surfaces: 3
 - Endpoint count: 637
-- Non-HTTP surface count: 3
-- Total catalog items: 640
+- Non-HTTP surface count: 5
+- Total catalog items: 642
 
 ## Coverage by implementation status
 - catalog-only: 322
@@ -124,13 +124,24 @@ Generated: 2026-05-10
 ## Coverage by surface family
 - automation.sequences: 1
 - automation.workflows: 1
+- first_party.reports: 1
+- first_party.views: 1
 - marketing.ctas: 1
 
 ## Coverage by surface type
 - docs-only: 2
+- external-cli-bridge: 2
 - javascript-sdk: 1
 
 ## Non-HTTP Surfaces
+- first_party.reports.agent_cli_bridge (external-cli-bridge, first_party.reports)
+  - Docs: https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide
+  - Context: docs/hubspot-api-context/agent-cli-bridge.md
+  - Disposition: Saved-report reads and writes delegate to the separately installed HubSpot Agent CLI because no equivalent public app endpoint is documented. HSAPI preserves portal identity checks and mutation gates.
+- first_party.views.agent_cli_bridge (external-cli-bridge, first_party.views)
+  - Docs: https://developers.hubspot.com/docs/developer-tooling/local-development/agent-cli/guide
+  - Context: docs/hubspot-api-context/agent-cli-bridge.md
+  - Disposition: CRM saved-view reads and writes delegate to the separately installed HubSpot Agent CLI because no equivalent public app endpoint is documented. HSAPI preserves portal identity checks and mutation gates.
 - marketing.ctas.javascript_sdk (javascript-sdk, marketing.ctas)
   - Docs: https://developers.hubspot.com/docs/api-reference/latest/marketing/ctas-sdk/guide
   - Context: docs/hubspot-api-context/marketing-surfaces.md

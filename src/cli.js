@@ -25,6 +25,7 @@ const {
   maybeResolvePortalBearerProfile,
   redactedOAuthTokenCacheContract,
   requestAuthMetadata,
+  resolveAgentCliProfile,
   resolveDeveloperProfile,
   resolveOAuthProfile,
   resolvePortal,
@@ -76,6 +77,8 @@ const {
   runOwners,
   runPipelines,
   runProjectBridge,
+  runAgentCliBridge,
+  runAgentCliDoctor,
   runProperties,
   runPropertyGroups,
   runPropertyValidations,
@@ -482,6 +485,7 @@ async function main(argv = process.argv.slice(2)) {
       const portalBearer = maybeResolvePortalBearerProfile(portal, name);
       const oauth = resolveOAuthProfile(portal, name);
       const developer = resolveDeveloperProfile(portal, name);
+      const agentCli = resolveAgentCliProfile(portal, name);
       if (!portalBearer && !oauth && !developer) {
         fail(`Portal "${name}" is missing auth.portalBearer.tokenEnv, auth.oauth, auth.developer, or legacy tokenEnv. Named profiles must declare at least one explicit credential family.`);
       }
@@ -500,6 +504,7 @@ async function main(argv = process.argv.slice(2)) {
         authFamilies: families,
         authDefaultFamily: resolveProfileDefaultFamily(portal, name)
       };
+      if (agentCli) profile.agentCli = agentCli;
       if (oauth) {
         const oauthMetadata = {
           mode: oauth.mode,
@@ -545,6 +550,16 @@ async function main(argv = process.argv.slice(2)) {
   }
 
   const portal = resolvePortal(config, flags);
+
+  if (area === 'agent-cli' && (action === 'doctor' || action === 'diagnose')) {
+    await runAgentCliDoctor(portal, flags);
+    return;
+  }
+
+  if (area === 'reports' || area === 'views') {
+    await runAgentCliBridge(portal, area, action, rest, flags);
+    return;
+  }
 
   if (area === 'request') {
     const method = String(action || '').toUpperCase();
