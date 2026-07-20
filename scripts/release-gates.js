@@ -89,7 +89,7 @@ const REQUIRED_DOC_PHRASES = [
   ['README.md', 'portals.oauth-hosted.sample.json'],
   ['docs/INSTALL.md', 'portals.oauth-service-key.sample.json'],
   ['docs/DESKTOP_MCP_QUICKSTART.md', 'npx --yes --package=github:chadmhohn/hsapi-cli'],
-  ['cloudflare/hsapi-oauth-broker/README.md', 'controlled staging/internal enrollment'],
+  ['cloudflare/hsapi-oauth-broker/README.md', 'Normal hosted users'],
   ['cloudflare/hsapi-oauth-broker/README.md', 'wrangler.operator.jsonc']
 ];
 
@@ -538,7 +538,6 @@ function validateNeutralTokenSource(failures, files) {
     'HSAPI_NEUTRAL_TOKEN_PROFILES',
     'HSAPI_NEUTRAL_TOKEN_DRY_RUN',
     'portalBearer.tokenEnv',
-    'brokerStartKeyEnv',
     'exec "$@"'
   ];
   for (const marker of requiredMarkers) {
@@ -805,21 +804,19 @@ function validatePortalOnboarding(failures, files) {
     failures.push('examples/portals.oauth-hosted.sample.json must include oauth-hosted-example with auth.oauth.');
     return null;
   }
-  if (profile.portalId !== 'REPLACE_WITH_NUMERIC_PORTAL_ID') {
-    failures.push('Hosted OAuth sample must retain a non-concrete portalId placeholder.');
+  if (Object.prototype.hasOwnProperty.call(profile, 'portalId')) {
+    failures.push('Hosted OAuth sample must let HubSpot account selection bind the first login; portalId is optional.');
   }
   if (profile.auth.defaultFamily !== AUTH_FAMILIES.OAUTH || oauth.mode !== 'hosted_broker') {
     failures.push('Hosted OAuth sample must default to oauth in hosted_broker mode.');
   }
   if (
-    typeof oauth.brokerUrl !== 'string'
-    || oauth.brokerUrl !== 'https://replace-with-operator-broker.example'
-    || typeof oauth.brokerStartKeyEnv !== 'string'
-    || !/^[A-Z][A-Z0-9_]*$/.test(oauth.brokerStartKeyEnv)
+    Object.prototype.hasOwnProperty.call(oauth, 'brokerUrl')
+    || Object.prototype.hasOwnProperty.call(oauth, 'brokerStartKeyEnv')
     || typeof oauth.tokenCachePath !== 'string'
     || !oauth.tokenCachePath.startsWith('~/')
   ) {
-    failures.push('Hosted OAuth sample must declare HTTPS brokerUrl, brokerStartKeyEnv, and an external user tokenCachePath.');
+    failures.push('Hosted OAuth sample must use the bundled broker with only an external user tokenCachePath.');
   }
   for (const forbidden of ['clientId', 'clientIdEnv', 'clientSecret', 'clientSecretEnv', 'refreshToken', 'refreshTokenEnv']) {
     if (Object.prototype.hasOwnProperty.call(oauth, forbidden)) {
@@ -836,17 +833,18 @@ function validatePortalOnboarding(failures, files) {
   if (
     combinedSample.default !== 'oauth-and-service-key-example'
     || !combinedProfile
-    || combinedProfile.portalId !== 'REPLACE_WITH_NUMERIC_PORTAL_ID'
+    || Object.prototype.hasOwnProperty.call(combinedProfile, 'portalId')
     || !combinedAuth
     || combinedAuth.defaultFamily !== AUTH_FAMILIES.OAUTH
     || !combinedOauth
     || combinedOauth.mode !== 'hosted_broker'
-    || combinedOauth.brokerUrl !== 'https://replace-with-operator-broker.example'
+    || Object.prototype.hasOwnProperty.call(combinedOauth, 'brokerUrl')
+    || Object.prototype.hasOwnProperty.call(combinedOauth, 'brokerStartKeyEnv')
     || !combinedPortalBearer
     || combinedPortalBearer.tokenEnv !== 'HUBSPOT_SERVICE_KEY_EXAMPLE'
     || combinedPortalBearer.kind !== 'private_app'
   ) {
-    failures.push('Combined portal sample must contain hosted OAuth plus an explicit ServiceKey/private-app portal_bearer credential.');
+    failures.push('Combined portal sample must remain account-chooser neutral and contain hosted OAuth plus an explicit ServiceKey/private-app portal_bearer credential.');
   }
 
   return {
@@ -854,8 +852,7 @@ function validatePortalOnboarding(failures, files) {
     serviceKeyProfile: 'service-key-example',
     hostedOAuthProfile: 'oauth-hosted-example',
     combinedProfile: 'oauth-and-service-key-example',
-    hostedOAuthMode: oauth.mode,
-    brokerStartKeyEnv: oauth.brokerStartKeyEnv
+    hostedOAuthMode: oauth.mode
   };
 }
 

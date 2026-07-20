@@ -507,10 +507,6 @@ async function main(argv = process.argv.slice(2)) {
         };
         if (oauth.mode === 'hosted_broker') {
           oauthMetadata.brokerUrl = oauth.brokerUrl;
-          oauthMetadata.brokerStartKeyEnv = oauth.brokerStartKeyEnv;
-          oauthMetadata.brokerStartKeyPresent = Boolean(
-            oauth.brokerStartKeyEnv && process.env[oauth.brokerStartKeyEnv]
-          );
         } else {
           oauthMetadata.clientIdEnv = oauth.clientIdEnv;
           oauthMetadata.clientIdPresent = Boolean(

@@ -1,6 +1,8 @@
 # Design: OAuth-First, Per-User Authentication for hsapi
 
-**Status:** Hosted-broker staging implemented; exact-version full-flow revalidation pending · **Date:** 2026-07-18
+**Status:** Portal-neutral hosted flow implemented in the release candidate;
+bundled-broker deployment and exact-version full-flow revalidation pending ·
+**Date:** 2026-07-20
 
 ## Goal
 
@@ -52,7 +54,7 @@ internal-tool risk, not a permission-elevation risk.
 | Model | How | Pros | Cons | Verdict |
 |---|---|---|---|---|
 | **A. Local confidential client** | Supply `client_id` + `client_secret` through environment variables; the CLI handles loopback callback, exchange, and refresh. | Simple recovery/developer path | Distributes the app secret | Supported fallback |
-| **B. Hosted token broker** | A fixed HTTPS service holds the secret; the CLI creates the login session and the broker performs exchange, refresh, and revoke. | Secret stays server-side; users only authorize in the browser | Requires operated infrastructure | **Selected team flow** |
+| **B. Hosted token broker** | A bundled HTTPS service holds the secret; the CLI creates a localhost-bound login session and the broker performs exchange, refresh, and revoke. | Secret stays server-side; users only authorize in the browser | Requires operated infrastructure and localhost callback availability | **Selected team flow** |
 
 **Decision:** use **Model B** for distributed team installs and retain **Model
 A** for app operators, local development, and recovery. The Cloudflare Worker
@@ -77,32 +79,39 @@ without placing the HubSpot client secret on the CLI machine.
 - **Family is selected per-endpoint from the catalog**, defaulting to `portal_bearer`
   (`auth.js:100-123`); resolvers hard-fail on family mismatch ("no silent fallback").
 
-## Implemented state (2026-07-18)
+## Implemented state (2026-07-20)
 
 - `hsapi auth login` and `auth logout` support `local` and `hosted_broker`
   OAuth modes.
-- Hosted profiles need a numeric `portalId`, an HTTPS `brokerUrl`, a
-  `brokerStartKeyEnv`, and an external token-cache path; they do not need local
-  HubSpot client credentials.
-- Cache metadata is bound to OAuth mode, broker URL, and portal ID. A returned
-  `hubId` mismatch is rejected before use.
-- The Cloudflare Worker fixes the HubSpot app, account, redirect, and scope set
-  server-side. Durable Objects retain callback codes briefly; exchange is
-  one-time and authenticated with a consume secret plus PKCE verifier.
-- Starting a hosted consent session requires an independently issued broker
-  client credential. The shared staging key is an internal enrollment control,
-  not a HubSpot credential; production still needs per-install enrollment or
-  an equivalent authenticated bootstrap.
+- Normal hosted profiles need only `mode: "hosted_broker"` and an external
+  token-cache path. The release bundles
+  `https://hsapi-oauth.groundworkrevops.com`; `brokerUrl` is an optional private
+  deployment override, and numeric `portalId` is an optional expected-account
+  pin. Teammates do not receive local HubSpot client credentials or a broker
+  credential.
+- HubSpot presents its account chooser. For an unpinned profile, the token
+  response's authenticated numeric `hub_id` becomes the cache binding.
+  Existing cache bindings and optional profile pins reject a different account
+  on login, cache use, or refresh.
+- The Cloudflare Worker fixes the HubSpot app, redirect, and scope set
+  server-side while serving accounts selected through HubSpot. Durable Objects
+  retain callback codes briefly; exchange is one-time and authenticated with a
+  completion grant, consume secret, and PKCE verifier.
+- The CLI opens an ephemeral `127.0.0.1` listener. After HubSpot calls the
+  broker callback, the broker redirects a fresh one-time completion grant to
+  that exact listener. This local-device handoff makes normal session creation
+  public without allowing a remote session creator to collect someone else's
+  consent result.
+- The shared broker accepts only native localhost-completion sessions. Requests
+  without the loopback proof are rejected; v0.4.x hosted clients must update to
+  v0.5 or later before using the shared broker.
 - Refresh and revoke require the HubSpot refresh token plus a broker-bound HMAC
-  credential. The app secret, signing key, and session-start key are
-  independent Worker secrets.
-- Staging authorization, exchange, portal identity, API calls, and refresh
-  completed against an isolated developer test account on Worker version
-  `5a333109-82bc-42d4-bc71-0364c6b9de1d`. The currently deployed version,
-  `a7a9641e-0324-402d-83cc-61d04fe4075a`, has current health and
-  unauthenticated session-start rejection proof; its authenticated session
-  start and exact authorization/exchange/refresh flow have not yet been
-  repeated.
+  credential. Refresh carries the cache's expected `hub_id`, and the broker
+  requires HubSpot's response to match it.
+- Earlier staging authorization, exchange, API calls, and refresh
+  completed against an isolated developer test account. The new any-account,
+  localhost-completion build must be deployed and revalidated end to end before
+  it is described as production-ready.
 
 ## Target architecture
 
@@ -113,14 +122,15 @@ without placing the HubSpot client secret on the CLI machine.
    authorizing user's permissions against the REST API. Requests a **superset of scopes**;
    HubSpot intersects with each user's real permissions at runtime. (New scopes need the
    super-admin **App Marketplace Access** permission to approve — App Install Governance.)
-2. **`hsapi auth login`** — in hosted mode the CLI creates a broker session,
-   opens HubSpot consent, and polls with a one-time consume secret plus PKCE
-   verifier. The broker captures the callback, exchanges the code with its
-   server-side app secret, and returns access/refresh tokens plus a
-   broker-bound refresh credential. Local mode retains the exact loopback
-   callback flow for app operators. Both modes write a cache outside the
-   package; operators must place it in an operating-system-protected per-user
-   directory.
+2. **`hsapi auth login`** — in hosted mode the CLI starts an ephemeral
+   `127.0.0.1` completion listener and creates a broker session with its exact
+   return URI, a one-time consume-secret digest, and a PKCE challenge. HubSpot
+   displays the account chooser. The broker captures HubSpot's callback and
+   sends a fresh completion grant to localhost; exchange then requires that
+   grant, the consume secret, and the PKCE verifier. The broker returns
+   access/refresh tokens, authenticated `hub_id`, and a broker-bound refresh
+   credential. Local mode retains its separate exact loopback callback flow for
+   app operators. Both modes write a cache outside the package.
 3. **Token audience is explicit and conservative.** The implemented enum is
    `user | admin`; missing metadata defaults to `admin` for backward
    compatibility. Command-level CRM routing injects `user` only for
@@ -135,10 +145,11 @@ without placing the HubSpot client secret on the CLI machine.
    family; the catalog's absent-audience default remains `admin`.
 5. **No private-app token in the normal flow.** The admin credential is *optional* and only
    a super admin who needs the auth-sensitive ops configures one. Everyone else runs pure OAuth.
-6. **Onboarding** walks a teammate: install → add the portal ID, hosted broker
-   URL, and start-key env name → inject the enrolled broker credential →
-   `hsapi auth login` (browser consent) → register MCP entry → `hsapi auth
-   whoami` to verify. No HubSpot app secret is provisioned to the teammate.
+6. **Onboarding** walks a teammate: install → copy the portal-neutral hosted
+   profile with an external cache path → `hsapi auth login` → select the
+   HubSpot account → register the MCP entry → `hsapi auth whoami` to verify the
+   cache's account binding. No portal ID, broker credential, HubSpot app
+   client ID, or HubSpot app client secret is provisioned to the teammate.
 
 ## The irreducible service-key set
 
@@ -165,9 +176,16 @@ boundaries until they are added to catalog preflight metadata.
   through the app operator's environment. It is never a portal-config value.
 - `BROKER_SIGNING_KEY` is an independent Worker secret. It binds refresh and
   revoke requests to tokens issued by this broker.
-- `BROKER_SESSION_START_KEY` is a third independent Worker secret. Enrolled
-  CLIs present it only when starting a consent session; callback/completion
-  remain public for HubSpot/browser redirects.
+- Normal hosted sessions require no CLI-held broker secret. Their callback
+  result is delivered as a one-time completion grant to the exact ephemeral
+  `127.0.0.1` listener registered at session start; exchange also requires the
+  initiating process's consume secret and PKCE verifier.
+- The shared broker has no client admission secret. A hosted session supports
+  exchange only after completion through the exact ephemeral `127.0.0.1`
+  listener registered by the initiating CLI.
+- The first authenticated `hub_id` binds an unpinned cache. Optional
+  `portalId`, existing cache binding, and refresh `expectedHubId` checks all
+  fail closed on a different or missing account identity.
 - Per-user OAuth tokens and broker credentials are cached outside the package.
   Credential use, writes, refresh, and logout fail closed when the configured
   cache path resolves inside the package; diagnostics report that unsafe path
@@ -189,22 +207,26 @@ boundaries until they are added to catalog preflight metadata.
 4. Resolver least-privilege selection and explicit admin escalation.
 5. `whoami` / `auth doctor`: surface signed-in user + flag admin-required ops. **Implemented**
 6. Provision the HubSpot user-level app and hosted Worker staging. **Implemented**
-7. Team onboarding docs for the controlled internal beta. **Implemented**
-8. Production operations runbook, broker, custom domain/access policy, and
-   monitoring. **Pending**
-9. Per-install broker enrollment and refresh-rotation recovery policy.
-   **Pending before production**
+7. Portal-neutral team onboarding docs for bundled OAuth and explicit
+   ServiceKey augmentation. **Implemented**
+8. Deploy and live-revalidate the any-account, localhost-completion broker
+   behind the bundled custom domain. **Pending before release**
+9. Production operations runbook, monitoring, incident response, and
+   refresh-rotation recovery policy. **Pending before production**
 
 ## File-level change map
 
-- `src/commands/auth.js` — local/hosted `login`, `logout`, start-key checks,
-  cache-path enforcement, and profile diagnostics.
+- `src/commands/auth.js` — local/hosted `login`, `logout`, localhost completion
+  listener, account-binding checks, cache-path enforcement, and profile
+  diagnostics.
 - `src/oauth-broker.js` — bounded broker HTTP client, authorization URL
   validation, exchange, refresh, and revoke.
-- `cloudflare/hsapi-oauth-broker/` — fixed-account Worker, Durable Object
-  session storage, rate limits, secret bindings, and deployment runbook.
+- `cloudflare/hsapi-oauth-broker/` — multi-account Worker, Durable Object
+  session storage, loopback completion grants, rate limits, secret bindings,
+  and deployment runbook.
 - `src/command-inputs.js` (:1164-1252) — reuse/extend authorize-URL + token-exchange builders; loopback wiring.
-- `src/auth-resolvers.js` — profile parsing, portal-bound cache metadata,
+- `src/auth-resolvers.js` — profile parsing, optional account pins, cache-bound
+  HubSpot identity metadata,
   redaction, outside-package enforcement, refresh locking, and least-privilege
   credential selection.
 - `src/auth.js` / `src/catalog.js` — `user | admin` token-audience validation

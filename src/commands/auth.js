@@ -40,9 +40,9 @@ const {
   assertTokenCacheOutsidePackage,
   hubSpotResponseCategory,
   hubSpotResponseClass,
-  hostedBrokerStartKeyIsValid,
   maybeResolvePortalBearerProfile,
   oauthCacheBrokerCredential,
+  oauthCacheHubId,
   oauthCacheProfileMatch,
   oauthCacheRefreshToken,
   oauthTokenCacheFromRefreshPayload,
@@ -106,30 +106,6 @@ function doctorEnvCheck(checks, envName, label, options, extra = {}) {
   );
 }
 
-function doctorBrokerStartKeyEnvCheck(checks, envName, options) {
-  const value = envName ? process.env[envName] : null;
-  const present = Boolean(value);
-  const valid = present && hostedBrokerStartKeyIsValid(value);
-  const status = valid ? 'pass' : (present || options.requireEnv ? 'fail' : 'warn');
-  doctorCheck(
-    checks,
-    status,
-    'oauth.broker_start_key_env',
-    valid
-      ? `oauth broker session-start credential environment variable ${envName} is set and valid.`
-      : present
-        ? `oauth broker session-start credential environment variable ${envName} is set but must contain a 43-character base64url credential.`
-        : `oauth broker session-start credential environment variable ${envName} is not set.`,
-    {
-      env: envName,
-      present,
-      valid,
-      family: AUTH_FAMILIES.OAUTH,
-      profileField: 'auth.oauth.brokerStartKeyEnv'
-    }
-  );
-}
-
 function doctorCachePathCheck(checks, cachePath, label, field) {
   if (!cachePath) return false;
   const insidePackage = !tokenCachePathIsOutsidePackage(cachePath);
@@ -151,13 +127,7 @@ function doctorCachePathCheck(checks, cachePath, label, field) {
 function profileDoctor(name, rawPortal, options) {
   const checks = [];
   const portalBearer = maybeResolvePortalBearerProfile(rawPortal, name);
-  const resolvedOAuth = resolveOAuthProfile(rawPortal, name);
-  const oauth = resolvedOAuth
-    ? {
-      ...resolvedOAuth,
-      portalId: rawPortal.portalId ? String(rawPortal.portalId) : null
-    }
-    : null;
+  const oauth = resolveOAuthProfile(rawPortal, name);
   const developer = resolveDeveloperProfile(rawPortal, name);
   const authDefaultFamily = resolveProfileDefaultFamily(rawPortal, name);
   const authFamilies = [];
@@ -222,7 +192,17 @@ function profileDoctor(name, rawPortal, options) {
           brokerUrl: oauth.brokerUrl
         }
       );
-      doctorBrokerStartKeyEnvCheck(checks, oauth.brokerStartKeyEnv, options);
+      doctorCheck(
+        checks,
+        'pass',
+        'oauth.browser_login',
+        'Hosted OAuth uses HubSpot account selection and a localhost completion handoff; no client secret or broker-start credential is required locally.',
+        {
+          family: AUTH_FAMILIES.OAUTH,
+          mode: oauth.mode,
+          profileField: 'auth.oauth'
+        }
+      );
       doctorCheck(
         checks,
         'pass',
@@ -572,6 +552,115 @@ function awaitOAuthCallback({ port, path: callbackPath, expectedState, timeoutMs
   });
 }
 
+async function createHostedBrokerCompletionListener(timeoutMs) {
+  const callbackPath = '/oauth/hsapi/callback';
+  let expectedState = null;
+  let settled = false;
+  let timer = null;
+  let resolveCompletion;
+  let rejectCompletion;
+  const completion = new Promise((resolve, reject) => {
+    resolveCompletion = resolve;
+    rejectCompletion = reject;
+  });
+
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url || '/', 'http://127.0.0.1');
+    if (url.pathname !== callbackPath) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not found');
+      return;
+    }
+
+    const states = url.searchParams.getAll('state');
+    const grants = url.searchParams.getAll('completion_grant');
+    const errors = url.searchParams.getAll('error');
+    if (
+      !expectedState
+      || states.length !== 1
+      || states[0] !== expectedState
+      || !(
+        (grants.length === 1 && errors.length === 0)
+        || (grants.length === 0 && errors.length === 1)
+      )
+    ) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Login callback did not match this hsapi session.');
+      return;
+    }
+
+    if (errors.length === 1) {
+      const oauthError = String(errors[0] || 'authorization_error')
+        .replace(/[^A-Za-z0-9._-]/g, '_')
+        .slice(0, 80);
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('HubSpot authorization was not completed. Return to hsapi.');
+      finish(() => rejectCompletion(new Error(`auth login failed: ${oauthError || 'authorization_error'}`)));
+      return;
+    }
+
+    const completionGrant = grants[0];
+    if (!completionGrant || !/^[A-Za-z0-9_-]{43}$/.test(completionGrant)) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Login callback did not include a valid completion grant.');
+      return;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(LOGIN_SUCCESS_HTML);
+    finish(() => resolveCompletion(completionGrant));
+  });
+
+  function finish(action) {
+    if (settled) return;
+    settled = true;
+    if (timer) clearTimeout(timer);
+    try {
+      server.close();
+    } finally {
+      action();
+    }
+  }
+
+  await new Promise((resolve, reject) => {
+    const onInitialError = (error) => {
+      reject(new Error(`auth login: could not bind a localhost completion listener: ${error.message}`));
+    };
+    server.once('error', onInitialError);
+    server.listen(0, '127.0.0.1', () => {
+      server.removeListener('error', onInitialError);
+      resolve();
+    });
+  });
+
+  server.on('error', (error) => {
+    finish(() => rejectCompletion(new Error(`auth login: localhost completion listener failed: ${error.message}`)));
+  });
+  timer = setTimeout(() => {
+    finish(() => rejectCompletion(new Error(`auth login: timed out after ${timeoutMs}ms waiting for HubSpot authorization.`)));
+  }, timeoutMs);
+  if (typeof timer.unref === 'function') timer.unref();
+
+  const address = server.address();
+  if (!address || typeof address !== 'object') {
+    finish(() => rejectCompletion(new Error('auth login: localhost completion listener did not expose a port.')));
+    throw new Error('auth login: localhost completion listener did not expose a port.');
+  }
+
+  return {
+    completionRedirectUri: `http://127.0.0.1:${address.port}${callbackPath}`,
+    setExpectedState(state) {
+      expectedState = state;
+    },
+    waitForCompletion() {
+      return completion;
+    },
+    close() {
+      finish(() => {});
+    }
+  };
+}
+
 // Exchange the authorization code for tokens. Mirrors refreshOAuthCredential's
 // fetch + HubSpot error handling style. Secrets are never surfaced.
 async function exchangeAuthorizationCode(portal, oauth, env, redirectUrl, code, codeVerifier) {
@@ -634,20 +723,10 @@ function requireLoginPrerequisites(portal, oauth) {
     fail(`auth login: portal "${portal.name}" has no auth.oauth profile.`);
   }
   if (oauth.mode === OAUTH_MODES.HOSTED_BROKER) {
-    if (!portal.portalId || !/^[1-9][0-9]*$/.test(String(portal.portalId))) {
-      fail(`auth login: portal "${portal.name}" must define a numeric portalId for hosted-broker account binding.`);
-    }
     if (!oauth.brokerUrl) {
       fail(`auth login: portal "${portal.name}" is missing required hosted-broker configuration: auth.oauth.brokerUrl.`);
     }
-    const brokerStartKey = process.env[oauth.brokerStartKeyEnv];
-    if (!brokerStartKey) {
-      fail(`auth login: portal "${portal.name}" is missing ${oauth.brokerStartKeyEnv} (auth.oauth.brokerStartKeyEnv).`);
-    }
-    if (!hostedBrokerStartKeyIsValid(brokerStartKey)) {
-      fail(`auth login: ${oauth.brokerStartKeyEnv} must contain the 43-character base64url broker session-start credential.`);
-    }
-    return { brokerStartKey };
+    return {};
   }
   const missing = [];
   const clientId = process.env[oauth.clientIdEnv];
@@ -676,86 +755,104 @@ function oauthPkceMaterial() {
   };
 }
 
-function waitForBrokerPoll(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
 async function runHostedBrokerAuthLogin(portal, oauth, flags) {
   assertTokenCacheOutsidePackage(oauth.tokenCachePath, 'OAuth token cache');
-  const { brokerStartKey } = requireLoginPrerequisites(portal, oauth);
+  requireLoginPrerequisites(portal, oauth);
   const timeoutMs = loginTimeoutFromFlags(flags);
   const { codeVerifier, codeChallenge } = oauthPkceMaterial();
   const consumeSecret = crypto.randomBytes(32).toString('base64url');
   const consumeSecretHash = crypto.createHash('sha256').update(consumeSecret).digest('base64url');
+  let completionListener;
   let session;
   try {
+    completionListener = await createHostedBrokerCompletionListener(timeoutMs);
     session = await startHostedBrokerLogin(oauth, {
       codeChallenge,
-      consumeSecretHash,
-      accountId: portal.portalId,
-      brokerStartKey
+      completionRedirectUri: completionListener.completionRedirectUri,
+      consumeSecretHash
     });
   } catch (error) {
+    if (completionListener) completionListener.close();
     fail(error.message);
   }
 
-  const sessionTimeoutMs = session.expiresIn
-    ? Math.min(timeoutMs, session.expiresIn * 1000)
-    : timeoutMs;
-  const deadline = Date.now() + sessionTimeoutMs;
-  let pollIntervalMs = Math.min(Math.max((session.intervalSeconds || 1) * 1000, 500), 5000);
-
-  // The URL contains the broker-created OAuth state but never the consume
-  // secret, verifier, HubSpot client secret, or resulting tokens.
-  writeStderr(`Opening browser for HubSpot login (portal "${portal.name}", hosted broker).\nIf it does not open, visit:\n${session.authorizationUrl.toString()}\n`);
+  completionListener.setExpectedState(session.sessionId);
+  writeStderr(`Opening HubSpot account selection for profile "${portal.name}".\nIf the browser does not open, visit:\n${session.authorizationUrl.toString()}\n`);
   openBrowser(session.authorizationUrl);
 
-  while (Date.now() < deadline) {
+  try {
+    const completionGrant = await completionListener.waitForCompletion();
     let exchange;
     try {
       exchange = await exchangeHostedBrokerLogin(oauth, {
         sessionId: session.sessionId,
         consumeSecret,
-        codeVerifier
+        codeVerifier,
+        completionGrant
       });
     } catch (error) {
       fail(error.message);
     }
-    if (exchange.status === 'complete') {
-      if (!exchange.token.refreshToken || !exchange.token.brokerCredential) {
-        fail(`auth login broker token exchange failed for portal "${portal.name}": response did not include broker-bound refresh credentials.`);
-      }
-      const cache = await withOAuthTokenCacheMutationLock(
-        oauth.tokenCachePath,
-        portal.name,
-        async () => {
-          const candidate = oauthTokenCacheFromRefreshPayload(exchange.token, oauth);
-          const profileMatch = oauthCacheProfileMatch(candidate, oauth);
-          if (!profileMatch.ok) {
-            fail(`auth login broker token exchange failed for portal "${portal.name}": broker response did not match the configured OAuth profile (${profileMatch.reason}).`);
+    if (exchange.status !== 'complete') {
+      fail(`auth login broker token exchange failed for profile "${portal.name}": completion was not ready.`);
+    }
+    if (!exchange.token.refreshToken || !exchange.token.brokerCredential) {
+      fail(`auth login broker token exchange failed for profile "${portal.name}": response did not include broker-bound refresh credentials.`);
+    }
+    const cache = await withOAuthTokenCacheMutationLock(
+      oauth.tokenCachePath,
+      portal.name,
+      async () => {
+        const priorCacheRead = readOAuthTokenCache(oauth.tokenCachePath);
+        const priorCache = priorCacheRead.cache;
+        const expectedHubId = portal.portalId || oauthCacheHubId(priorCache);
+        if (
+          !exchange.token.hubId
+          || (expectedHubId && exchange.token.hubId !== String(expectedHubId))
+        ) {
+          try {
+            await revokeHostedBrokerTokens(oauth, {
+              refreshToken: exchange.token.refreshToken,
+              brokerCredential: exchange.token.brokerCredential
+            });
+          } catch (_error) {
+            // Never persist a mismatched token. Revocation is best-effort.
           }
-          writeOAuthTokenCache(oauth.tokenCachePath, candidate);
-          return candidate;
+          const reason = exchange.token.hubId
+            ? `selected HubSpot account ${exchange.token.hubId} does not match the existing profile binding ${expectedHubId}`
+            : 'broker response did not identify the selected HubSpot account';
+          fail(`auth login failed for profile "${portal.name}": ${reason}.`);
         }
-      );
-      printJson({
-        ok: true,
-        portal: portal.name,
-        action: 'login',
-        oauthMode: oauth.mode,
-        tokenCache: redactedOAuthTokenCacheContract(oauth, { status: 'read', cache, error: null }),
-        scopeSource: 'hosted_broker'
-      });
-      return;
-    }
-    if (exchange.intervalSeconds) {
-      pollIntervalMs = Math.min(Math.max(exchange.intervalSeconds * 1000, 500), 5000);
-    }
-    const remainingMs = deadline - Date.now();
-    if (remainingMs <= 0) break;
-    await waitForBrokerPoll(Math.min(pollIntervalMs, remainingMs));
+        const candidate = oauthTokenCacheFromRefreshPayload(
+          exchange.token,
+          oauth,
+          Date.now(),
+          null,
+          priorCache
+        );
+        const profileMatch = oauthCacheProfileMatch(candidate, oauth);
+        if (!profileMatch.ok) {
+          fail(`auth login broker token exchange failed for profile "${portal.name}": broker response did not match the configured OAuth profile (${profileMatch.reason}).`);
+        }
+        writeOAuthTokenCache(oauth.tokenCachePath, candidate);
+        return candidate;
+      }
+    );
+    printJson({
+      ok: true,
+      portal: portal.name,
+      portalId: cache.hubId || null,
+      action: 'login',
+      oauthMode: oauth.mode,
+      accountBinding: portal.portalId ? 'profile' : 'oauth_token_cache',
+      tokenCache: redactedOAuthTokenCacheContract(oauth, { status: 'read', cache, error: null }),
+      scopeSource: 'hosted_broker'
+    });
+  } catch (error) {
+    fail(error.message);
+  } finally {
+    completionListener.close();
   }
-  fail(`auth login: timed out after ${sessionTimeoutMs}ms waiting for hosted OAuth broker completion.`);
 }
 
 async function runLocalAuthLogin(portal, oauth, flags) {
@@ -945,6 +1042,16 @@ function runAuthWhoami(flags) {
       };
     const oauthCacheContract = redactedOAuthTokenCacheContract(portal.oauth, oauthCacheRead);
     result.oauth = oauthCacheContract;
+    if (
+      !result.portalId
+      && oauthCacheContract.status === 'usable'
+      && oauthCacheContract.hubId
+    ) {
+      result.portalId = oauthCacheContract.hubId;
+      result.portalIdSource = 'oauth_token_cache';
+    } else if (result.portalId) {
+      result.portalIdSource = 'profile';
+    }
     if (oauthCacheContract.status !== 'usable') {
       result.oauth.hint = oauthCacheContract.profileMismatchReason === 'client_id_unavailable'
         ? `Set ${portal.oauth.clientIdEnv}, then run: hsapi auth login --portal ${portal.name}`
@@ -1046,6 +1153,7 @@ async function runAuth(action, rest, flags) {
 
 module.exports = {
   ADMIN_ONLY_OPERATIONS,
+  createHostedBrokerCompletionListener,
   doctorCachePathCheck,
   doctorCheck,
   doctorEnvCheck,

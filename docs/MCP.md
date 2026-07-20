@@ -72,9 +72,20 @@ MCP input uses top-level fields for `portal`, `showRequest`, `confirmMutation`, 
 
 For a new connection, the assistant should call `hsapi_context_doc` with
 `name: "portal-auth-setup"`, choose the ServiceKey, hosted OAuth, or combined
-template, then run `hsapi_profiles_list` and `hsapi_auth_doctor`. The guide is
-packaged locally; MCP access is a convenience and does not require repository
-access.
+template, then run `hsapi_profiles_list` and `hsapi_auth_doctor`. Normal hosted
+OAuth needs only `mode: "hosted_broker"` and an external token-cache path; the
+CLI supplies the bundled broker URL. The assistant must not ask for a portal
+ID, HubSpot client credential, or broker credential. It should have the user
+run `hsapi auth login --portal <name>` in the local desktop environment, select
+the intended account in HubSpot, and verify the returned `hub_id` binding with
+`auth whoami` before starting normal MCP work. Login uses a short-lived
+`127.0.0.1` listener and one-time completion grant, so the browser and CLI must
+share the desktop's loopback interface. The guide is packaged locally;
+MCP access is a convenience and does not require repository access.
+
+The shared broker requires hsapi v0.5 or later. If an MCP host still has a
+v0.4.x hosted installation, update the package and replace its old hosted
+profile with the current template before running browser login.
 
 ## OpenClaw Config
 
@@ -119,11 +130,26 @@ For copy/paste local setup on Codex Desktop or Claude Desktop, including Windows
 Before replacing older HubSpot MCP entries with the CLI-backed MCP server, make local `hsapi` token loading independent of those entries. The neutral pattern is:
 
 1. Keep a private `HSAPI_PORTALS_CONFIG` outside this package.
-2. Store only profile names, portal metadata, and credential environment variable names in that config.
-3. Load real token values through a local secret manager, OpenClaw-supported SecretRef wrapper, or another private injection command.
+2. Store only profile names, portal metadata, cache paths, and credential
+   environment variable names in that config. A normal hosted OAuth profile
+   has no local credential env var.
+3. Load ServiceKey or developer credential values through a local secret
+   manager, OpenClaw-supported SecretRef wrapper, or another private injection
+   command. Hosted OAuth access and refresh tokens remain in its protected
+   external cache.
 4. Start `hsapi` or `hsapi-mcp` through a wrapper that reads the needed env var names from `HSAPI_PORTALS_CONFIG` and exports values only for the child process.
 
-Use `examples/portals.multi-portal.sample.json` as the profile-name template. It preserves the `portal-alpha` and `portal-beta` profile names while keeping token values out of the repo. Use `examples/neutral-token-wrapper.sample.sh` as the wrapper template. The wrapper calls `HSAPI_SECRET_LOOKUP_CMD <ENV_NAME>` for each missing credential environment variable declared by the selected profiles in `HSAPI_PORTALS_CONFIG`, including `auth.portalBearer.tokenEnv` and hosted OAuth `auth.oauth.brokerStartKeyEnv`; the lookup command is deliberately local and repo-external so it can be backed by a password manager, an OpenClaw SecretRef command, a locked-down file provider, or another operator-approved secret manager.
+Use `examples/portals.multi-portal.sample.json` as the ServiceKey profile-name
+template. It preserves the `portal-alpha` and `portal-beta` profile names while
+keeping token values out of the repo. Use
+`examples/neutral-token-wrapper.sample.sh` as the wrapper template. The wrapper
+calls `HSAPI_SECRET_LOOKUP_CMD <ENV_NAME>` for each missing credential
+environment variable explicitly declared by selected profiles, including
+ServiceKey `auth.portalBearer.tokenEnv` and local OAuth or developer credential
+fields. Normal hosted OAuth declares none and needs no wrapper-loaded admission
+credential. The lookup command is deliberately local and repo-external so it
+can be backed by a password manager, an OpenClaw SecretRef command, a
+locked-down file provider, or another operator-approved secret manager.
 
 Direct CLI shape:
 

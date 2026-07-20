@@ -62,23 +62,32 @@ After a global git or tarball install, run `hsapi --help` and copy the absolute
 ServiceKey or hosted-OAuth template path printed there; do not assume the
 current directory contains `examples/`.
 
-For hosted OAuth, copy the hosted template instead and use only the exact
-portal ID, broker URL, and broker admission credential issued by the app
-operator. Do not add local HubSpot client credentials.
+For hosted OAuth, copy the hosted template instead. The normal profile needs
+only `mode: "hosted_broker"` and an external `tokenCachePath`; `hsapi` supplies
+the bundled broker URL. Do not add a portal ID, broker admission credential,
+HubSpot client ID, or HubSpot client secret. A numeric `portalId` is optional
+when an operator intentionally wants to pin the profile to one known account,
+and `brokerUrl` is an advanced override for an approved private deployment.
+
+Hosted OAuth in v0.5 and later uses the native localhost-completion protocol.
+The shared broker does not accept the older v0.4.x hosted protocol. Update the
+CLI and replace an old hosted profile with the current template before logging
+in through the shared broker.
 
 The normal per-user default is `~/.config/hsapi/portals.json`
 (`%USERPROFILE%\.config\hsapi\portals.json` on Windows). An explicit
 `HSAPI_PORTALS_CONFIG` takes precedence. Package installs and upgrades never create or overwrite
-this file; operators distribute the non-secret profile
-metadata and broker admission credential through their approved configuration
-and secret channels.
+this file. OAuth access and refresh tokens remain in the external per-user
+cache; ServiceKey values remain in an approved environment or secret manager.
 
-The config stores labels, portal IDs, API base URLs, credential environment
-variable names, hosted-broker URLs, and token-cache paths. New portal-bearer
+The config stores labels, optional portal IDs, API base URLs, credential
+environment variable names, hosted-broker URLs, and token-cache paths. New portal-bearer
 profiles should use `auth.portalBearer.tokenEnv`; legacy top-level `tokenEnv`
 profiles remain supported. OAuth profiles can use `mode: "hosted_broker"` with
-`brokerUrl`, `brokerStartKeyEnv`, and `tokenCachePath`, which keeps the HubSpot
-app secret off the user's machine, or `mode: "local"` with client credential
+`tokenCachePath` and the bundled broker default, which keeps the HubSpot app
+secret off the user's machine. `portalId` optionally pins an expected account,
+and `brokerUrl` optionally selects an operator-approved private broker.
+Alternatively, `mode: "local"` uses client credential
 environment-variable names and an exact loopback redirect. Developer profiles
 use `auth.developer.personalAccessKeyEnv` for HubSpot CLI/local
 developer-tooling surfaces, `auth.developer.developerApiKeyEnv` plus
@@ -105,25 +114,34 @@ hsapi auth login --portal oauth-hosted-example
 hsapi auth whoami --portal oauth-hosted-example
 ```
 
-Hosted mode needs no local HubSpot client ID or client secret. It does require
-an independently issued broker session-start credential in the environment
-named by `brokerStartKeyEnv`; this prevents arbitrary callers from creating
-consent sessions. The broker is fixed to one app, portal, redirect, and scope
-set, and the CLI rejects a returned token whose hub ID does not match the
-profile. See `docs/hubspot-api-context/portal-auth-setup.md` for the
+Hosted mode needs no local HubSpot client ID, client secret, broker admission
+credential, or pre-known portal ID. HubSpot displays its account chooser, and
+the broker returns HubSpot's authenticated `hub_id`.
+For an unpinned profile, the first successful login binds that ID in the token
+cache. A later login, refresh, or cache use for a different account is rejected
+rather than silently rebinding the profile. If `portalId` is configured, it is
+the expected account from the first login onward.
+
+The hosted flow also opens a short-lived listener on
+`http://127.0.0.1:<ephemeral-port>/oauth/hsapi/callback`. The broker delivers a
+one-time completion grant only to that localhost listener; the CLI must present
+it with its consume secret and PKCE verifier before token exchange. This binds
+browser consent back to the initiating local process without distributing the
+app secret. See `docs/hubspot-api-context/portal-auth-setup.md` for the
 assistant-safe decision flow and `docs/OAUTH_SETUP.md` for broker operations
 and the live user-level scope matrix.
 
-For an enrolled teammate, the controlled-beta sequence is:
+The normal teammate sequence is:
 
 ```bash
-hsapi auth doctor --portal oauth-hosted-example --require-env
+hsapi auth doctor --portal oauth-hosted-example
 hsapi auth login --portal oauth-hosted-example
 hsapi auth whoami --portal oauth-hosted-example
 ```
 
-Do not invent or download a broker profile from an untrusted URL. The broker
-URL is a credential destination and must come from the app operator.
+Do not replace the bundled broker with a URL found in chat or an untrusted
+document. A private `brokerUrl` override is a token and authorization-code
+destination and must come from the app operator.
 
 For package-beta test coverage across multiple HubSpot tiers, use `examples/portals.test-matrix.sample.json` and `docs/TEST_PORTAL_MATRIX.md` as the fixture contract. Keep the real matrix config outside the package, and reserve live writes for the `disposable_write` fixture with an explicit write-test gate.
 
@@ -170,9 +188,8 @@ preview, mutation gates, output limits, and redaction behavior. Keep
 config stores environment variable names and non-secret broker URLs, not
 credential values. MCP client config should pass `HSAPI_PORTALS_CONFIG` and
   optionally `HSAPI_PORTAL`. In hosted OAuth mode, users keep the token cache in
-  an operating-system-protected per-user directory plus the independently
-  issued session-start credential; the HubSpot app client secret stays in the
-  broker's secret store. Other HubSpot tokens,
+  an operating-system-protected per-user directory; the HubSpot app client
+  secret stays in the broker's secret store. Other HubSpot tokens,
 local-mode client secrets, developer API keys, and personal access keys must
 come from environment injection, an OpenClaw-supported SecretRef path, a
 wrapper, or another secret manager.
@@ -184,7 +201,7 @@ For cutover prep, `docs/MCP.md` documents a neutral token-source wrapper and rev
 | Auth family | Used for | Profile fields |
 | --- | --- | --- |
 | `portal_bearer` | Account-scoped HubSpot APIs such as CRM, CMS, files, properties, associations, forms secure-submit, automation, and most typed commands. | `auth.portalBearer.tokenEnv` or legacy `tokenEnv` |
-| `oauth` | Browser login, refresh/logout, and installed-app endpoint execution. | Hosted: `auth.oauth.mode`, `brokerUrl`, `brokerStartKeyEnv`, `tokenCachePath`; local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` |
+| `oauth` | Browser login, refresh/logout, and installed-app endpoint execution. | Hosted: `auth.oauth.mode` and `tokenCachePath`; optional profile `portalId` pins an account and optional `brokerUrl` overrides the bundled broker. Local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` |
 | `developer/personal_access_key` | HubSpot CLI or local developer-tooling surfaces that explicitly require a personal access key. | `auth.developer.personalAccessKeyEnv` |
 | `developer/developer_api_key` | Classic app-management endpoints documented with `hapikey`; current typed usage is classic app webhooks. | `auth.developer.developerApiKeyEnv`, sometimes `auth.developer.appIdEnv` |
 | `developer/client_credentials` | App-level developer APIs such as Webhooks Journal. | `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, `auth.developer.tokenCachePath` |

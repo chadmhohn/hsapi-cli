@@ -35,6 +35,7 @@ interface OAuthSessionTestStub {
     consumeSecretHash: string,
     codeChallenge: string,
     oauthConfigurationHash: string,
+    completionRedirectUri: string,
     createdAt: number,
     expiresAt: number,
   ): Promise<boolean>;
@@ -42,11 +43,27 @@ interface OAuthSessionTestStub {
     code: string,
     oauthConfigurationHash: string,
     now: number,
-  ): Promise<string>;
+  ): Promise<{
+    kind: string;
+    completionRedirectUri?: string | null;
+    completionGrant?: string | null;
+    oauthError?: string | null;
+  }>;
+  recordAuthorizationError(
+    oauthError: string,
+    oauthConfigurationHash: string,
+    now: number,
+  ): Promise<{
+    kind: string;
+    completionRedirectUri?: string | null;
+    completionGrant?: string | null;
+    oauthError?: string | null;
+  }>;
   beginExchange(
     consumeSecretHash: string,
     codeChallenge: string,
     oauthConfigurationHash: string,
+    completionGrant: string | null,
     now: number,
   ): Promise<
     | ExchangeReady
@@ -63,40 +80,38 @@ interface OAuthSessionTestStub {
 
 const verifier = "v".repeat(64);
 const consumeSecret = "s".repeat(64);
-const brokerSessionStartKey = "b".repeat(43);
+const retiredBrokerSessionStartKey = "b".repeat(43);
 const reusedConfigurationSecret = "r".repeat(43);
+const nativeCompletionRedirectUri =
+  "http://127.0.0.1:49152/oauth/hsapi/callback";
+const callbackCompletionGrants = new Map<string, string>();
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  callbackCompletionGrants.clear();
   await reset();
 });
 
 describe("hsapi OAuth broker", () => {
-  it("creates a server-scoped session and authenticates polling", async () => {
-    const unauthenticatedStart = await postJson(
+  it("creates a public account-selector session that requires localhost completion", async () => {
+    const startResponse = await postJson(
       "/v1/oauth/sessions",
       {
-        accountId: "123456789",
         codeChallenge: await sha256Base64Url(verifier),
+        completionRedirectUri: nativeCompletionRedirectUri,
         consumeSecretHash: await sha256Base64Url(consumeSecret),
       },
       "192.0.2.9",
     );
-    expect(unauthenticatedStart.status).toBe(401);
-    expect(await unauthenticatedStart.json()).toMatchObject({
-      error: "invalid_broker_client",
-    });
-
-    const start = await startSession();
+    expect(startResponse.status).toBe(201);
+    const start = await startResponse.json<StartResponse>();
 
     expect(start.expiresIn).toBe(600);
     expect(start.interval).toBe(1);
     expect(start.sessionId).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
     const authorizationUrl = new URL(start.authorizationUrl);
-    expect(authorizationUrl.pathname).toBe(
-      "/oauth/123456789/authorize",
-    );
+    expect(authorizationUrl.pathname).toBe("/oauth/authorize");
     expect(authorizationUrl.searchParams.get("scope")).toBe("oauth");
     const optionalScopes = (
       authorizationUrl.searchParams.get("optional_scope") ?? ""
@@ -116,17 +131,150 @@ describe("hsapi OAuth broker", () => {
       start.sessionId,
       "x".repeat(64),
       verifier,
+      "g".repeat(43),
     );
     expect(unauthenticatedPoll.status).toBe(401);
 
-    const pendingPoll = await exchange(
+    const prematureExchange = await exchange(
       start.sessionId,
       consumeSecret,
       verifier,
     );
-    expect(pendingPoll.status).toBe(202);
-    expect(await pendingPoll.json()).toEqual({ status: "pending" });
-    expect(pendingPoll.headers.get("cache-control")).toContain("no-store");
+    expect(prematureExchange.status).toBe(400);
+    expect(await prematureExchange.json()).toMatchObject({
+      error: "invalid_request",
+    });
+    expect(prematureExchange.headers.get("cache-control")).toContain(
+      "no-store",
+    );
+  });
+
+  it("rejects retired remote and account-pinned session starts", async () => {
+    const legacyStart = await postJson(
+      "/v1/oauth/sessions",
+      {
+        accountId: "123456789",
+        codeChallenge: await sha256Base64Url(verifier),
+        consumeSecretHash: await sha256Base64Url(consumeSecret),
+      },
+      "192.0.2.10",
+      retiredBrokerSessionStartKey,
+    );
+    expect(legacyStart.status).toBe(400);
+    expect(await legacyStart.json()).toMatchObject({
+      error: "unknown_field",
+    });
+
+    const remotePollingStart = await postJson(
+      "/v1/oauth/sessions",
+      {
+        codeChallenge: await sha256Base64Url(verifier),
+        consumeSecretHash: await sha256Base64Url(consumeSecret),
+      },
+      "192.0.2.11",
+      retiredBrokerSessionStartKey,
+    );
+    expect(remotePollingStart.status).toBe(400);
+    expect(await remotePollingStart.json()).toMatchObject({
+      error: "invalid_request",
+    });
+
+    const invalidLoopback = await postJson("/v1/oauth/sessions", {
+      codeChallenge: await sha256Base64Url(verifier),
+      completionRedirectUri:
+        "https://attacker.example/oauth/hsapi/callback",
+      consumeSecretHash: await sha256Base64Url(consumeSecret),
+    });
+    expect(invalidLoopback.status).toBe(400);
+    expect(await invalidLoopback.json()).toMatchObject({
+      error: "invalid_completion_redirect_uri",
+    });
+  });
+
+  it("hands a native session back to localhost before exchanging any account", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        access_token: "native-access-token",
+        refresh_token: "native-refresh-token",
+        expires_in: 1800,
+        token_type: "bearer",
+        hub_id: 999999999,
+        scopes: ["oauth"],
+      }),
+    );
+
+    const start = await startSession();
+    const callback = await dispatch(
+      `https://broker.test/v1/oauth/callback?code=native-code&state=${start.sessionId}`,
+      { headers: { "CF-Connecting-IP": "192.0.2.19" } },
+    );
+    expect(callback.status).toBe(303);
+    const location = new URL(String(callback.headers.get("location")));
+    expect(location.origin).toBe("http://127.0.0.1:49152");
+    expect(location.pathname).toBe("/oauth/hsapi/callback");
+    expect(location.searchParams.get("state")).toBe(start.sessionId);
+    const completionGrant = location.searchParams.get("completion_grant");
+    expect(completionGrant).toMatch(/^[A-Za-z0-9_-]{43}$/);
+
+    const exchanged = await exchange(
+      start.sessionId,
+      consumeSecret,
+      verifier,
+      completionGrant || undefined,
+    );
+    expect(exchanged.status).toBe(200);
+    expect(await exchanged.json()).toMatchObject({
+      hubId: 999999999,
+      scopes: ["oauth"],
+    });
+  });
+
+  it("reissues one completion grant for sequential and concurrent callback retries", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({
+        access_token: "retry-access-token",
+        refresh_token: "retry-refresh-token",
+        expires_in: 1800,
+        token_type: "bearer",
+        hub_id: 123456789,
+      }),
+    );
+    const start = await startSession();
+    const callbackUrl =
+      `https://broker.test/v1/oauth/callback?code=retry-code&state=${start.sessionId}`;
+
+    const [first, concurrentDuplicate] = await Promise.all([
+      dispatch(callbackUrl, {
+        headers: { "CF-Connecting-IP": "192.0.2.44" },
+      }),
+      dispatch(callbackUrl, {
+        headers: { "CF-Connecting-IP": "192.0.2.45" },
+      }),
+    ]);
+    expect(first.status).toBe(303);
+    expect(concurrentDuplicate.status).toBe(303);
+    const firstLocation = first.headers.get("location");
+    expect(firstLocation).toBe(concurrentDuplicate.headers.get("location"));
+    expect(firstLocation).toContain("completion_grant=");
+
+    const sequentialDuplicate = await dispatch(callbackUrl, {
+      headers: { "CF-Connecting-IP": "192.0.2.46" },
+    });
+    expect(sequentialDuplicate.status).toBe(303);
+    expect(sequentialDuplicate.headers.get("location")).toBe(firstLocation);
+
+    const exchanged = await exchange(
+      start.sessionId,
+      consumeSecret,
+      verifier,
+    );
+    expect(exchanged.status).toBe(200);
+
+    const afterExchangeDuplicate = await dispatch(callbackUrl, {
+      headers: { "CF-Connecting-IP": "192.0.2.47" },
+    });
+    expect(afterExchangeDuplicate.status).toBe(303);
+    expect(afterExchangeDuplicate.headers.get("location")).toBe(firstLocation);
   });
 
   it("exchanges once, refreshes with an HMAC credential, and revokes", async () => {
@@ -171,13 +319,10 @@ describe("hsapi OAuth broker", () => {
       { headers: { "CF-Connecting-IP": "192.0.2.20" } },
     );
     expect(callback.status).toBe(303);
-    expect(callback.headers.get("location")).toBe("/v1/oauth/complete");
     expect(callback.headers.get("cache-control")).toContain("no-store");
-    const completePage = await dispatch(
-      "https://broker.test/v1/oauth/complete",
+    expect(callback.headers.get("location")).toContain(
+      `${nativeCompletionRedirectUri}?state=${start.sessionId}&completion_grant=`,
     );
-    expect(completePage.status).toBe(200);
-    expect(await completePage.text()).not.toContain("authorization-code");
 
     const exchanged = await exchange(
       start.sessionId,
@@ -344,7 +489,7 @@ describe("hsapi OAuth broker", () => {
     expect(String(logged.mock.calls[0]?.[0])).not.toContain(sensitiveMessage);
   });
 
-  it("revokes a newly issued token when post-exchange validation fails", async () => {
+  it("revokes a newly issued token when HubSpot omits its account identity", async () => {
     const upstreamRequests: URLSearchParams[] = [];
     vi.spyOn(globalThis, "fetch").mockImplementation(
       async (_input: RequestInfo | URL, init?: RequestInit) => {
@@ -354,11 +499,10 @@ describe("hsapi OAuth broker", () => {
           return new Response(null, { status: 204 });
         }
         return Response.json({
-          access_token: "wrong-account-access",
-          refresh_token: "wrong-account-refresh",
+          access_token: "missing-account-access",
+          refresh_token: "missing-account-refresh",
           expires_in: 1800,
           token_type: "bearer",
-          hub_id: 999999999,
         });
       },
     );
@@ -366,7 +510,7 @@ describe("hsapi OAuth broker", () => {
     expect(
       (
         await dispatch(
-          `https://broker.test/v1/oauth/callback?code=wrong-account-code&state=${start.sessionId}`,
+          `https://broker.test/v1/oauth/callback?code=missing-account-code&state=${start.sessionId}`,
           { headers: { "CF-Connecting-IP": "192.0.2.25" } },
         )
       ).status,
@@ -377,13 +521,14 @@ describe("hsapi OAuth broker", () => {
       consumeSecret,
       verifier,
     );
-    expect(failed.status).toBe(403);
+    expect(failed.status).toBe(502);
     expect(await failed.json()).toMatchObject({
-      error: "account_mismatch",
+      error: "hubspot_oauth_error",
+      oauthError: "missing_hub_id",
     });
     expect(upstreamRequests).toHaveLength(2);
     expect(upstreamRequests[1]?.get("token")).toBe(
-      "wrong-account-refresh",
+      "missing-account-refresh",
     );
     expect(upstreamRequests[1]?.get("token_type_hint")).toBe(
       "refresh_token",
@@ -438,6 +583,7 @@ describe("hsapi OAuth broker", () => {
     const failed = await postJson("/v1/oauth/tokens/refresh", {
       refreshToken: initial.refreshToken,
       brokerCredential: initial.brokerCredential,
+      expectedHubId: "123456789",
     });
     expect(failed.status).toBe(403);
     expect(await failed.json()).toMatchObject({
@@ -519,10 +665,12 @@ describe("hsapi OAuth broker", () => {
     const consumeHash = await sha256Base64Url(consumeSecret);
     const challenge = await sha256Base64Url(verifier);
     const configurationHash = await testConfigurationHash(env);
+    const oldCompletionGrant = requireStoredCompletionGrant(start.sessionId);
     const oldAttempt = await stub.beginExchange(
       consumeHash,
       challenge,
       configurationHash,
+      oldCompletionGrant,
       Date.now(),
     );
     expect(oldAttempt.kind).toBe("ready");
@@ -534,6 +682,7 @@ describe("hsapi OAuth broker", () => {
       consumeHash,
       challenge,
       configurationHash,
+      oldCompletionGrant,
       Date.now() + 60_000,
     );
     expect(timedRetry).toEqual({ kind: "in_progress" });
@@ -544,21 +693,27 @@ describe("hsapi OAuth broker", () => {
         consumeHash,
         challenge,
         configurationHash,
+        nativeCompletionRedirectUri,
         replacementCreatedAt,
         replacementCreatedAt + 10 * 60 * 1_000,
       ),
     ).toBe(true);
-    expect(
-      await stub.recordAuthorizationCode(
-        "replacement-code",
-        configurationHash,
-        replacementCreatedAt + 1,
-      ),
-    ).toBe("stored");
+    const replacementCallback = await stub.recordAuthorizationCode(
+      "replacement-code",
+      configurationHash,
+      replacementCreatedAt + 1,
+    );
+    expect(replacementCallback).toMatchObject({ kind: "stored" });
+    const replacementCompletionGrant = replacementCallback.completionGrant;
+    expect(replacementCompletionGrant).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    if (!replacementCompletionGrant) {
+      throw new Error("Expected a replacement completion grant.");
+    }
     const replacementAttempt = await stub.beginExchange(
       consumeHash,
       challenge,
       configurationHash,
+      replacementCompletionGrant,
       replacementCreatedAt + 2,
     );
     expect(replacementAttempt.kind).toBe("ready");
@@ -573,6 +728,7 @@ describe("hsapi OAuth broker", () => {
         consumeHash,
         challenge,
         configurationHash,
+        replacementCompletionGrant,
         replacementCreatedAt + 3,
       ),
     ).toEqual({ kind: "in_progress" });
@@ -585,35 +741,41 @@ describe("hsapi OAuth broker", () => {
         consumeHash,
         challenge,
         configurationHash,
+        replacementCompletionGrant,
         replacementCreatedAt + 4,
       ),
     ).toEqual({ kind: "consumed" });
   });
 
-  it("keeps authorization errors private until an authenticated exchange", async () => {
+  it("reissues a stored authorization error only to the localhost callback", async () => {
     const start = await startSession();
     const callback = await dispatch(
       `https://broker.test/v1/oauth/callback?error=access_denied&state=${start.sessionId}`,
       { headers: { "CF-Connecting-IP": "192.0.2.30" } },
     );
     expect(callback.status).toBe(303);
-    expect(callback.headers.get("location")).toBe("/v1/oauth/complete");
-
-    const probe = await exchange(
-      start.sessionId,
-      "x".repeat(64),
-      verifier,
+    const location = callback.headers.get("location");
+    expect(location).toBe(
+      `${nativeCompletionRedirectUri}?state=${start.sessionId}&error=access_denied`,
     );
-    expect(probe.status).toBe(401);
+    expect(location).not.toContain("completion_grant");
 
-    const authenticated = await exchange(
+    const duplicate = await dispatch(
+      `https://broker.test/v1/oauth/callback?code=ignored&state=${start.sessionId}`,
+      { headers: { "CF-Connecting-IP": "192.0.2.39" } },
+    );
+    expect(duplicate.status).toBe(303);
+    expect(duplicate.headers.get("location")).toBe(location);
+
+    const remoteExchange = await exchange(
       start.sessionId,
       consumeSecret,
       verifier,
+      "g".repeat(43),
     );
-    expect(authenticated.status).toBe(400);
-    expect(await authenticated.json()).toMatchObject({
-      error: "access_denied",
+    expect(remoteExchange.status).toBe(401);
+    expect(await remoteExchange.json()).toMatchObject({
+      error: "invalid_session_credential",
     });
   });
 
@@ -650,12 +812,11 @@ describe("hsapi OAuth broker", () => {
     const invalidChallenge = await postJson(
       "/v1/oauth/sessions",
       {
-        accountId: "123456789",
         codeChallenge: "not-a-sha256-challenge",
+        completionRedirectUri: nativeCompletionRedirectUri,
         consumeSecretHash: await sha256Base64Url(consumeSecret),
       },
       "192.0.2.35",
-      brokerSessionStartKey,
     );
     expect(invalidChallenge.status).toBe(400);
     expect(await invalidChallenge.json()).toMatchObject({
@@ -737,21 +898,21 @@ describe("hsapi OAuth broker", () => {
 
       const stub = env.OAUTH_SESSIONS.getByName(
         start.sessionId,
-      ) as unknown as {
-        beginExchange(
-          consumeSecretHash: string,
-          codeChallenge: string,
-          oauthConfigurationHash: string,
-          now: number,
-        ): Promise<unknown>;
-      };
-      const exchange = await stub.beginExchange(
-        await sha256Base64Url(consumeSecret),
-        await sha256Base64Url(verifier),
-        await testConfigurationHash(env),
-        Date.now() + 3 * 60 * 1_000,
-      );
-      expect(exchange).toEqual({ kind: "expired" });
+      ) as unknown as OAuthSessionTestStub;
+      const configurationHash = await testConfigurationHash(env);
+      const duplicate =
+        callbackKind === "code"
+          ? await stub.recordAuthorizationCode(
+              "authorization-code",
+              configurationHash,
+              Date.now() + 3 * 60 * 1_000,
+            )
+          : await stub.recordAuthorizationError(
+              "access_denied",
+              configurationHash,
+              Date.now() + 3 * 60 * 1_000,
+            );
+      expect(duplicate).toEqual({ kind: "expired" });
     },
   );
 
@@ -781,7 +942,6 @@ describe("hsapi OAuth broker", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -836,12 +996,10 @@ describe("hsapi OAuth broker", () => {
       new Request("https://broker.test/v1/oauth/sessions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${brokerSessionStartKey}`,
           "CF-Connecting-IP": "192.0.2.42",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -862,20 +1020,6 @@ describe("hsapi OAuth broker", () => {
         BROKER_SIGNING_KEY: reusedConfigurationSecret,
       },
     ],
-    [
-      "HubSpot client secret and session-start key",
-      {
-        HUBSPOT_CLIENT_SECRET: reusedConfigurationSecret,
-        BROKER_SESSION_START_KEY: reusedConfigurationSecret,
-      },
-    ],
-    [
-      "broker signing key and session-start key",
-      {
-        BROKER_SIGNING_KEY: reusedConfigurationSecret,
-        BROKER_SESSION_START_KEY: reusedConfigurationSecret,
-      },
-    ],
   ])("rejects reuse between %s", async (_name, overrides) => {
     const invalidEnv = {
       ...env,
@@ -891,12 +1035,10 @@ describe("hsapi OAuth broker", () => {
       new Request("https://broker.test/v1/oauth/sessions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${brokerSessionStartKey}`,
           "CF-Connecting-IP": "192.0.2.43",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          accountId: "123456789",
           codeChallenge: await sha256Base64Url(verifier),
           consumeSecretHash: await sha256Base64Url(consumeSecret),
         }),
@@ -920,6 +1062,7 @@ describe("hsapi OAuth broker", () => {
       start.sessionId,
       consumeSecret,
       verifier,
+      "g".repeat(43),
     );
     expect(response.status).toBe(401);
   });
@@ -929,12 +1072,11 @@ async function startSession(): Promise<StartResponse> {
   const response = await postJson(
     "/v1/oauth/sessions",
     {
-      accountId: "123456789",
       codeChallenge: await sha256Base64Url(verifier),
+      completionRedirectUri: nativeCompletionRedirectUri,
       consumeSecretHash: await sha256Base64Url(consumeSecret),
     },
-    "192.0.2.10",
-    brokerSessionStartKey,
+    "192.0.2.13",
   );
   expect(response.status).toBe(201);
   return response.json<StartResponse>();
@@ -944,12 +1086,14 @@ async function exchange(
   sessionId: string,
   secret: string,
   codeVerifier: string,
+  completionGrant?: string,
 ): Promise<Response> {
   return exchangeWithEnv(
     sessionId,
     secret,
     codeVerifier,
     env,
+    completionGrant ?? callbackCompletionGrants.get(sessionId),
   );
 }
 
@@ -958,7 +1102,10 @@ async function exchangeWithEnv(
   secret: string,
   codeVerifier: string,
   targetEnv: Env,
+  completionGrant?: string,
 ): Promise<Response> {
+  const effectiveCompletionGrant =
+    completionGrant ?? callbackCompletionGrants.get(sessionId);
   return dispatchWithEnv(
     `https://broker.test/v1/oauth/sessions/${sessionId}/exchange`,
     targetEnv,
@@ -969,7 +1116,12 @@ async function exchangeWithEnv(
         "CF-Connecting-IP": "192.0.2.11",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ codeVerifier }),
+      body: JSON.stringify({
+        codeVerifier,
+        ...(effectiveCompletionGrant
+          ? { completionGrant: effectiveCompletionGrant }
+          : {}),
+      }),
     },
   );
 }
@@ -1006,7 +1158,32 @@ async function dispatchWithEnv(
   targetEnv: Env,
   init?: RequestInit,
 ): Promise<Response> {
-  return worker.fetch(new Request(input, init), targetEnv);
+  const response = await worker.fetch(new Request(input, init), targetEnv);
+  const inputUrl = new URL(input);
+  if (
+    inputUrl.pathname === "/v1/oauth/callback" &&
+    response.status === 303
+  ) {
+    const state = inputUrl.searchParams.get("state");
+    const location = response.headers.get("location");
+    if (state && location) {
+      const completionGrant = new URL(location).searchParams.get(
+        "completion_grant",
+      );
+      if (completionGrant) {
+        callbackCompletionGrants.set(state, completionGrant);
+      }
+    }
+  }
+  return response;
+}
+
+function requireStoredCompletionGrant(sessionId: string): string {
+  const completionGrant = callbackCompletionGrants.get(sessionId);
+  if (!completionGrant) {
+    throw new Error("Expected a stored localhost completion grant.");
+  }
+  return completionGrant;
 }
 
 async function sha256Base64Url(value: string): Promise<string> {
@@ -1031,8 +1208,7 @@ async function testConfigurationHash(targetEnv: Env): Promise<string> {
     value.split(/[\s,]+/u).filter(Boolean);
   return sha256Base64Url(
     JSON.stringify({
-      version: 1,
-      accountId: String(targetEnv.HUBSPOT_ACCOUNT_ID).trim(),
+      version: 2,
       clientId: String(targetEnv.HUBSPOT_CLIENT_ID).trim(),
       redirectUri: String(targetEnv.HUBSPOT_REDIRECT_URI).trim(),
       requiredScopes: parseScopes(targetEnv.HUBSPOT_REQUIRED_SCOPES),

@@ -12,14 +12,29 @@ OAuth values are credentials. Treat authorization codes, access tokens, refresh 
 
 ## Hosted OAuth
 
-Distributed CLI/MCP profiles should define `auth.oauth.mode:
-"hosted_broker"` with the operator-issued HTTPS `brokerUrl`,
-`brokerStartKeyEnv`, and an external per-user `tokenCachePath`. The full profile
-also requires the exact numeric portal ID supplied by the app operator.
+Distributed CLI/MCP profiles need only `auth.oauth.mode: "hosted_broker"` and
+an external per-user `tokenCachePath`. The normal flow uses the bundled hosted
+broker. It does not require a local broker credential, portal ID, HubSpot
+client ID, client secret, redirect URL, or scope list.
 
-Hosted users do not configure a local HubSpot client ID, client secret,
-redirect URL, or scope list. Those values are fixed server-side. Never invent
-or download a broker URL or admission credential.
+The shared broker accepts only the native localhost-completion protocol used by
+hsapi v0.5 and later. v0.4.x hosted users must update the CLI and replace the
+old hosted profile with the current template before logging in through it.
+
+`auth.oauth.brokerUrl` is an optional HTTPS override for a trusted private
+broker deployment. A top-level `portalId` is an optional expected-account pin.
+Do not add either field to the normal profile, and never invent an override or
+pin.
+
+At login, HubSpot presents its account chooser. The broker returns the selected
+account's `hub_id`, and an unpinned profile binds that identity in its token
+cache. Later login, refresh, and cache use reject a different account. A
+configured `portalId` must match on the first login as well.
+
+Hosted login also starts a short-lived listener on `127.0.0.1`. After HubSpot
+calls the broker, the broker redirects the browser to that listener with a
+single-use completion proof tied to the login state. The CLI exchanges tokens
+only after validating that localhost handoff.
 
 The external v2 cache can hold the access token, refresh token, broker refresh
 credential, expiry metadata, and source binding needed for automatic refresh.
@@ -27,7 +42,7 @@ Protect it as a credential file.
 
 Common hosted commands:
 
-- `hsapi auth doctor --portal <name> --require-env`
+- `hsapi auth doctor --portal <name>`
 - `hsapi auth login --portal <name>`
 - `hsapi auth whoami --portal <name>`
 - `hsapi auth logout --portal <name>`
@@ -41,7 +56,9 @@ operations require this non-user credential because HubSpot rejects a
 user-level OAuth token for those endpoints.
 
 HSAPI never silently falls back from OAuth to ServiceKey. Use the combined
-template only when the operator has explicitly provisioned both.
+template only when the operator has explicitly provisioned both. Before
+combining them, verify independently that the ServiceKey's account identity
+matches the OAuth `hub_id`; an environment-variable name is not identity proof.
 
 ## Local OAuth
 

@@ -61,6 +61,11 @@ Package installs and upgrades never create or replace the external portal
 configuration or OAuth token cache. Back up operator-managed configuration
 normally, but do not copy it into the package directory.
 
+Hosted OAuth users upgrading from v0.4.x must install v0.5 or later and replace
+their old hosted profile with the current portal-neutral template before using
+the shared broker. The shared broker accepts only the native localhost-
+completion protocol used by v0.5 and later.
+
 There is currently no npm-registry release. If the package is distributed
 through a registry later, standard npm updates can be used:
 
@@ -109,7 +114,7 @@ not an OAuth client secret.
 | Auth family | Profile fields | Typical commands |
 | --- | --- | --- |
 | `portal_bearer` | `auth.portalBearer.tokenEnv` or legacy `tokenEnv` | CRM, CMS, files, properties, associations, account details, most account-scoped typed commands |
-| `oauth` | Hosted: `auth.oauth.mode`, `auth.oauth.brokerUrl`, `auth.oauth.brokerStartKeyEnv`, `auth.oauth.tokenCachePath`; local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` | Browser login, refresh/logout, and OAuth-installed-app endpoints |
+| `oauth` | Hosted: `auth.oauth.mode` and `auth.oauth.tokenCachePath`; optional profile `portalId` pins an account and optional `auth.oauth.brokerUrl` overrides the bundled broker. Local: client credential env names, `redirectUrl`, scopes, and `tokenCachePath` | Browser login, refresh/logout, and OAuth-installed-app endpoints |
 | `developer/personal_access_key` | `auth.developer.personalAccessKeyEnv` | Developer-tooling surfaces that explicitly require a personal access key |
 | `developer/developer_api_key` | `auth.developer.developerApiKeyEnv`, sometimes `auth.developer.appIdEnv` | Classic app webhooks and app-management endpoints documented with `hapikey` |
 | `developer/client_credentials` | `auth.developer.clientIdEnv`, `auth.developer.clientSecretEnv`, `auth.developer.tokenCachePath` | App-level developer APIs such as Webhooks Journal |
@@ -120,8 +125,11 @@ that OAuth/developer token-cache paths live outside the package without
 printing secret values or making HubSpot calls. Add `--require-env` when the
 command should fail if required local environment variables are not set. A
 complete `hosted_broker` profile passes without local HubSpot client
-credentials; it requires a numeric `portalId`, an HTTPS `brokerUrl`, a
-`brokerStartKeyEnv`, its injected value, and a token-cache path.
+credentials or broker admission credentials; it requires only
+`mode: "hosted_broker"` and a token-cache path outside the package. The CLI
+uses its bundled broker URL unless an approved private deployment is selected
+with `brokerUrl`. A numeric profile `portalId` is optional and pins the expected
+HubSpot account when present.
 
 For a hosted user login:
 
@@ -130,20 +138,28 @@ hsapi auth login --portal <name>
 hsapi auth whoami --portal <name>
 ```
 
-The operator must provision the broker separately, keep the HubSpot client
-secret in its server-side secret store, and securely issue the independent
-broker session-start credential to enrolled users. See `docs/OAUTH_SETUP.md`
-and `cloudflare/hsapi-oauth-broker/README.md`.
+HubSpot displays its account chooser during normal hosted login. The first
+successful exchange stores the authenticated `hub_id` as the binding for an
+unpinned cache; later selection of another account is rejected. If `portalId`
+was configured, the first exchange must match it. The broker redirects a
+one-time completion grant to a short-lived `127.0.0.1` listener so only the
+initiating local CLI can finish exchange.
 
-An enrolled teammate needs only the operator-issued external profile, the
-broker session-start credential injected under the profile's
-`brokerStartKeyEnv`, and their normal HubSpot browser login. They do not receive
-the HubSpot app client ID or client secret.
+A teammate needs only the external portal-neutral profile and their normal
+HubSpot browser login. They do not receive the HubSpot app client ID, client
+secret, redirect configuration, scope list, or any broker credential. See
+`docs/OAUTH_SETUP.md` and `cloudflare/hsapi-oauth-broker/README.md`.
 
-An assistant must never ask a user to paste a ServiceKey, client secret, broker
-credential, authorization code, or token cache into chat. It should ask the
-user to inject the value locally, then use `auth doctor` and the read-only
-identity checks.
+Adding `portalBearer`/ServiceKey is a separate, explicit operator action for
+endpoints that do not accept user OAuth. Before combining it with an
+OAuth-bound profile, verify that the private-app token belongs to the same
+HubSpot account reported by `hsapi auth whoami`; never use it as an automatic
+fallback.
+
+An assistant must never ask a user to paste a ServiceKey, client secret,
+authorization code, completion grant, or token cache into chat. It should ask
+the user to inject any explicitly approved ServiceKey locally, then use
+`auth doctor` and the read-only identity checks.
 
 Before running an unfamiliar command, inspect its auth requirement:
 

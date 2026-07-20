@@ -1,17 +1,14 @@
 {
-  "_comment": "Portal-neutral combined template. OAuth is the default user identity; ServiceKey/private-app auth is available only for cataloged non-user operations.",
+  "_comment": "Portal-neutral combined template. OAuth is the default user identity and binds the HubSpot-selected hub_id in the external cache. Use this template only after independently verifying that the ServiceKey belongs to that same HubSpot account.",
   "default": "oauth-and-service-key-example",
   "portals": {
     "oauth-and-service-key-example": {
       "label": "Example HubSpot Portal",
-      "portalId": "REPLACE_WITH_NUMERIC_PORTAL_ID",
       "baseUrl": "https://api.hubapi.com",
       "auth": {
         "defaultFamily": "oauth",
         "oauth": {
           "mode": "hosted_broker",
-          "brokerUrl": "https://replace-with-operator-broker.example",
-          "brokerStartKeyEnv": "HSAPI_OAUTH_BROKER_START_KEY",
           "tokenCachePath": "~/.config/hsapi/oauth/oauth-and-service-key-example-token-cache.json"
         },
         "portalBearer": {

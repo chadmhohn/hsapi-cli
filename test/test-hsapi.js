@@ -7166,6 +7166,31 @@ test('92 user-level app scope probe classification and combined candidates', asy
   assert.match(help.stdout, /finally block/);
 });
 
+test('hosted OAuth localhost completion listener binds state and one-time grant to the initiating CLI', async () => {
+  const {
+    createHostedBrokerCompletionListener
+  } = require('../src/commands/auth');
+  const listener = await createHostedBrokerCompletionListener(5000);
+  const state = 's'.repeat(43);
+  const completionGrant = 'g'.repeat(43);
+  listener.setExpectedState(state);
+  try {
+    const wrongState = await fetch(
+      `${listener.completionRedirectUri}?state=${'x'.repeat(43)}&completion_grant=${completionGrant}`
+    );
+    assert.strictEqual(wrongState.status, 400);
+
+    const completionPromise = listener.waitForCompletion();
+    const accepted = await fetch(
+      `${listener.completionRedirectUri}?state=${state}&completion_grant=${completionGrant}`
+    );
+    assert.strictEqual(accepted.status, 200);
+    assert.strictEqual(await completionPromise, completionGrant);
+  } finally {
+    listener.close();
+  }
+});
+
 test('93 hosted OAuth broker transport, config isolation, metadata, and redaction', async () => {
   const {
     exchangeHostedBrokerLogin,
@@ -7203,7 +7228,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         res.writeHead(201, { 'content-type': 'application/json' });
         res.end(JSON.stringify({
           sessionId: brokerSessionId,
-          authorizationUrl: `https://app.hubspot.com/oauth/123456789/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
+          authorizationUrl: `https://app.hubspot.com/oauth/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
           expiresIn: 600,
           interval: 1
         }));
@@ -7264,13 +7289,10 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert(address && typeof address === 'object');
     const brokerUrl = `http://127.0.0.1:${address.port}`;
     const source = { brokerUrl };
-    const brokerStartKey = 'test-broker-start-key';
-
     const session = await startHostedBrokerLogin(source, {
-      accountId: '123456789',
       codeChallenge: 'challenge-123',
+      completionRedirectUri: 'http://127.0.0.1:49152/oauth/hsapi/callback',
       consumeSecretHash: 'consume-hash-123',
-      brokerStartKey
     });
     assert.strictEqual(session.sessionId, brokerSessionId);
     assert.strictEqual(session.authorizationUrl.origin, 'https://app.hubspot.com');
@@ -7278,9 +7300,9 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.strictEqual(session.intervalSeconds, 1);
     assert.throws(
       () => validateHubSpotAuthorizationUrl(
-        new URL(`https://evil.example/oauth/123456789/authorize?client_id=x&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`),
+        new URL(`https://evil.example/oauth/authorize?client_id=x&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`),
         brokerSessionId,
-        '123456789',
+        null,
         'test'
       ),
       /untrusted HubSpot authorizationUrl/
@@ -7289,7 +7311,8 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     const pending = await exchangeHostedBrokerLogin(source, {
       sessionId: session.sessionId,
       consumeSecret: 'consume-secret-123',
-      codeVerifier: 'verifier-123'
+      codeVerifier: 'verifier-123',
+      completionGrant: 'completion-grant-123'
     });
     assert.deepStrictEqual(pending, {
       status: 'pending',
@@ -7299,7 +7322,8 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     const complete = await exchangeHostedBrokerLogin(source, {
       sessionId: session.sessionId,
       consumeSecret: 'consume-secret-123',
-      codeVerifier: 'verifier-123'
+      codeVerifier: 'verifier-123',
+      completionGrant: 'completion-grant-123'
     });
     assert.strictEqual(complete.status, 'complete');
     assert.deepStrictEqual(complete.token.scopes, ['oauth', 'crm.objects.contacts.read']);
@@ -7336,6 +7360,67 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         reason: 'portal_id_mismatch'
       }
     );
+    const unpinnedCacheSource = {
+      ...cacheSource,
+      portalId: null
+    };
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(cache, unpinnedCacheSource),
+      { ok: true, reason: null }
+    );
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        { ...cache, hubId: undefined },
+        unpinnedCacheSource
+      ),
+      { ok: false, reason: 'token_portal_id_missing' }
+    );
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        { ...cache, hubId: 'not-numeric' },
+        unpinnedCacheSource
+      ),
+      { ok: false, reason: 'token_portal_id_invalid' }
+    );
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        {
+          ...cache,
+          source: {
+            ...cache.source,
+            portalId: undefined
+          }
+        },
+        unpinnedCacheSource
+      ),
+      { ok: false, reason: 'cache_source_portal_id_missing' }
+    );
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        {
+          ...cache,
+          source: {
+            ...cache.source,
+            portalId: 'not-numeric'
+          }
+        },
+        unpinnedCacheSource
+      ),
+      { ok: false, reason: 'cache_source_portal_id_invalid' }
+    );
+    assert.deepStrictEqual(
+      oauthCacheProfileMatch(
+        {
+          ...cache,
+          source: {
+            ...cache.source,
+            portalId: '987654321'
+          }
+        },
+        unpinnedCacheSource
+      ),
+      { ok: false, reason: 'cache_token_portal_id_mismatch' }
+    );
 
     const redacted = redactedOAuthTokenCacheContract(cacheSource, {
       status: 'read',
@@ -7349,9 +7434,58 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert(!JSON.stringify(redacted).includes('broker-refresh-token'));
     assert(!JSON.stringify(redacted).includes('v1.broker-credential'));
 
+    const whoamiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-whoami-'));
+    const whoamiCachePath = path.join(whoamiDir, 'oauth-cache.json');
+    const whoamiConfig = writeTempConfig(baseUrl, {
+      portalId: null,
+      tokenEnv: null,
+      auth: {
+        defaultFamily: AUTH_FAMILIES.OAUTH,
+        oauth: {
+          mode: OAUTH_MODES.HOSTED_BROKER,
+          brokerUrl: cacheSource.brokerUrl,
+          tokenCachePath: whoamiCachePath
+        }
+      }
+    });
+    fs.writeFileSync(whoamiCachePath, JSON.stringify(cache, null, 2));
+    const usableWhoami = parseJsonOutput(await run(
+      ['auth', 'whoami', '--portal', 'test'],
+      {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: whoamiConfig
+      }
+    ));
+    assert.strictEqual(usableWhoami.oauth.status, 'usable');
+    assert.strictEqual(usableWhoami.portalId, '123456789');
+    assert.strictEqual(usableWhoami.portalIdSource, 'oauth_token_cache');
+
+    fs.writeFileSync(whoamiCachePath, JSON.stringify({
+      ...cache,
+      source: {
+        ...cache.source,
+        portalId: '987654321'
+      }
+    }, null, 2));
+    const mismatchedWhoami = parseJsonOutput(await run(
+      ['auth', 'whoami', '--portal', 'test'],
+      {
+        ...baseEnv,
+        HSAPI_PORTALS_CONFIG: whoamiConfig
+      }
+    ));
+    assert.strictEqual(mismatchedWhoami.oauth.status, 'invalid');
+    assert.strictEqual(mismatchedWhoami.oauth.profileMismatchReason, 'cache_token_portal_id_mismatch');
+    assert.strictEqual(mismatchedWhoami.portalId, null);
+    assert.strictEqual(
+      Object.prototype.hasOwnProperty.call(mismatchedWhoami, 'portalIdSource'),
+      false
+    );
+
     const refreshed = await refreshHostedBrokerTokens(source, {
       refreshToken: cache.refreshToken,
-      brokerCredential: cache.brokerCredential
+      brokerCredential: cache.brokerCredential,
+      expectedHubId: cache.hubId
     });
     assert.strictEqual(refreshed.accessToken, 'rotated-access-token');
     assert.strictEqual(refreshed.refreshToken, 'rotated-refresh-token');
@@ -7363,28 +7497,30 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     });
 
     const startRequest = brokerRequests.find((request) => request.pathname === '/v1/oauth/sessions');
-    assert.strictEqual(startRequest.headers.authorization, `Bearer ${brokerStartKey}`);
+    assert.strictEqual(startRequest.headers.authorization, undefined);
     assert.deepStrictEqual(startRequest.body, {
       codeChallenge: 'challenge-123',
-      consumeSecretHash: 'consume-hash-123',
-      accountId: '123456789'
+      completionRedirectUri: 'http://127.0.0.1:49152/oauth/hsapi/callback',
+      consumeSecretHash: 'consume-hash-123'
     });
     const exchangeRequest = brokerRequests.find((request) => request.pathname.endsWith('/exchange'));
     assert.strictEqual(exchangeRequest.headers.authorization, 'Bearer consume-secret-123');
-    assert.deepStrictEqual(exchangeRequest.body, { codeVerifier: 'verifier-123' });
+    assert.deepStrictEqual(exchangeRequest.body, {
+      codeVerifier: 'verifier-123',
+      completionGrant: 'completion-grant-123'
+    });
     const refreshRequest = brokerRequests.find((request) => request.pathname.endsWith('/refresh'));
     assert.deepStrictEqual(refreshRequest.body, {
       refreshToken: 'broker-refresh-token',
-      brokerCredential: 'v1.broker-credential'
+      brokerCredential: 'v1.broker-credential',
+      expectedHubId: '123456789'
     });
 
     const hostedProfile = resolveOAuthProfile({
-      portalId: '123456789',
       auth: {
         oauth: {
           mode: OAUTH_MODES.HOSTED_BROKER,
           brokerUrl: 'https://auth.example.test/base',
-          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
           tokenCachePath: '~/.config/hsapi/oauth/test.json',
           clientIdEnv: 'MUST_NOT_BE_READ',
           clientSecretEnv: 'MUST_NOT_BE_READ'
@@ -7393,8 +7529,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     }, 'hosted-test');
     assert.strictEqual(hostedProfile.mode, OAUTH_MODES.HOSTED_BROKER);
     assert.strictEqual(hostedProfile.brokerUrl, 'https://auth.example.test/base');
-    assert.strictEqual(hostedProfile.brokerStartKeyEnv, 'HSAPI_OAUTH_BROKER_START_KEY');
-    assert.strictEqual(hostedProfile.portalId, '123456789');
+    assert.strictEqual(hostedProfile.portalId, null);
     assert.strictEqual(hostedProfile.clientIdEnv, null);
     assert.strictEqual(hostedProfile.clientSecretEnv, null);
     assert.strictEqual(hostedProfile.redirectUrl, null);
@@ -7405,7 +7540,6 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         oauth: {
           mode: OAUTH_MODES.HOSTED_BROKER,
           brokerUrl: 'http://auth.example.test',
-          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
           tokenCachePath: '~/.config/hsapi/oauth/test.json'
         }
       }
@@ -7417,7 +7551,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
     assert.notStrictEqual(invalidBrokerResult.status, 0);
     assert.match(invalidBrokerResult.stderr, /must use HTTPS/);
 
-    const missingPortalIdConfig = writeTempConfig(baseUrl, {
+    const unpinnedPortalConfig = writeTempConfig(baseUrl, {
       portalId: null,
       tokenEnv: null,
       auth: {
@@ -7425,23 +7559,22 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         oauth: {
           mode: OAUTH_MODES.HOSTED_BROKER,
           brokerUrl: 'https://auth.example.test',
-          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
-          tokenCachePath: '~/.config/hsapi/oauth/test.json'
+          tokenCachePath: path.join(
+            os.tmpdir(),
+            `hsapi-unpinned-oauth-${process.pid}-${Date.now()}.json`
+          )
         }
       }
     });
-    const missingPortalIdDoctor = await run(['auth', 'doctor', '--portal', 'test'], {
+    const unpinnedPortalDoctor = await run(['auth', 'doctor', '--portal', 'test'], {
       ...baseEnv,
-      HSAPI_PORTALS_CONFIG: missingPortalIdConfig
+      HSAPI_PORTALS_CONFIG: unpinnedPortalConfig
     });
-    assert.notStrictEqual(missingPortalIdDoctor.status, 0);
-    assert.match(missingPortalIdDoctor.stderr, /numeric portalId/);
-    const missingPortalIdLogin = await run(['auth', 'login', '--portal', 'test'], {
-      ...baseEnv,
-      HSAPI_PORTALS_CONFIG: missingPortalIdConfig
-    });
-    assert.notStrictEqual(missingPortalIdLogin.status, 0);
-    assert.match(missingPortalIdLogin.stderr, /numeric portalId/);
+    assert.strictEqual(
+      unpinnedPortalDoctor.status,
+      0,
+      unpinnedPortalDoctor.stderr || unpinnedPortalDoctor.stdout
+    );
 
     const logoutDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-logout-'));
     const logoutCachePath = path.join(logoutDir, 'cache.json');
@@ -7467,7 +7600,6 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         oauth: {
           mode: OAUTH_MODES.HOSTED_BROKER,
           brokerUrl: 'https://auth.example.test',
-          brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
           tokenCachePath: logoutCachePath
         }
       }
@@ -7666,155 +7798,69 @@ test('OAuth caches inside the package are neither used nor read by doctor and wh
   }
 });
 
-test('hosted OAuth doctor and login require brokerStartKeyEnv and doctor validates its environment state', async () => {
-  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-start-key-'));
+test('hosted OAuth doctor and profiles require no local app or broker-start secret', async () => {
+  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-hosted-browser-oauth-'));
   const cachePath = path.join(cacheDir, 'oauth-cache.json');
-  const startKeyEnv = 'HSAPI_HOSTED_START_KEY_TEST_ONLY';
-  const validStartKey = 'K'.repeat(43);
-  const missingFieldConfig = writeTempConfig(baseUrl, {
+  const legacyStartKeyEnv = 'HSAPI_LEGACY_HOSTED_START_KEY_SHOULD_BE_IGNORED';
+  const config = writeTempConfig(baseUrl, {
+    portalId: null,
     tokenEnv: null,
     auth: {
       defaultFamily: AUTH_FAMILIES.OAUTH,
       oauth: {
         mode: 'hosted_broker',
-        brokerUrl: 'https://auth.example.test',
+        brokerStartKeyEnv: legacyStartKeyEnv,
         tokenCachePath: cachePath
       }
     }
   });
 
-  for (const command of [
-    ['auth', 'doctor', '--portal', 'test'],
-    ['auth', 'login', '--portal', 'test']
-  ]) {
-    const result = await run(command, {
-      ...baseEnv,
-      HSAPI_PORTALS_CONFIG: missingFieldConfig
-    });
-    assert.notStrictEqual(result.status, 0);
-    assert.match(result.stderr, /auth\.oauth\.brokerStartKeyEnv must name the environment variable/);
-  }
-
-  const configuredFieldConfig = writeTempConfig(baseUrl, {
-    tokenEnv: null,
-    auth: {
-      defaultFamily: AUTH_FAMILIES.OAUTH,
-      oauth: {
-        mode: 'hosted_broker',
-        brokerUrl: 'https://auth.example.test',
-        brokerStartKeyEnv: startKeyEnv,
-        tokenCachePath: cachePath
-      }
-    }
-  });
-  const missingEnv = {
+  const env = {
     ...baseEnv,
-    HSAPI_PORTALS_CONFIG: configuredFieldConfig,
-    [startKeyEnv]: ''
+    HSAPI_PORTALS_CONFIG: config,
+    [legacyStartKeyEnv]: ''
   };
-  const missingEnvDoctor = await run([
+  const doctor = await run([
     'auth',
     'doctor',
     '--portal',
     'test',
     '--require-env'
-  ], missingEnv);
-  assert.notStrictEqual(missingEnvDoctor.status, 0);
-  assert.strictEqual(missingEnvDoctor.stderr, '');
-  const missingEnvOutput = JSON.parse(missingEnvDoctor.stdout);
-  const missingEnvCheck = missingEnvOutput.profiles[0].checks.find(
-    (check) => check.id === 'oauth.broker_start_key_env'
+  ], env);
+  assert.strictEqual(doctor.status, 0, doctor.stderr || doctor.stdout);
+  const doctorOutput = parseJsonOutput(doctor);
+  const browserLoginCheck = doctorOutput.profiles[0].checks.find(
+    (check) => check.id === 'oauth.browser_login'
   );
-  assert(missingEnvCheck, 'auth doctor must report the broker session-start environment check');
-  assert.strictEqual(missingEnvCheck.status, 'fail');
-  assert.strictEqual(missingEnvCheck.env, startKeyEnv);
-  assert.strictEqual(missingEnvCheck.present, false);
-  assert.strictEqual(missingEnvCheck.valid, false);
-
-  const missingEnvLogin = await run(['auth', 'login', '--portal', 'test'], missingEnv);
-  assert.notStrictEqual(missingEnvLogin.status, 0);
-  assert.match(missingEnvLogin.stderr, new RegExp(`missing ${startKeyEnv}`));
-
-  const malformedStartKey = 'malformed-present-broker-start-key';
-  const malformedEnv = {
-    ...missingEnv,
-    [startKeyEnv]: malformedStartKey
-  };
-  const malformedEnvDoctor = await run([
-    'auth',
-    'doctor',
-    '--portal',
-    'test',
-    '--require-env'
-  ], malformedEnv);
-  assert.notStrictEqual(malformedEnvDoctor.status, 0);
-  assert.strictEqual(malformedEnvDoctor.stderr, '');
-  const malformedEnvOutput = JSON.parse(malformedEnvDoctor.stdout);
-  const malformedEnvCheck = malformedEnvOutput.profiles[0].checks.find(
-    (check) => check.id === 'oauth.broker_start_key_env'
+  assert(browserLoginCheck, 'auth doctor must describe browser account selection');
+  assert.strictEqual(browserLoginCheck.status, 'pass');
+  assert.match(browserLoginCheck.message, /no client secret or broker-start credential is required locally/);
+  assert.strictEqual(
+    doctorOutput.profiles[0].checks.some(
+      (check) => check.id === 'oauth.broker_start_key_env'
+    ),
+    false
   );
-  assert.strictEqual(malformedEnvCheck.status, 'fail');
-  assert.strictEqual(malformedEnvCheck.present, true);
-  assert.strictEqual(malformedEnvCheck.valid, false);
-  assert.match(malformedEnvCheck.message, /43-character base64url credential/);
-  assert(!malformedEnvDoctor.stdout.includes(malformedStartKey));
+  assert.strictEqual(doctorOutput.ready, true);
 
-  const malformedEnvLogin = await run(['auth', 'login', '--portal', 'test'], malformedEnv);
-  assert.notStrictEqual(malformedEnvLogin.status, 0);
-  assert.match(malformedEnvLogin.stderr, /43-character base64url broker session-start credential/);
-  assert(!malformedEnvLogin.stderr.includes(malformedStartKey));
-
-  const validEnvDoctor = await run([
-    'auth',
-    'doctor',
-    '--portal',
-    'test',
-    '--require-env'
-  ], {
-    ...missingEnv,
-    [startKeyEnv]: validStartKey
-  });
-  assert.strictEqual(validEnvDoctor.status, 0, validEnvDoctor.stderr || validEnvDoctor.stdout);
-  const validEnvOutput = parseJsonOutput(validEnvDoctor);
-  const validEnvCheck = validEnvOutput.profiles[0].checks.find(
-    (check) => check.id === 'oauth.broker_start_key_env'
-  );
-  assert(validEnvCheck, 'auth doctor must report the configured broker session-start environment');
-  assert.strictEqual(validEnvCheck.status, 'pass');
-  assert.strictEqual(validEnvCheck.present, true);
-  assert.strictEqual(validEnvCheck.valid, true);
-  assert.strictEqual(validEnvOutput.ready, true);
-  assert(!validEnvDoctor.stdout.includes(validStartKey), 'auth doctor must not print the broker session-start credential');
-
-  const hostedProfiles = await run(['profiles', 'list'], {
-    ...missingEnv,
-    [startKeyEnv]: validStartKey,
-    null: 'NULL_ENV_SENTINEL_MUST_NOT_AFFECT_HOSTED_PROFILE'
-  });
+  const hostedProfiles = await run(['profiles', 'list'], env);
   assert.strictEqual(hostedProfiles.status, 0, hostedProfiles.stderr || hostedProfiles.stdout);
   const hostedProfilesOutput = parseJsonOutput(hostedProfiles);
   const hostedOAuth = hostedProfilesOutput.profiles[0].oauth;
   assert.strictEqual(hostedOAuth.mode, 'hosted_broker');
-  assert.strictEqual(hostedOAuth.brokerUrl, 'https://auth.example.test');
-  assert.strictEqual(hostedOAuth.brokerStartKeyEnv, startKeyEnv);
-  assert.strictEqual(hostedOAuth.brokerStartKeyPresent, true);
+  assert.match(hostedOAuth.brokerUrl, /^https:\/\//);
+  assert.strictEqual(
+    Object.prototype.hasOwnProperty.call(hostedOAuth, 'brokerStartKeyEnv'),
+    false
+  );
+  assert.strictEqual(
+    Object.prototype.hasOwnProperty.call(hostedOAuth, 'brokerStartKeyPresent'),
+    false
+  );
   assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientIdEnv'), false);
   assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientIdPresent'), false);
   assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientSecretEnv'), false);
   assert.strictEqual(Object.prototype.hasOwnProperty.call(hostedOAuth, 'clientSecretPresent'), false);
-  assert(!hostedProfiles.stdout.includes(validStartKey), 'profiles list must not print the broker session-start credential');
-  assert(!hostedProfiles.stdout.includes('NULL_ENV_SENTINEL_MUST_NOT_AFFECT_HOSTED_PROFILE'));
-
-  const hostedProfilesMissingKey = await run(['profiles', 'list'], missingEnv);
-  assert.strictEqual(
-    hostedProfilesMissingKey.status,
-    0,
-    hostedProfilesMissingKey.stderr || hostedProfilesMissingKey.stdout
-  );
-  assert.strictEqual(
-    parseJsonOutput(hostedProfilesMissingKey).profiles[0].oauth.brokerStartKeyPresent,
-    false
-  );
 });
 
 test('local OAuth caches are bound to the resolved client app and legacy caches fail closed', async () => {
