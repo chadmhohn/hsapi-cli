@@ -15,6 +15,9 @@
           "kind": "private_app"
         }
       },
+      "agentCli": {
+        "authMode": "service-key"
+      },
       "baseUrl": "https://api.hubapi.com"
     },
     "portal-beta": {
@@ -29,6 +32,9 @@
           "tokenEnv": "HUBSPOT_ACCESS_TOKEN_PORTAL_BETA",
           "kind": "private_app"
         }
+      },
+      "agentCli": {
+        "authMode": "service-key"
       },
       "baseUrl": "https://api.hubapi.com"
     }

@@ -325,49 +325,47 @@ function compactOutput(value) {
 function applyMaxResultsBudget(value, maxResults) {
   if (maxResults === undefined || !value || typeof value !== 'object' || Array.isArray(value)) return value;
 
-  let output = value;
-  const ensureClone = () => {
-    if (output === value) output = cloneJsonValue(value);
-    return output;
-  };
-
-  if (Array.isArray(value.results) && value.results.length > maxResults) {
-    const target = ensureClone();
-    trimTopLevelResults(target, maxResults, 'results');
+  // Most HubSpot API responses use results/data.results. The first-party Agent
+  // CLI instead emits {data:[...]} and HSAPI wraps that parsed payload at
+  // result.data. Keep the budget centralized so CLI and MCP callers get the
+  // same bounded behavior without capability-specific response rewriting.
+  const candidates = [
+    ['results'],
+    ['data', 'results'],
+    ['data'],
+    ['result', 'data', 'results'],
+    ['result', 'data', 'data'],
+  ];
+  for (const pathParts of candidates) {
+    const results = nestedRecordValue(value, pathParts);
+    if (!Array.isArray(results) || results.length <= maxResults) continue;
+    const target = cloneJsonValue(value);
+    trimResultsAtPath(target, pathParts, maxResults);
+    return target;
   }
 
-  if (value.data && typeof value.data === 'object' && Array.isArray(value.data.results) && value.data.results.length > maxResults) {
-    const target = ensureClone();
-    trimNestedDataResults(target, maxResults);
-  }
-
-  return output;
+  return value;
 }
 
 function cloneJsonValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function trimTopLevelResults(target, maxResults, pathName) {
-  const originalResultCount = target.results.length;
-  target.results = target.results.slice(0, maxResults);
+function trimResultsAtPath(target, pathParts, maxResults) {
+  let container = target;
+  for (const part of pathParts.slice(0, -1)) container = container[part];
+  const key = pathParts[pathParts.length - 1];
+  const originalResultCount = container[key].length;
+  container[key] = container[key].slice(0, maxResults);
+  const nextAfter = container.paging && container.paging.next
+    ? container.paging.next.after || null
+    : null;
   markResultTruncated(target, {
-    path: pathName,
+    path: pathParts.join('.'),
     maxResults,
     originalResultCount,
-    returnedResultCount: target.results.length
-  });
-}
-
-function trimNestedDataResults(target, maxResults) {
-  const originalResultCount = target.data.results.length;
-  target.data.results = target.data.results.slice(0, maxResults);
-  markResultTruncated(target, {
-    path: 'data.results',
-    maxResults,
-    originalResultCount,
-    returnedResultCount: target.data.results.length,
-    nextAfter: target.data.paging && target.data.paging.next ? target.data.paging.next.after || null : null
+    returnedResultCount: container[key].length,
+    ...(pathParts.join('.') === 'data.results' || nextAfter ? { nextAfter } : {})
   });
 }
 

@@ -6,6 +6,7 @@ module.exports = {
   ...require('./maintenance'),
   ...require('./crm'),
   ...require('./project'),
+  ...require('./agent-cli'),
   ...require('./properties'),
   ...require('./associations'),
   ...require('./users'),

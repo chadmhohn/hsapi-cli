@@ -74,3 +74,12 @@ secret locally. Never invent an optional broker URL or portal-ID pin.
 Switch to `hsapi_command_execute` / `hsapi_request_execute` **only when you need to write data** (create, update, delete). Those require `confirmMutation: true` and always show a blocked preview first.
 
 The six catalog/meta tools (`hsapi_profiles_list`, `hsapi_catalog_coverage`, `hsapi_catalog_commands`, `hsapi_auth_doctor`, `hsapi_context_doc`, `hsapi_command_help`) are also `readOnlyHint: true`. Full tool surface and Co-Work always-approve setup: `docs/MCP.md`.
+
+Saved reports and CRM saved views are deliberate first-party exceptions. Use
+`hsapi_agent_cli_doctor`, then `hsapi_reports_read` / `hsapi_views_read` for
+reads and the corresponding `*_write` tool for mutations. They delegate to a
+separately installed HubSpot Agent CLI only after verifying its account matches
+the selected HSAPI portal. Never treat its single-account OAuth cache as an
+HSAPI multi-portal cache or silently fall back to ServiceKey mode. An omitted
+MCP `authMode` uses the selected profile's optional `agentCli.authMode`, then
+defaults to OAuth; an explicit tool argument overrides the profile.

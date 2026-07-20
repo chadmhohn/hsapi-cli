@@ -11,6 +11,9 @@
           "mode": "hosted_broker",
           "tokenCachePath": "~/.config/hsapi/oauth/oauth-hosted-example-token-cache.json"
         }
+      },
+      "agentCli": {
+        "authMode": "oauth"
       }
     }
   }

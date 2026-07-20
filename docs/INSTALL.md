@@ -184,6 +184,28 @@ For CMS capability mismatches, run `hsapi cms doctor --portal <profile>` first. 
 
 For Projects/local developer tooling, run `hsapi project doctor --account <account>` first. The bridge delegates to the official HubSpot CLI, requires an explicit account, previews delegated argv with `--show-request`, and blocks upload/deploy/delete-style commands unless `--yes` is present.
 
+## Optional HubSpot Agent CLI Bridge
+
+Saved-report and saved-view commands require HubSpot's separate Agent CLI
+`0.10.0` or newer. HSAPI does not bundle, download, or auto-upgrade that binary.
+Install it from HubSpot's Agent CLI guide, then run:
+
+```bash
+hubspot --version
+hsapi agent-cli doctor --portal <profile>
+```
+
+OAuth mode uses the Agent CLI's own single-account cache. The selected HSAPI
+profile must have a known account binding (`portalId` or a usable HSAPI OAuth
+cache `hubId`), and doctor/each delegated command refuses a `hubspot whoami`
+mismatch. This is portal-safe but is not concurrent multi-profile OAuth.
+
+Set `agentCli.authMode` to `oauth` or `service-key` on the selected profile to
+choose its default delegated identity. `--agent-auth` remains a per-call
+override. In ServiceKey mode, HSAPI injects that profile's token only into the
+delegated child process; it does not silently fall back from OAuth. See
+`docs/hubspot-api-context/agent-cli-bridge.md`.
+
 ## MCP Server Mode
 
 Direct CLI mode is the default operator surface: run `hsapi ...` directly from a shell, script, or agent runtime that is allowed to execute commands. MCP server mode is for OpenClaw or another MCP client: the client starts `hsapi-mcp` or `hsapi mcp serve` over stdio and calls the exposed tools.

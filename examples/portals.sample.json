@@ -11,6 +11,9 @@
           "tokenEnv": "HUBSPOT_SERVICE_KEY_EXAMPLE",
           "kind": "private_app"
         }
+      },
+      "agentCli": {
+        "authMode": "service-key"
       }
     }
   }

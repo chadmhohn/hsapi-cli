@@ -80,6 +80,7 @@ const OAUTH_MODES = Object.freeze({
 });
 const DEFAULT_HOSTED_OAUTH_BROKER_URL =
   'https://hsapi-oauth.groundworkrevops.com';
+const AGENT_CLI_AUTH_MODES = new Set(['oauth', 'service-key']);
 
 function oauthClientIdFingerprint(clientId) {
   const normalized = configString(clientId);
@@ -274,6 +275,20 @@ function resolveProfileDefaultFamily(portal, portalName) {
   return family;
 }
 
+function resolveAgentCliProfile(portal, portalName) {
+  if (portal.agentCli === undefined) return null;
+  const agentCli = assertConfigObject(portal.agentCli, `Portal "${portalName}" agentCli`);
+  const authMode = configString(agentCli.authMode);
+  if (!authMode || !AGENT_CLI_AUTH_MODES.has(authMode)) {
+    fail(`Portal "${portalName}" agentCli.authMode must be one of ${[...AGENT_CLI_AUTH_MODES].join(', ')}.`);
+  }
+  return {
+    authMode,
+    profileField: 'agentCli.authMode',
+    provenance: 'explicit_profile'
+  };
+}
+
 function portalTokenEnv(portal, portalName) {
   return resolvePortalBearerProfile(portal, portalName).tokenEnv;
 }
@@ -294,6 +309,7 @@ function resolvePortal(config, flags) {
     : (portal.portalId ? String(portal.portalId).trim() : null);
   const oauth = resolvedOAuth;
   const developer = resolveDeveloperProfile(portal, portalName);
+  const agentCli = resolveAgentCliProfile(portal, portalName);
   if (!portalBearer && !oauth && !developer) {
     fail(`Portal "${portalName}" is missing auth.portalBearer.tokenEnv, auth.oauth, auth.developer, or legacy tokenEnv. Named profiles must declare at least one explicit credential family.`);
   }
@@ -309,6 +325,7 @@ function resolvePortal(config, flags) {
     portalBearer,
     oauth,
     developer,
+    agentCli,
     authDefaultFamily: resolveProfileDefaultFamily(portal, portalName),
     knownPlanLabel: portal.knownPlanLabel || null,
     knownPlanSource: portal.knownPlanSource || null,
@@ -1973,6 +1990,7 @@ module.exports = {
   resolveDeveloperProfile,
   resolveOAuthCredential,
   resolveOAuthProfile,
+  resolveAgentCliProfile,
   resolvePortal,
   resolvePortalBearerCredential,
   resolvePortalBearerProfile,

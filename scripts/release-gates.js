@@ -48,8 +48,12 @@ const REQUIRED_DOC_PHRASES = [
   ['docs/hubspot-api-context/cms.md', 'hsapi cms doctor'],
   ['docs/hubspot-api-context/projects.md', 'hsapi project doctor'],
   ['docs/hubspot-api-context/projects.md', 'delegatedTo: "official_hubspot_cli"'],
+  ['docs/hubspot-api-context/agent-cli-bridge.md', 'official_hubspot_agent_cli'],
+  ['docs/hubspot-api-context/agent-cli-bridge.md', 'single-account cache'],
   ['README.md', 'hsapi project doctor'],
+  ['README.md', 'hsapi agent-cli doctor'],
   ['docs/INSTALL.md', 'hsapi project doctor'],
+  ['docs/INSTALL.md', 'Optional HubSpot Agent CLI Bridge'],
   ['docs/MCP.md', 'Direct CLI Mode'],
   ['docs/MCP.md', 'MCP Server Mode'],
   ['docs/MCP.md', 'OpenClaw Config'],
@@ -148,7 +152,12 @@ const REQUIRED_MCP_TOOLS = [
   'hsapi_catalog_commands',
   'hsapi_auth_doctor',
   'hsapi_command_execute',
-  'hsapi_request_execute'
+  'hsapi_request_execute',
+  'hsapi_agent_cli_doctor',
+  'hsapi_reports_read',
+  'hsapi_reports_write',
+  'hsapi_views_read',
+  'hsapi_views_write'
 ];
 
 const FORBIDDEN_MCP_TOOL_ARGUMENTS = new Set([
@@ -787,6 +796,8 @@ function validatePortalOnboarding(failures, files) {
     || !portalBearer
     || portalBearer.tokenEnv !== 'HUBSPOT_SERVICE_KEY_EXAMPLE'
     || portalBearer.kind !== 'private_app'
+    || !serviceKeyProfile.agentCli
+    || serviceKeyProfile.agentCli.authMode !== 'service-key'
   ) {
     failures.push('examples/portals.sample.json must be the minimal ServiceKey/private-app portal_bearer template.');
   }
@@ -809,6 +820,9 @@ function validatePortalOnboarding(failures, files) {
   }
   if (profile.auth.defaultFamily !== AUTH_FAMILIES.OAUTH || oauth.mode !== 'hosted_broker') {
     failures.push('Hosted OAuth sample must default to oauth in hosted_broker mode.');
+  }
+  if (!profile.agentCli || profile.agentCli.authMode !== 'oauth') {
+    failures.push('Hosted OAuth sample must explicitly default Agent CLI delegation to oauth.');
   }
   if (
     Object.prototype.hasOwnProperty.call(oauth, 'brokerUrl')
@@ -843,6 +857,8 @@ function validatePortalOnboarding(failures, files) {
     || !combinedPortalBearer
     || combinedPortalBearer.tokenEnv !== 'HUBSPOT_SERVICE_KEY_EXAMPLE'
     || combinedPortalBearer.kind !== 'private_app'
+    || !combinedProfile.agentCli
+    || combinedProfile.agentCli.authMode !== 'oauth'
   ) {
     failures.push('Combined portal sample must remain account-chooser neutral and contain hosted OAuth plus an explicit ServiceKey/private-app portal_bearer credential.');
   }
@@ -852,7 +868,12 @@ function validatePortalOnboarding(failures, files) {
     serviceKeyProfile: 'service-key-example',
     hostedOAuthProfile: 'oauth-hosted-example',
     combinedProfile: 'oauth-and-service-key-example',
-    hostedOAuthMode: oauth.mode
+    hostedOAuthMode: oauth.mode,
+    agentCliDefaults: {
+      serviceKey: serviceKeyProfile.agentCli.authMode,
+      hostedOAuth: profile.agentCli.authMode,
+      combined: combinedProfile.agentCli.authMode
+    }
   };
 }
 

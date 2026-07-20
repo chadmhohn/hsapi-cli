@@ -314,6 +314,16 @@ The MCP client should pass:
 Do not put secret values or token caches in MCP client JSON. Desktop apps often
 need a full restart after environment or MCP configuration changes.
 
+Saved-report and CRM saved-view tools are an optional first-party bridge, not
+another HSAPI auth family. Read `agent-cli-bridge` through `hsapi_context_doc`,
+then run `hsapi_agent_cli_doctor` for the selected portal. HubSpot Agent CLI
+OAuth has a separate single-account cache; HSAPI verifies that account against
+the profile or HSAPI OAuth-cache binding before delegation. An optional
+`agentCli.authMode` profile field can select `oauth` or `service-key`; an MCP
+`authMode` or CLI `--agent-auth` value overrides it. Select ServiceKey mode
+explicitly in one of those places—never configure or use it as an automatic
+OAuth fallback.
+
 Start with these read-only MCP tools:
 
 1. `hsapi_context_doc` with `name: "portal-auth-setup"`;

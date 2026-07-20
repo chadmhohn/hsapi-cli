@@ -508,6 +508,69 @@ function readMockHsCalls(logPath) {
     .map((line) => JSON.parse(line));
 }
 
+function writeMockAgentCli() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-mock-agent-cli-'));
+  const scriptPath = process.platform === 'win32' ? path.join(dir, 'hubspot-mock.js') : path.join(dir, 'hubspot');
+  const binPath = process.platform === 'win32' ? path.join(dir, 'hubspot.cmd') : scriptPath;
+  const logPath = path.join(dir, 'calls.jsonl');
+  fs.writeFileSync(scriptPath, `#!/usr/bin/env node
+const fs = require('fs');
+const args = process.argv.slice(2);
+const call = {
+  args,
+  authMode: process.env.HUBSPOT_ACCESS_TOKEN ? 'service-key' : 'oauth',
+  noAutoUpgrade: process.env.HUBSPOT_NO_AUTO_UPGRADE || null
+};
+fs.appendFileSync(process.env.HSAPI_MOCK_AGENT_LOG, JSON.stringify(call) + '\\n');
+if (args[0] === '--version') {
+  console.log('hubspot 0.10.0 (build test, commit mock)');
+  process.exit(0);
+}
+if (args[0] === 'whoami') {
+  console.log('User:    mock@example.com');
+  console.log('Portal:  ' + (process.env.HSAPI_MOCK_AGENT_PORTAL || '999'));
+  console.log('Scopes:  crm.objects.contacts.read, reports');
+  process.exit(0);
+}
+if (args[0] === 'reports' && args[1] === 'list') {
+  console.log(JSON.stringify({ results: Array.from({ length: 12 }, (_, index) => ({ id: 'report-' + (index + 1), name: 'Mock report ' + (index + 1) })) }));
+  process.exit(0);
+}
+if (args[0] === 'reports' && args[1] === 'create') {
+  console.log(JSON.stringify({ id: 'report-created', name: args[args.indexOf('--name') + 1] || 'Generated report' }));
+  process.exit(0);
+}
+if (args[0] === 'reports' && args[1] === 'delete' && args.includes('--dry-run')) {
+  console.log(JSON.stringify({ id: args[2], digest: 'blast-mock', ok: true, executed: false, dry_run: true }));
+  process.exit(0);
+}
+if (args[0] === 'views' && args[1] === 'list') {
+  console.log(JSON.stringify({ results: Array.from({ length: 12 }, (_, index) => ({ id: 'view-' + (index + 1), name: 'Mock view ' + (index + 1), objectTypeId: '0-3' })) }));
+  process.exit(0);
+}
+if (args[0] === 'views' && args[1] === 'create') {
+  console.log(JSON.stringify({ ok: true, data: { id: 'view-created', name: args[args.indexOf('--name') + 1] } }));
+  process.exit(0);
+}
+console.log(JSON.stringify({ ok: true, args }));
+process.exit(0);
+`, 'utf8');
+  fs.chmodSync(scriptPath, 0o755);
+  if (process.platform === 'win32') {
+    fs.writeFileSync(binPath, `@echo off\r\n"${process.execPath}" "%~dp0hubspot-mock.js" %*\r\n`, 'utf8');
+  }
+  return { dir, binPath, logPath };
+}
+
+function readMockAgentCalls(logPath) {
+  if (!fs.existsSync(logPath)) return [];
+  return fs.readFileSync(logPath, 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
 function runMcpConversation(messages, env, expectedResponses, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [MCP_CLI], {
@@ -910,6 +973,238 @@ test('02 block (2)', async () => {
 
 });
 
+test('02b first-party Agent CLI bridge keeps portal identity and mutation gates', async () => {
+  const mockAgent = writeMockAgentCli();
+  const env = {
+    ...baseEnv,
+    HSAPI_TEST_TOKEN: 'profile-service-key-secret',
+    HSAPI_MOCK_AGENT_LOG: mockAgent.logPath,
+    HSAPI_MOCK_AGENT_PORTAL: '999'
+  };
+  const binArgs = ['--agent-cli-bin', mockAgent.binPath];
+
+  const agentProfileConfig = writeTempConfig(baseUrl, {
+    agentCli: { authMode: 'service-key' }
+  });
+  const agentProfileEnv = {
+    ...env,
+    HSAPI_PORTALS_CONFIG: agentProfileConfig
+  };
+  const profileDoctor = await run(['agent-cli', 'doctor', '--portal', 'test', ...binArgs], agentProfileEnv);
+  assert.strictEqual(profileDoctor.status, 0, profileDoctor.stderr || profileDoctor.stdout);
+  const profileDoctorOutput = parseJsonOutput(profileDoctor);
+  assert.strictEqual(profileDoctorOutput.auth.mode, 'service-key');
+  assert.strictEqual(profileDoctorOutput.auth.modeSource, 'profile');
+  assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.authMode === 'service-key'));
+
+  const profileList = parseJsonOutput(await run(['profiles', 'list'], agentProfileEnv));
+  assert.strictEqual(profileList.profiles[0].agentCli.authMode, 'service-key');
+
+  const authDoctor = parseJsonOutput(await run(['auth', 'doctor', '--portal', 'test'], agentProfileEnv));
+  assert.strictEqual(authDoctor.profiles[0].agentCli.authMode, 'service-key');
+  assert(authDoctor.profiles[0].checks.some((check) => check.id === 'agent_cli.auth_mode' && check.status === 'pass'));
+
+  const invalidAgentProfileConfig = writeTempConfig(baseUrl, {
+    agentCli: { authMode: 'automatic' }
+  });
+  const invalidAgentProfile = await run(['profiles', 'list'], {
+    ...env,
+    HSAPI_PORTALS_CONFIG: invalidAgentProfileConfig
+  });
+  assert.notStrictEqual(invalidAgentProfile.status, 0);
+  assert.match(invalidAgentProfile.stderr || invalidAgentProfile.stdout, /agentCli\.authMode must be one of oauth, service-key/);
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const flagOverride = await run(['agent-cli', 'doctor', '--portal', 'test', '--agent-auth', 'oauth', ...binArgs], {
+    ...agentProfileEnv,
+    HUBSPOT_ACCESS_TOKEN: ''
+  });
+  assert.strictEqual(flagOverride.status, 0, flagOverride.stderr || flagOverride.stdout);
+  const flagOverrideOutput = parseJsonOutput(flagOverride);
+  assert.strictEqual(flagOverrideOutput.auth.mode, 'oauth');
+  assert.strictEqual(flagOverrideOutput.auth.modeSource, 'command_flag');
+  assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.authMode === 'oauth'));
+
+  fs.writeFileSync(mockAgent.logPath, '');
+
+  const doctor = await run(['agent-cli', 'doctor', '--portal', 'test', '--agent-auth', 'service-key', ...binArgs], env);
+  assert.strictEqual(doctor.status, 0, doctor.stderr || doctor.stdout);
+  const doctorOutput = parseJsonOutput(doctor);
+  assert.strictEqual(doctorOutput.ready, true);
+  assert.strictEqual(doctorOutput.delegatedTo, 'official_hubspot_agent_cli');
+  assert.strictEqual(doctorOutput.identity.portalId, '999');
+  assert(!doctor.stdout.includes('profile-service-key-secret'));
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
+    ['--version'],
+    ['whoami']
+  ]);
+  assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.authMode === 'service-key'));
+  assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.noAutoUpgrade === '1'));
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const list = await run(['reports', 'list', '--portal', 'test', '--agent-auth', 'service-key', ...binArgs], env);
+  assert.strictEqual(list.status, 0, list.stderr || list.stdout);
+  const listOutput = parseJsonOutput(list);
+  assert.strictEqual(listOutput.ok, true);
+  assert.strictEqual(listOutput.provider, 'hubspot_agent_cli');
+  assert.strictEqual(listOutput.result.data.results[0].id, 'report-1');
+  assert.strictEqual(listOutput.result.data.results.length, 12);
+  assert.strictEqual(listOutput.result.outputFormat, 'json');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(listOutput.result, 'stdout'), false, 'parsed Agent CLI output must not be duplicated as raw stdout');
+  assert.deepStrictEqual(listOutput.preflight.identity, {
+    portalId: '999',
+    user: 'mock@example.com',
+    scopeCount: 2
+  });
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
+    ['--version'],
+    ['whoami'],
+    ['reports', 'list', '--format', 'json']
+  ]);
+
+  const budgetedList = await run([
+    'reports', 'list', '--portal', 'test', '--agent-auth', 'service-key',
+    '--max-results', '2', ...binArgs
+  ], env);
+  assert.strictEqual(budgetedList.status, 0, budgetedList.stderr || budgetedList.stdout);
+  const budgetedListOutput = parseJsonOutput(budgetedList);
+  assert.strictEqual(budgetedListOutput.result.data.results.length, 2);
+  assert.strictEqual(budgetedListOutput.truncated, true);
+  assert.strictEqual(budgetedListOutput.truncation.path, 'result.data.results');
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const preview = await run([
+    'reports', 'create', 'SELECT COUNT(*) FROM CONTACT', '--name', 'Contact count',
+    '--portal', 'test', '--agent-auth', 'service-key', ...binArgs, '--show-request'
+  ], env);
+  assert.strictEqual(preview.status, 0, preview.stderr || preview.stdout);
+  const previewOutput = parseJsonOutput(preview);
+  assert.strictEqual(previewOutput.executed, false);
+  assert.strictEqual(previewOutput.showRequest, true);
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath), [], '--show-request must not invoke the Agent CLI');
+
+  const blocked = await run([
+    'reports', 'create', 'SELECT COUNT(*) FROM CONTACT', '--name', 'Contact count',
+    '--portal', 'test', '--agent-auth', 'service-key', ...binArgs
+  ], env);
+  assert.strictEqual(blocked.status, 2, blocked.stderr || blocked.stdout);
+  const blockedOutput = parseJsonOutput(blocked);
+  assert.strictEqual(blockedOutput.blocked, true);
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath), [], 'blocked mutation must not invoke the Agent CLI');
+
+  const created = await run([
+    'reports', 'create', 'SELECT COUNT(*) FROM CONTACT', '--name', 'Contact count',
+    '--portal', 'test', '--agent-auth', 'service-key', ...binArgs, '--yes'
+  ], env);
+  assert.strictEqual(created.status, 0, created.stderr || created.stdout);
+  const createdOutput = parseJsonOutput(created);
+  assert.strictEqual(createdOutput.mutationConfirmed, true);
+  assert.strictEqual(createdOutput.result.data.id, 'report-created');
+
+  const delegatedHistoryPath = path.join(mockAgent.dir, 'delegated-history.jsonl');
+  const createdWithHistory = await run([
+    'reports', 'create', "SELECT COUNT(*) FROM CONTACT WHERE email = 'private@example.com'", '--name', 'Private report name',
+    '--portal', 'test', '--agent-auth', 'service-key', ...binArgs, '--yes'
+  ], {
+    ...env,
+    HSAPI_HISTORY: '1',
+    HSAPI_HISTORY_FILE: delegatedHistoryPath
+  });
+  assert.strictEqual(createdWithHistory.status, 0, createdWithHistory.stderr || createdWithHistory.stdout);
+  const delegatedHistoryText = fs.readFileSync(delegatedHistoryPath, 'utf8');
+  const delegatedHistory = JSON.parse(delegatedHistoryText.trim());
+  assert.strictEqual(delegatedHistory.method, 'DELEGATE');
+  assert.strictEqual(delegatedHistory.provider, 'hubspot_agent_cli');
+  assert.strictEqual(delegatedHistory.endpointId, 'first_party.reports.agent_cli_bridge');
+  assert.deepStrictEqual(delegatedHistory.argv, ['hsapi', 'reports', 'create']);
+  assert(!delegatedHistoryText.includes('private@example.com'));
+  assert(!delegatedHistoryText.includes('Private report name'));
+  assert(!delegatedHistoryText.includes('profile-service-key-secret'));
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const deleteDryRun = await run([
+    'reports', 'delete', 'report-1', '--dry-run', '--portal', 'test',
+    '--agent-auth', 'service-key', ...binArgs
+  ], env);
+  assert.strictEqual(deleteDryRun.status, 0, deleteDryRun.stderr || deleteDryRun.stdout);
+  const deleteDryRunOutput = parseJsonOutput(deleteDryRun);
+  assert.strictEqual(deleteDryRunOutput.result.data.digest, 'blast-mock');
+  assert.strictEqual(deleteDryRunOutput.executed, false);
+  assert.strictEqual(deleteDryRunOutput.commandExecuted, true);
+  assert.strictEqual(deleteDryRunOutput.dryRun, true);
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const mismatch = await run(['views', 'list', 'deals', '--portal', 'test', ...binArgs], {
+    ...env,
+    HUBSPOT_ACCESS_TOKEN: '',
+    HSAPI_MOCK_AGENT_PORTAL: '123'
+  });
+  assert.strictEqual(mismatch.status, 1, mismatch.stderr || mismatch.stdout);
+  const mismatchOutput = parseJsonOutput(mismatch);
+  assert.match(mismatchOutput.message, /does not match selected HSAPI portal/);
+  const mismatchCalls = readMockAgentCalls(mockAgent.logPath);
+  assert.deepStrictEqual(mismatchCalls.map((call) => call.args), [['--version'], ['whoami']]);
+  assert(mismatchCalls.every((call) => call.authMode === 'oauth'));
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const implicitAdminOverride = await run(['views', 'list', 'deals', '--portal', 'test', ...binArgs], {
+    ...env,
+    HUBSPOT_ACCESS_TOKEN: 'unrelated-global-admin-token'
+  });
+  assert.strictEqual(implicitAdminOverride.status, 1, implicitAdminOverride.stderr || implicitAdminOverride.stdout);
+  assert.match(parseJsonOutput(implicitAdminOverride).message, /would prioritize an admin token/);
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath), [], 'OAuth mode must block before invoking an implicit admin token');
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const mcp = await runMcpConversation([
+    {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'agent-bridge-test', version: '1' } }
+    },
+    {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: {
+        name: 'hsapi_reports_read',
+        arguments: { action: 'list', portal: 'test' }
+      }
+    },
+    {
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'tools/call',
+      params: {
+        name: 'hsapi_views_write',
+        arguments: { action: 'create', objectType: 'deals', name: 'MCP view', portal: 'test' }
+      }
+    }
+  ], {
+    ...agentProfileEnv,
+    HSAPI_AGENT_CLI_BIN: mockAgent.binPath
+  }, 3);
+  assert.strictEqual(mcp.stderr, '');
+  const mcpRead = mcpStructuredContent(mcp.responses[1]);
+  assert.strictEqual(mcpRead.ok, true);
+  assert.strictEqual(mcpRead.provider, 'hubspot_agent_cli');
+  assert.strictEqual(mcpRead.result.data.results[0].id, 'report-1');
+  assert.strictEqual(mcpRead.result.data.results.length, 10);
+  assert.strictEqual(mcpRead.truncated, true);
+  assert.strictEqual(mcpRead.truncation.path, 'result.data.results');
+  assert.strictEqual(mcpRead.auth.mode, 'service-key');
+  assert.strictEqual(mcpRead.auth.modeSource, 'profile');
+  const mcpBlocked = mcpStructuredContent(mcp.responses[2]);
+  assert.strictEqual(mcpBlocked.blocked, true);
+  assert.strictEqual(mcpBlocked.status, 2);
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
+    ['--version'],
+    ['whoami'],
+    ['reports', 'list', '--format', 'json']
+  ]);
+});
+
 test('03 block (3)', async () => {
     const result = await run(['request', 'GET', '/crm/v3/owners'], baseEnv);
     assert.notStrictEqual(result.status, 0);
@@ -989,6 +1284,11 @@ test('07 block (7)', async () => {
     assert(toolNames.includes('hsapi_command_execute_read'));
     assert(toolNames.includes('hsapi_request_execute'));
     assert(toolNames.includes('hsapi_request_execute_read'));
+    assert(toolNames.includes('hsapi_agent_cli_doctor'));
+    assert(toolNames.includes('hsapi_reports_read'));
+    assert(toolNames.includes('hsapi_reports_write'));
+    assert(toolNames.includes('hsapi_views_read'));
+    assert(toolNames.includes('hsapi_views_write'));
     const profiles = mcpStructuredContent(mcp.responses[2]);
     assert.strictEqual(profiles.ok, true);
     assert.strictEqual(profiles.profiles[0].name, 'test');
@@ -1740,6 +2040,16 @@ test('19 Issue #19: tool annotations + initialize instructions for modern MCP cl
       assert.strictEqual(byName[readTool].annotations.readOnlyHint, true, readTool);
       assert.strictEqual(byName[readTool].annotations.destructiveHint, false, readTool);
       assert.strictEqual(byName[readTool].annotations.openWorldHint, true, readTool);
+    }
+    for (const readTool of ['hsapi_agent_cli_doctor', 'hsapi_reports_read', 'hsapi_views_read']) {
+      assert.strictEqual(byName[readTool].annotations.readOnlyHint, true, readTool);
+      assert.strictEqual(byName[readTool].annotations.destructiveHint, false, readTool);
+      assert.strictEqual(byName[readTool].annotations.openWorldHint, true, readTool);
+    }
+    for (const writeTool of ['hsapi_reports_write', 'hsapi_views_write']) {
+      assert.strictEqual(byName[writeTool].annotations.readOnlyHint, false, writeTool);
+      assert.strictEqual(byName[writeTool].annotations.destructiveHint, true, writeTool);
+      assert.strictEqual(byName[writeTool].annotations.openWorldHint, true, writeTool);
     }
 
 });
@@ -3125,6 +3435,17 @@ test('62 block (42)', async () => {
       assert.strictEqual(surface.surfaceType, surfaceType);
       assert.strictEqual(surface.status, 'catalog-only');
       assert.strictEqual(surface.contextUrl, contextUrl);
+    }
+    for (const [id, family] of [
+      ['first_party.reports.agent_cli_bridge', 'first_party.reports'],
+      ['first_party.views.agent_cli_bridge', 'first_party.views']
+    ]) {
+      const surface = surfacesById.get(id);
+      assert(surface, `${id} surface should be cataloged`);
+      assert.strictEqual(surface.family, family);
+      assert.strictEqual(surface.surfaceType, 'external-cli-bridge');
+      assert.strictEqual(surface.status, 'typed');
+      assert.strictEqual(surface.contextUrl, 'docs/hubspot-api-context/agent-cli-bridge.md');
     }
     const ctaSurface = surfacesById.get('marketing.ctas.javascript_sdk');
     assert.match(ctaSurface.scopeNotes, /browser JavaScript SDK surface/);

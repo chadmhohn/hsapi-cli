@@ -47,6 +47,15 @@ per-user directory or appropriate Windows ACLs.
 - Add ServiceKey/private-app auth only through an explicit operator action,
   verify it belongs to the OAuth-bound account, and never silently retry an
   OAuth failure with it.
+- Saved-report and saved-view delegation requires the separately installed
+  HubSpot Agent CLI. HSAPI disables that binary's automatic upgrade in child
+  processes, verifies `hubspot whoami` against the selected portal before every
+  delegated command, and blocks OAuth mode when an implicit
+  `HUBSPOT_ACCESS_TOKEN` override could take precedence.
+- In Agent CLI ServiceKey mode—selected explicitly by profile or call—pass the
+  selected portal token only in the child process environment. Never place it
+  in delegated argv, previews, logs, MCP payloads, or the Agent CLI OAuth
+  cache.
 
 ## Reporting Security Issues
 
