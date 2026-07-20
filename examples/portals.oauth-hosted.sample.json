@@ -1,17 +1,14 @@
 {
-  "_comment": "Portal-neutral hosted OAuth template. The app operator must supply the exact portal ID, trusted broker URL, and broker admission credential.",
+  "_comment": "Portal-neutral hosted OAuth template. The CLI uses its bundled broker; HubSpot account selection binds the returned hub_id in this external token cache. Add portalId only to pin an expected account, or brokerUrl only to override the broker for a trusted private deployment.",
   "default": "oauth-hosted-example",
   "portals": {
     "oauth-hosted-example": {
       "label": "Example HubSpot Portal with Hosted OAuth",
-      "portalId": "REPLACE_WITH_NUMERIC_PORTAL_ID",
       "baseUrl": "https://api.hubapi.com",
       "auth": {
         "defaultFamily": "oauth",
         "oauth": {
           "mode": "hosted_broker",
-          "brokerUrl": "https://replace-with-operator-broker.example",
-          "brokerStartKeyEnv": "HSAPI_OAUTH_BROKER_START_KEY",
           "tokenCachePath": "~/.config/hsapi/oauth/oauth-hosted-example-token-cache.json"
         }
       }

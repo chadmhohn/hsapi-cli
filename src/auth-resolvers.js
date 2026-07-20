@@ -78,10 +78,8 @@ const OAUTH_MODES = Object.freeze({
   LOCAL: 'local',
   HOSTED_BROKER: 'hosted_broker'
 });
-
-function hostedBrokerStartKeyIsValid(value) {
-  return typeof value === 'string' && /^[A-Za-z0-9_-]{43}$/.test(value);
-}
+const DEFAULT_HOSTED_OAUTH_BROKER_URL =
+  'https://hsapi-oauth.groundworkrevops.com';
 
 function oauthClientIdFingerprint(clientId) {
   const normalized = configString(clientId);
@@ -122,20 +120,13 @@ function hostedBrokerUrl(rawUrl, portalName) {
   return parsed.toString().replace(/\/+$/, '');
 }
 
-function hostedOAuthPortalId(rawPortalId, portalName) {
-  const portalId = rawPortalId === undefined || rawPortalId === null
-    ? null
-    : String(rawPortalId).trim();
-  if (!portalId || !/^[1-9][0-9]*$/.test(portalId)) {
-    fail(`Portal "${portalName}" must define a numeric portalId when auth.oauth.mode is "${OAUTH_MODES.HOSTED_BROKER}".`);
-  }
-  return portalId;
-}
-
-function optionalOAuthPortalId(rawPortalId) {
+function optionalOAuthPortalId(rawPortalId, portalName) {
   if (rawPortalId === undefined || rawPortalId === null) return null;
   const portalId = String(rawPortalId).trim();
-  return /^[1-9][0-9]*$/.test(portalId) ? portalId : null;
+  if (!/^[1-9][0-9]*$/.test(portalId)) {
+    fail(`Portal "${portalName}" portalId must be a numeric HubSpot account ID when provided.`);
+  }
+  return portalId;
 }
 
 function maybeResolvePortalBearerProfile(portal, portalName) {
@@ -212,23 +203,17 @@ function resolveOAuthProfile(portal, portalName) {
     ? (configString(oauth.authorizeUrlBase) || 'https://app.hubspot.com')
     : null;
   const brokerUrl = mode === OAUTH_MODES.HOSTED_BROKER
-    ? hostedBrokerUrl(configString(oauth.brokerUrl), portalName)
+    ? hostedBrokerUrl(
+      configString(oauth.brokerUrl) || DEFAULT_HOSTED_OAUTH_BROKER_URL,
+      portalName
+    )
     : null;
-  const brokerStartKeyEnv = mode === OAUTH_MODES.HOSTED_BROKER
-    ? configString(oauth.brokerStartKeyEnv)
-    : null;
-  if (mode === OAUTH_MODES.HOSTED_BROKER && !brokerStartKeyEnv) {
-    fail(`Portal "${portalName}" auth.oauth.brokerStartKeyEnv must name the environment variable holding the broker session-start credential.`);
-  }
-  const portalId = mode === OAUTH_MODES.HOSTED_BROKER
-    ? hostedOAuthPortalId(portal.portalId, portalName)
-    : optionalOAuthPortalId(portal.portalId);
+  const portalId = optionalOAuthPortalId(portal.portalId, portalName);
 
   return {
     family: AUTH_FAMILIES.OAUTH,
     mode,
     brokerUrl,
-    brokerStartKeyEnv,
     portalId,
     clientIdEnv,
     clientSecretEnv,
@@ -304,13 +289,10 @@ function resolvePortal(config, flags) {
   }
   const portalBearer = maybeResolvePortalBearerProfile(portal, portalName);
   const resolvedOAuth = resolveOAuthProfile(portal, portalName);
-  const portalId = portal.portalId ? String(portal.portalId) : null;
-  const oauth = resolvedOAuth
-    ? {
-      ...resolvedOAuth,
-      portalId
-    }
-    : null;
+  const portalId = resolvedOAuth
+    ? resolvedOAuth.portalId
+    : (portal.portalId ? String(portal.portalId).trim() : null);
+  const oauth = resolvedOAuth;
   const developer = resolveDeveloperProfile(portal, portalName);
   if (!portalBearer && !oauth && !developer) {
     fail(`Portal "${portalName}" is missing auth.portalBearer.tokenEnv, auth.oauth, auth.developer, or legacy tokenEnv. Named profiles must declare at least one explicit credential family.`);
@@ -422,6 +404,11 @@ function safeOAuthMetadataId(value) {
   return normalized && /^[A-Za-z0-9_-]{1,128}$/.test(normalized) ? normalized : null;
 }
 
+function positiveHubSpotAccountId(value) {
+  const normalized = safeOAuthMetadataId(value);
+  return normalized && /^[1-9][0-9]*$/.test(normalized) ? normalized : null;
+}
+
 function oauthMetadataScopes(source) {
   if (!source || typeof source !== 'object') return [];
   const raw = source.scopes === undefined ? source.scope : source.scopes;
@@ -480,6 +467,8 @@ function oauthCacheProfileMatch(cache, source) {
   const tokenHubId = oauthCacheHubId(cache);
 
   if (source.mode === OAUTH_MODES.HOSTED_BROKER) {
+    const hostedTokenHubId = positiveHubSpotAccountId(tokenHubId);
+    const hostedSourcePortalId = positiveHubSpotAccountId(cachedSourcePortalId);
     if (cachedMode !== OAUTH_MODES.HOSTED_BROKER) {
       return { ok: false, reason: 'oauth_mode_mismatch' };
     }
@@ -492,10 +481,36 @@ function oauthCacheProfileMatch(cache, source) {
     if (!oauthCacheBrokerCredential(cache)) {
       return { ok: false, reason: 'broker_credential_missing' };
     }
-    if (expectedPortalId && tokenHubId !== expectedPortalId) {
+    if (!hostedTokenHubId) {
       return {
         ok: false,
-        reason: tokenHubId ? 'portal_id_mismatch' : 'token_portal_id_missing'
+        reason: tokenHubId ? 'token_portal_id_invalid' : 'token_portal_id_missing'
+      };
+    }
+    if (!hostedSourcePortalId) {
+      return {
+        ok: false,
+        reason: cachedSourcePortalId
+          ? 'cache_source_portal_id_invalid'
+          : 'cache_source_portal_id_missing'
+      };
+    }
+    if (expectedPortalId && hostedTokenHubId !== expectedPortalId) {
+      return {
+        ok: false,
+        reason: 'portal_id_mismatch'
+      };
+    }
+    if (
+      expectedPortalId
+      && hostedSourcePortalId !== expectedPortalId
+    ) {
+      return { ok: false, reason: 'cache_source_portal_id_mismatch' };
+    }
+    if (hostedTokenHubId !== hostedSourcePortalId) {
+      return {
+        ok: false,
+        reason: 'cache_token_portal_id_mismatch'
       };
     }
   } else {
@@ -829,7 +844,10 @@ function oauthTokenCacheFromRefreshPayload(
     ? {
       mode: OAUTH_MODES.HOSTED_BROKER,
       brokerUrl: source.brokerUrl,
-      portalId: source.portalId || null
+      portalId: safeOAuthMetadataId(source.portalId)
+        || hubId
+        || safeOAuthMetadataId(rawPriorSource.portalId)
+        || null
     }
     : {
       mode: OAUTH_MODES.LOCAL,
@@ -1204,7 +1222,10 @@ async function refreshOAuthCredentialUnlocked(portal, source, cacheRead) {
     try {
       payload = await refreshHostedBrokerTokens(source, {
         refreshToken,
-        brokerCredential
+        brokerCredential,
+        expectedHubId: oauthCacheHubId(priorCache)
+          || safeOAuthMetadataId(source.portalId)
+          || null
       });
     } catch (error) {
       fail(`${error.message} Re-authenticate with: hsapi auth login --portal ${portal.name}`);
@@ -1890,6 +1911,7 @@ function resolvePortalBearerCredential(portal, auth) {
 }
 
 module.exports = {
+  DEFAULT_HOSTED_OAUTH_BROKER_URL,
   assertTokenCacheOutsidePackage,
   loadConfig,
   DEVELOPER_CLIENT_CREDENTIALS_TOKEN_CACHE_SCHEMA,
@@ -1911,7 +1933,6 @@ module.exports = {
   effectiveCredentialFamily,
   hubSpotResponseCategory,
   hubSpotResponseClass,
-  hostedBrokerStartKeyIsValid,
   hostedBrokerUrl,
   maybeResolvePortalBearerProfile,
   oauthCacheAccessToken,

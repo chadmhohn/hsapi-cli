@@ -19,8 +19,12 @@ Do not put HubSpot tokens, OAuth refresh tokens, client secrets, developer API k
 Use this shape instead:
 
 1. Copy a sample portal config to a private path outside the repo.
-2. Store only environment variable names in that private portal config.
-3. Provide actual credential values through the local user environment, a password manager, a local secret lookup wrapper, or another private secret manager.
+2. For hosted OAuth, store only portal-neutral metadata and an external token
+   cache path; no local OAuth credential is required.
+3. For ServiceKey or developer profiles, store only environment variable names
+   in that private config and provide actual values through the local user
+   environment, a password manager, a local secret lookup wrapper, or another
+   private secret manager.
 4. Register one MCP server entry per portal profile and pass `HSAPI_PORTAL` for that entry.
 
 Desktop apps often do not inherit the terminal environment that installed the package. After changing persistent environment variables or MCP config, fully quit and restart the desktop app.
@@ -151,24 +155,40 @@ Windows PowerShell user environment example:
 [Environment]::SetEnvironmentVariable('HUBSPOT_SERVICE_KEY_EXAMPLE', '<set-locally-from-your-secret-channel>', 'User')
 ```
 
-Safer shared/operator path: use a wrapper or secret lookup command so MCP
-config never stores real tokens or broker admission credentials. The supplied
-wrapper loads both ServiceKey `tokenEnv` and hosted OAuth `brokerStartKeyEnv`
-values declared by the selected profile. See
+Safer shared/operator path for ServiceKey profiles: use a wrapper or secret
+lookup command so MCP config never stores real tokens. Hosted OAuth does not
+need a local OAuth or broker credential. The supplied wrapper loads ServiceKey
+`tokenEnv` values declared by selected profiles. See
 `examples/neutral-token-wrapper.sample.sh` and the neutral credential source
 section in `docs/MCP.md`.
 
 After changing user environment variables, restart terminals and fully restart Codex Desktop or Claude Desktop.
 
-For hosted OAuth, copy `examples/portals.oauth-hosted.sample.json`, replace
-every `REPLACE_...` value with the exact metadata issued by the app operator,
-and inject only the broker start credential locally. Do not configure a local
-HubSpot client ID or client secret. After the doctor check, run:
+For hosted OAuth, copy `examples/portals.oauth-hosted.sample.json`. Its normal
+profile needs only `mode: "hosted_broker"` and an external `tokenCachePath`;
+the package supplies the bundled broker URL. Do not configure a portal ID,
+broker credential, local HubSpot client ID, or local HubSpot client secret.
+Add a numeric `portalId` only to pin the profile to a known account, or an HTTPS
+`brokerUrl` only for an operator-approved private deployment.
+
+The shared broker accepts only hsapi v0.5-and-later native localhost sessions.
+Update any v0.4.x hosted installation and replace its old hosted profile with
+the current template before running these commands.
+
+Run:
 
 ```bash
+hsapi auth doctor --portal oauth-hosted-example
 hsapi auth login --portal oauth-hosted-example
 hsapi auth whoami --portal oauth-hosted-example
 ```
+
+HubSpot shows its account chooser. The returned numeric `hub_id` binds an
+unpinned token cache; an optional profile pin or existing cache binding rejects
+a different selection. During login, the broker sends a one-time completion
+grant to the initiating CLI's short-lived `127.0.0.1` listener. If local
+loopback traffic is blocked, complete login from an environment where that
+listener is reachable.
 
 ## 4. Verify the CLI Before MCP
 
@@ -346,7 +366,10 @@ The takeaway for repo work: tokens live only in client-side env injection or a w
 ## 8. Troubleshooting
 
 - No MCP tools appear: restart the desktop app, then confirm the MCP server entry exists in the client config and `hsapi-mcp` can be resolved by full path.
-- MCP server starts but auth fails: run `hsapi auth doctor --portal <name> --require-env` in a fresh terminal. The desktop app may not inherit your shell-only env vars.
+- MCP server starts but auth fails: run `hsapi auth doctor --portal <name>` in
+  a fresh terminal. Add `--require-env` for a ServiceKey or other profile that
+  declares local credential environment variables. The desktop app may not
+  inherit shell-only env vars.
 - Wrong portal is used: check `HSAPI_PORTAL` in that MCP server entry and the `default` profile in `HSAPI_PORTALS_CONFIG`.
 - Token value appears in output: stop and rotate the token. File an issue with the command and redacted reproduction steps.
 - Codex/OpenClaw-style clients time out on MCP startup: make sure the installed package includes newline-delimited MCP stdio support. `npm test` includes a regression for this.
@@ -357,9 +380,11 @@ When sharing the repo with another user or agent, give them:
 
 1. GitHub repo access.
 2. This quickstart.
-3. Their intended local profile names; for hosted OAuth, the exact portal ID
-   and broker URL issued by the app operator.
-4. The credential env var names they should place in their private `portals.json`.
-5. Instructions for their approved secret source.
+3. Their intended local profile names. Normal hosted OAuth needs neither an
+   operator-issued portal ID nor a broker URL.
+4. For ServiceKey profiles only, the credential env var names they should
+   place in their private `portals.json`.
+5. For ServiceKey profiles only, instructions for their approved secret
+   source.
 
 Do not send token values through GitHub, MCP config, chat transcripts, screenshots, or committed files.

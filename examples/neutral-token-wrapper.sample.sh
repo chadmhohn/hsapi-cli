@@ -4,11 +4,12 @@ set -euo pipefail
 # Sample neutral credential-source wrapper for hsapi and hsapi-mcp.
 #
 # The wrapper reads declared credential environment variable names from
-# HSAPI_PORTALS_CONFIG, including ServiceKey/private-app tokens and hosted
-# OAuth broker admission credentials. It asks a local secret lookup command
-# for missing values, exports them for the child process, then execs the
-# requested command. Keep the lookup command and real portal config outside
-# this package.
+# HSAPI_PORTALS_CONFIG, including ServiceKey/private-app tokens, local OAuth
+# app credentials, and developer credentials. Normal hosted OAuth has no local
+# credential to load: it uses the bundled broker and a protected external token
+# cache. The wrapper asks a local secret lookup command for missing values,
+# exports them for the child process, then execs the requested command. Keep the
+# lookup command and real portal config outside this package.
 #
 # Required:
 #   HSAPI_PORTALS_CONFIG     Path to a private hsapi portals config.
@@ -90,7 +91,6 @@ for (const name of profileNames) {
 
   addCredentialEnv(portalBearer.tokenEnv);
   addCredentialEnv(portal.tokenEnv);
-  addCredentialEnv(oauth.brokerStartKeyEnv);
   addCredentialEnv(oauth.clientIdEnv);
   addCredentialEnv(oauth.clientSecretEnv);
   addCredentialEnv(developer.personalAccessKeyEnv);

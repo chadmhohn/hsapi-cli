@@ -22,7 +22,6 @@ const env = {
   npm_config_cache: cacheDir,
   npm_config_update_notifier: 'false',
 };
-const syntheticPortalId = String(Number.MAX_SAFE_INTEGER);
 
 let tarballPath;
 
@@ -83,21 +82,17 @@ try {
   const externalConfigDir = path.join(tempRoot, 'external-config');
   const externalConfigPath = path.join(externalConfigDir, 'portals.json');
   const externalCachePath = path.join(tempRoot, 'oauth-cache.json');
-  const brokerStartKey = 'b'.repeat(43);
   fs.mkdirSync(externalConfigDir, { recursive: true });
   const externalConfigText = `${JSON.stringify({
     default: 'hosted-smoke',
     portals: {
       'hosted-smoke': {
         label: 'Hosted OAuth package smoke',
-        portalId: syntheticPortalId,
         baseUrl: 'https://api.hubapi.com',
         auth: {
           defaultFamily: 'oauth',
           oauth: {
             mode: 'hosted_broker',
-            brokerUrl: 'https://oauth.example.test',
-            brokerStartKeyEnv: 'HSAPI_OAUTH_BROKER_START_KEY',
             tokenCachePath: externalCachePath,
           },
         },
@@ -107,7 +102,6 @@ try {
   fs.writeFileSync(externalConfigPath, externalConfigText, { mode: 0o600 });
   const installedEnv = {
     ...env,
-    HSAPI_OAUTH_BROKER_START_KEY: brokerStartKey,
     HSAPI_PORTALS_CONFIG: externalConfigPath,
   };
 
@@ -157,9 +151,6 @@ try {
   const doctor = JSON.parse(doctorText);
   if (!doctor.ok || !doctor.ready || doctor.profiles?.[0]?.authDefaultFamily !== 'oauth') {
     throw new Error('installed hosted OAuth profile did not pass offline auth doctor');
-  }
-  if (doctorText.includes(brokerStartKey)) {
-    throw new Error('installed auth doctor printed the broker session-start credential');
   }
   if (doctorText.includes('HUBSPOT_CLIENT_SECRET') || doctorText.includes('HUBSPOT_CLIENT_ID')) {
     throw new Error('hosted OAuth package smoke unexpectedly required local HubSpot app credentials');

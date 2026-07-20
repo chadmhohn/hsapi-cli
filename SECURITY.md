@@ -6,28 +6,23 @@ Do not put HubSpot private app tokens, OAuth access or refresh tokens, broker
 credentials, client secrets, real portal configs, local memory files, or
 customer data in this package.
 
-Portal config files may contain environment-variable names, portal IDs, and
-non-secret broker URLs, never credential values. Keep real configs and OAuth
-token caches outside the package directory and point to the config with
-`HSAPI_PORTALS_CONFIG`.
+Portal config files may contain environment-variable names, optional portal
+IDs, and non-secret broker URLs, never credential values. The normal hosted
+profile contains only its mode and external token-cache path. Keep real configs
+and OAuth token caches outside the package directory and point to the config
+with `HSAPI_PORTALS_CONFIG`.
 
-For `auth.oauth.mode: "hosted_broker"`, store `HUBSPOT_CLIENT_SECRET`,
-`BROKER_SIGNING_KEY`, and `BROKER_SESSION_START_KEY` only as platform secrets.
-Do not place them in `wrangler.jsonc`, `.dev.vars` committed to Git, shell
-history, deployment logs, or chat. Use three independent high-entropy values;
-never reuse the HubSpot client secret or signing key as the session-start key.
+For `auth.oauth.mode: "hosted_broker"`, store `HUBSPOT_CLIENT_SECRET` and
+`BROKER_SIGNING_KEY` only as platform secrets. Do not place them in
+`wrangler.jsonc`, `.dev.vars` committed to Git, shell history, deployment logs,
+or chat. These values must be independent. Normal hosted users never receive
+or configure either one.
 
-Each enrolled CLI receives the session-start credential through the
-environment variable named by `auth.oauth.brokerStartKeyEnv`. It is not a
-HubSpot credential, but it is a broker admission secret and must use the same
-secret-injection protections as other credentials. Users also hold access
-tokens, refresh tokens, and broker credentials in their local cache; protect
-that file with the operating-system user account and restrictive permissions.
-The CLI requests restrictive file modes where the filesystem supports them,
-but this is best-effort and does not replace a protected per-user directory or
-appropriate Windows ACLs.
-Production should replace a shared team start key with per-install enrollment
-or an equivalent authenticated bootstrap.
+Users hold access tokens, refresh tokens, and broker credentials in their local
+cache; protect that file with the operating-system user account and restrictive
+permissions. The CLI requests restrictive file modes where the filesystem
+supports them, but this is best-effort and does not replace a protected
+per-user directory or appropriate Windows ACLs.
 
 ## Safe Operation
 
@@ -37,13 +32,21 @@ or an equivalent authenticated bootstrap.
 - Use disposable HubSpot developer/test portals for write tests.
 - Keep broker production configuration separate from staging, including
   independent secrets and an exact registered callback URL.
-- Require an authenticated broker client credential before allocating an OAuth
-  consent session; callback and completion routes remain public for the
-  HubSpot/browser redirect.
+- For normal public session creation, require an exact ephemeral
+  `127.0.0.1` completion redirect, a PKCE challenge, and a consume-secret
+  digest. Deliver a fresh one-time completion grant only to that loopback
+  redirect, and require the grant, raw consume secret, and verifier together
+  for exchange. Reject every hosted session that does not supply the native
+  localhost completion proof; the shared broker has no alternate non-loopback
+  or shared-admission-secret fallback.
 - Disable request/invocation logging for OAuth callback URLs because HubSpot
   necessarily sends an authorization code in the callback query string.
-- Verify returned `hubId` against the configured numeric portal ID before
-  accepting or refreshing a hosted OAuth cache.
+- Require a numeric returned `hubId`. Verify it against the optional configured
+  portal ID or the cache's existing account binding before accepting login,
+  cache use, or refresh. Never silently rebind an established profile.
+- Add ServiceKey/private-app auth only through an explicit operator action,
+  verify it belongs to the OAuth-bound account, and never silently retry an
+  OAuth failure with it.
 
 ## Reporting Security Issues
 

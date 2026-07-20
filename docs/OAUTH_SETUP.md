@@ -20,67 +20,65 @@ and account product entitlements.
 
 | Mode | Recommended use | Secret location |
 |---|---|---|
-| `hosted_broker` | Distributed CLI/MCP installs | HubSpot client secret stays in the broker; an independent session-start credential is injected locally |
+| `hosted_broker` | Distributed CLI/MCP installs | HubSpot client secret stays in the broker; no OAuth client or broker secret is installed locally |
 | `local` | App operators and local development | Client ID and secret are supplied to the local process through environment variables |
 
 The hosted broker is the recommended team flow. Local mode remains supported
 for development and recovery.
 
+The shared broker accepts only the native localhost-completion protocol in
+hsapi v0.5 and later. A v0.4.x hosted installation must update and replace its
+old hosted profile with the current template before using the shared broker.
+
 ## Hosted broker setup
 
-You need:
+You need only:
 
-- the exact HubSpot portal ID;
-- the HTTPS base URL of the broker assigned to that app and portal;
-- the environment-variable name holding the independently issued broker
-  session-start credential;
-- a per-user token-cache path outside the package.
+- an external per-user token-cache path; and
+- a HubSpot user who can authorize the app and choose the intended account.
+
+The normal profile uses the broker bundled with `hsapi`:
+`https://hsapi-oauth.groundworkrevops.com`. The URL is public configuration,
+not a credential. The user does not supply a portal ID, HubSpot client ID,
+HubSpot client secret, redirect URL, scope list, or broker admission
+credential.
 
 Package installs and upgrades never create, download, or overwrite the portal
-profile or token cache. This is intentional: `brokerUrl` is a security trust
-anchor because the CLI sends its broker admission credential there.
+profile or token cache. Keep both outside the package. An explicit
+`auth.oauth.brokerUrl` is supported only for an approved private deployment;
+because that endpoint receives authorization codes and token operations, treat
+the override as a security trust anchor.
 
 ### Operator and teammate responsibilities
 
-The app operator:
+The bundled-broker operator:
 
-- provisions the fixed HubSpot app/account, callback, scopes, and Worker
-  secrets;
-- distributes the external non-secret profile through an approved
-  configuration channel;
-- injects the independent broker session-start credential through an approved
-  secret channel;
-- validates the exact broker health and callback before enrollment.
+- provisions the HubSpot app, callback, scopes, and Worker secrets;
+- keeps the HubSpot client secret and broker signing key in the hosted secret
+  store;
+- publishes and validates the broker health and exact callback; and
+- operates one app across the HubSpot accounts whose users authorize it.
 
 The teammate:
 
 - installs or updates `hsapi`;
-- places the operator-issued profile at `~/.config/hsapi/portals.json` or points
-  `HSAPI_PORTALS_CONFIG` at it;
-- receives the broker credential in the environment named by
-  `brokerStartKeyEnv`;
+- copies the portal-neutral profile to `~/.config/hsapi/portals.json` or points
+  `HSAPI_PORTALS_CONFIG` at another external path;
 - runs `auth doctor`, `auth login`, and `auth whoami`.
-
-A shared start key is limited to controlled internal beta enrollment.
-Production/general distribution requires per-install enrollment or an
-equivalent authenticated bootstrap.
 
 Add a profile to the file selected by `HSAPI_PORTALS_CONFIG`:
 
 ```json
 {
   "portals": {
-    "your-portal-name": {
-      "label": "Your Portal Label",
-      "portalId": "YOUR_NUMERIC_PORTAL_ID",
+    "hubspot-oauth": {
+      "label": "HubSpot OAuth",
       "baseUrl": "https://api.hubapi.com",
       "auth": {
         "defaultFamily": "oauth",
         "oauth": {
           "mode": "hosted_broker",
-          "brokerUrl": "https://oauth.example.com",
-          "brokerStartKeyEnv": "HSAPI_OAUTH_BROKER_START_KEY",
-          "tokenCachePath": "~/.config/hsapi/oauth/your-portal-cache.json"
+          "tokenCachePath": "~/.config/hsapi/oauth/hubspot-oauth-cache.json"
         }
       }
     }
@@ -88,20 +86,51 @@ Add a profile to the file selected by `HSAPI_PORTALS_CONFIG`:
 }
 ```
 
-`portalId` is required and must match the broker's fixed HubSpot account. The
-broker URL must be HTTPS without URL credentials, a query string, or a
-fragment. `brokerStartKeyEnv` names a local environment variable containing an
-enrollment credential issued by the broker operator:
+The first successful login to an unpinned profile binds the cache to the
+numeric `hub_id` returned by HubSpot. Configure a numeric `portalId` only when
+the profile must be pinned to one account before first login:
 
-```powershell
-$env:HSAPI_OAUTH_BROKER_START_KEY = "<broker-session-start-credential>"
+```json
+{
+  "portalId": "123456789"
+}
 ```
 
-This value is not the HubSpot client secret and grants no HubSpot API access by
-itself. It prevents unauthenticated callers from creating consent sessions and
-must still be protected as a secret. Hosted profiles do not use `clientIdEnv`,
-`clientSecretEnv`, `redirectUrl`, or a locally configured scope list; those
-values are fixed server-side.
+When present, `portalId` is an expected-account constraint: a different
+account selected in HubSpot is rejected and the profile is never silently
+rebound. Without it, the existing cache binding serves the same role after the
+first login. To move intentionally to another account, use a separate profile
+and token-cache path or explicitly remove the old binding through the approved
+logout/reconfiguration procedure.
+
+For an approved private broker only, add:
+
+```json
+{
+  "brokerUrl": "https://oauth.example.com"
+}
+```
+
+The override must be HTTPS without URL credentials, a query string, or a
+fragment. Hosted profiles do not use local client-credential, redirect, scope,
+or broker admission fields; those app details remain server-side.
+
+### Browser-to-CLI completion proof
+
+At login, the CLI opens a short-lived listener on
+`http://127.0.0.1:<ephemeral-port>/oauth/hsapi/callback`. It sends only that
+strict loopback URL, a PKCE challenge, and a digest of a separate consume
+secret when creating the broker session. HubSpot calls the broker's registered
+HTTPS callback. The broker then redirects a fresh one-time completion grant to
+the exact localhost listener. Token exchange succeeds only when the initiating
+CLI presents that completion grant, its raw consume secret, and the PKCE
+verifier.
+
+This completion proof lets the normal session-creation route remain public
+without letting a remote caller harvest a token after convincing another user
+to approve consent. The listener binds only to `127.0.0.1`, accepts the
+session's exact state, closes after completion or timeout, and is not the
+HubSpot app's registered redirect URI.
 
 The Cloudflare implementation and deployment controls are documented in
 [`cloudflare/hsapi-oauth-broker/README.md`](../cloudflare/hsapi-oauth-broker/README.md).
@@ -154,32 +183,34 @@ origin.
 Validate the profile before opening a browser:
 
 ```sh
-hsapi auth doctor --portal your-portal-name --require-env
+hsapi auth doctor --portal hubspot-oauth
 ```
 
-`--require-env` passes for a complete hosted profile when the broker
-session-start environment variable is set; HubSpot app credentials remain
-server-side.
+For the normal hosted profile, `auth doctor` needs no OAuth environment
+variables. It verifies the bundled or overridden broker URL and confirms that
+the token-cache path is outside the package.
 
 Then authorize:
 
 ```sh
-hsapi auth login --portal your-portal-name
+hsapi auth login --portal hubspot-oauth
 ```
 
-Confirm the browser is on the intended HubSpot account. Selecting **All** checks
-every selectable optional permission; a disabled permission is not granted.
-The CLI verifies the returned hub ID against the profile's portal ID before it
-writes the token cache.
+HubSpot shows its account chooser. Confirm the intended account before
+approving consent. Selecting **All** checks every selectable optional
+permission; a disabled permission is not granted. Before writing the cache,
+the CLI requires HubSpot's numeric `hub_id` and compares it with either the
+optional profile `portalId` or the cache's existing account binding. A mismatch
+fails closed rather than rebinding the profile.
 
 Verify the cached identity and a harmless read:
 
 ```sh
-hsapi auth whoami --portal your-portal-name
-hsapi crm list contacts --portal your-portal-name --limit 3
+hsapi auth whoami --portal hubspot-oauth
+hsapi crm list contacts --portal hubspot-oauth --limit 3
 ```
 
-`whoami` should report a usable OAuth cache and a matching portal. Access
+`whoami` should report a usable OAuth cache and the selected account ID. Access
 tokens, refresh tokens, and broker credentials are redacted from command
 output.
 
@@ -247,8 +278,6 @@ scope. Configure `portalBearer` only for operators who need those operations:
     "defaultFamily": "oauth",
     "oauth": {
       "mode": "hosted_broker",
-      "brokerUrl": "https://oauth.example.com",
-      "brokerStartKeyEnv": "HSAPI_OAUTH_BROKER_START_KEY",
       "tokenCachePath": "~/.config/hsapi/oauth/your-portal-cache.json"
     },
     "portalBearer": {
@@ -258,6 +287,13 @@ scope. Configure `portalBearer` only for operators who need those operations:
   }
 }
 ```
+
+Add the ServiceKey only after hosted OAuth has bound the profile to a HubSpot
+account. An authorized operator must verify the private-app token's account
+identity matches `hsapi auth whoami --portal <name>` before enabling the
+combined profile. The credential stays in the named environment variable; it
+is never copied into JSON. `hsapi` does not silently retry an OAuth failure
+with the ServiceKey.
 
 Known boundaries include destructive CRM archives, several owner/pipeline and
 schema surfaces, custom-object operations not accepted by the user-level app,
@@ -271,12 +307,12 @@ unfamiliar writes.
 | Symptom | Meaning or fix |
 |---|---|
 | `Unknown portal "..."` | Verify `HSAPI_PORTALS_CONFIG` and the profile name |
-| Hosted profile rejects `portalId` | Use the exact numeric HubSpot account ID |
-| Login reports missing broker session-start credential | Set the environment variable named by `auth.oauth.brokerStartKeyEnv` to the value issued by the broker operator |
+| Hosted profile rejects `portalId` | Omit it for account selection, or use the exact numeric HubSpot account ID when intentionally pinning the profile |
 | Broker health reports `ready: false` | The operator must finish broker configuration or secret provisioning |
-| Browser opened the wrong account | Switch HubSpot accounts before approving consent and retry |
+| Browser opened the wrong account | Cancel before consent, switch HubSpot accounts, and retry |
+| Browser completes but the CLI is still waiting | Ensure localhost traffic to `127.0.0.1` is allowed and retry; the one-time completion grant must return to the initiating CLI |
 | Optional permission is disabled | HubSpot will omit it even when **All** is selected |
-| `portal_id_mismatch` | The authorized account does not match the profile/broker account |
+| `portal_id_mismatch` or cache account mismatch | The selected account does not match the optional profile pin or existing cache binding; use the intended account or a separate profile/cache |
 | `User level OAuth token is not allowed for this endpoint.` | The endpoint does not accept this token type; adding the visible scope will not fix it |
 | `Endpoint requires non-user (admin) token` | Configure a scoped `portalBearer` credential if the operator is authorized to do so |
 | Local mode reports `EADDRINUSE` | Free the configured loopback port and retry |

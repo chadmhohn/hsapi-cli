@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "hsapi-oauth-broker",
   "main": "src/index.ts",
-  "compatibility_date": "2026-07-18",
+  "compatibility_date": "2026-07-20",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
 
@@ -11,7 +11,6 @@
   // wrangler.operator.jsonc and put deployment-specific values there.
   "vars": {
     "ENVIRONMENT": "local",
-    "HUBSPOT_ACCOUNT_ID": "REPLACE_ACCOUNT_ID",
     "HUBSPOT_CLIENT_ID": "00000000-0000-4000-8000-000000000001",
     "HUBSPOT_REDIRECT_URI": "http://localhost:8787/v1/oauth/callback",
     "HUBSPOT_REQUIRED_SCOPES": "oauth",
@@ -19,7 +18,7 @@
   },
 
   "secrets": {
-    "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY", "BROKER_SESSION_START_KEY"]
+    "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY"]
   },
 
   "durable_objects": {
@@ -66,11 +65,10 @@
     "staging": {
       "workers_dev": true,
       "secrets": {
-        "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY", "BROKER_SESSION_START_KEY"]
+        "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY"]
       },
       "vars": {
         "ENVIRONMENT": "staging",
-        "HUBSPOT_ACCOUNT_ID": "REPLACE_ACCOUNT_ID",
         "HUBSPOT_CLIENT_ID": "00000000-0000-4000-8000-000000000001",
         "HUBSPOT_REDIRECT_URI": "https://hsapi-oauth-broker-staging.REPLACE.workers.dev/v1/oauth/callback",
         "HUBSPOT_REQUIRED_SCOPES": "oauth",
@@ -105,11 +103,10 @@
     "production": {
       "workers_dev": true,
       "secrets": {
-        "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY", "BROKER_SESSION_START_KEY"]
+        "required": ["HUBSPOT_CLIENT_SECRET", "BROKER_SIGNING_KEY"]
       },
       "vars": {
         "ENVIRONMENT": "production",
-        "HUBSPOT_ACCOUNT_ID": "REPLACE_ACCOUNT_ID",
         "HUBSPOT_CLIENT_ID": "00000000-0000-4000-8000-000000000001",
         "HUBSPOT_REDIRECT_URI": "https://hsapi-oauth-broker-production.REPLACE.workers.dev/v1/oauth/callback",
         "HUBSPOT_REQUIRED_SCOPES": "oauth",

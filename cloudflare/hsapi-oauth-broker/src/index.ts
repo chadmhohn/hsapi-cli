@@ -9,6 +9,7 @@ const RETRY_AFTER_SECONDS = 1;
 const MAX_REQUEST_JSON_BODY_BYTES = 64 * 1024;
 const MAX_UPSTREAM_JSON_BODY_BYTES = 1024 * 1024;
 const HUBSPOT_UPSTREAM_TIMEOUT_MS = 20 * 1_000;
+const HUBSPOT_CLEANUP_TIMEOUT_MS = 5 * 1_000;
 const HUBSPOT_TOKEN_URL = "https://api.hubspot.com/oauth/2026-03/token";
 const HUBSPOT_REVOKE_URL =
   "https://api.hubspot.com/oauth/2026-03/token/revoke";
@@ -16,7 +17,6 @@ const BASE64URL_SHA256_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const PKCE_VERIFIER_PATTERN = /^[A-Za-z0-9\-._~]{43,128}$/;
 const CONSUME_SECRET_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
-const BROKER_SESSION_START_KEY_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const ACCOUNT_ID_PATTERN = /^[1-9][0-9]*$/;
 const CLIENT_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -38,6 +38,8 @@ interface SessionRow extends Record<string, SqlStorageValue> {
   consume_secret_hash: string | null;
   code_challenge: string | null;
   oauth_configuration_hash: string | null;
+  completion_redirect_uri: string | null;
+  completion_grant: string | null;
   authorization_code: string | null;
   oauth_error: string | null;
   created_at: number;
@@ -47,10 +49,14 @@ interface SessionRow extends Record<string, SqlStorageValue> {
 }
 
 type CallbackResult =
-  | "stored"
-  | "already_received"
-  | "expired"
-  | "unavailable";
+  | {
+      kind: "stored" | "already_received";
+      completionRedirectUri: string;
+      completionGrant: string | null;
+      oauthError: string | null;
+    }
+  | { kind: "expired" }
+  | { kind: "unavailable" };
 
 type BeginExchangeResult =
   | {
@@ -77,10 +83,8 @@ interface HubSpotToken {
 }
 
 interface RuntimeConfiguration {
-  accountId: string;
   clientId: string;
   clientSecret: string;
-  sessionStartKey: string;
   redirectUri: string;
   requiredScopes: string[];
   optionalScopes: string[];
@@ -129,6 +133,8 @@ export class OAuthSession extends DurableObject<Env> {
           consume_secret_hash TEXT,
           code_challenge TEXT,
           oauth_configuration_hash TEXT,
+          completion_redirect_uri TEXT,
+          completion_grant TEXT,
           authorization_code TEXT,
           oauth_error TEXT,
           created_at INTEGER NOT NULL,
@@ -150,6 +156,16 @@ export class OAuthSession extends DurableObject<Env> {
           "ALTER TABLE oauth_session ADD COLUMN exchange_attempt_id TEXT",
         );
       }
+      if (!columns.some((column) => column.name === "completion_redirect_uri")) {
+        this.ctx.storage.sql.exec(
+          "ALTER TABLE oauth_session ADD COLUMN completion_redirect_uri TEXT",
+        );
+      }
+      if (!columns.some((column) => column.name === "completion_grant")) {
+        this.ctx.storage.sql.exec(
+          "ALTER TABLE oauth_session ADD COLUMN completion_grant TEXT",
+        );
+      }
     });
   }
 
@@ -157,6 +173,7 @@ export class OAuthSession extends DurableObject<Env> {
     consumeSecretHash: string,
     codeChallenge: string,
     oauthConfigurationHash: string,
+    completionRedirectUri: string,
     createdAt: number,
     expiresAt: number,
   ): Promise<boolean> {
@@ -173,17 +190,20 @@ export class OAuthSession extends DurableObject<Env> {
          consume_secret_hash,
          code_challenge,
          oauth_configuration_hash,
+         completion_redirect_uri,
+         completion_grant,
          authorization_code,
          oauth_error,
          created_at,
          expires_at,
          exchange_started_at,
          exchange_attempt_id
-       ) VALUES (1, ?, ?, ?, ?, NULL, NULL, ?, ?, NULL, NULL)`,
+       ) VALUES (1, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?, NULL, NULL)`,
       "awaiting_callback",
       consumeSecretHash,
       codeChallenge,
       oauthConfigurationHash,
+      completionRedirectUri,
       createdAt,
       expiresAt,
     );
@@ -198,10 +218,10 @@ export class OAuthSession extends DurableObject<Env> {
   ): Promise<CallbackResult> {
     const session = this.readSession();
     if (!session) {
-      return "unavailable";
+      return { kind: "unavailable" };
     }
     if (session.expires_at <= now) {
-      return "expired";
+      return { kind: "expired" };
     }
     if (
       session.oauth_configuration_hash === null ||
@@ -210,15 +230,22 @@ export class OAuthSession extends DurableObject<Env> {
         session.oauth_configuration_hash,
       )
     ) {
-      return "unavailable";
+      return { kind: "unavailable" };
     }
-    if (session.status === "authorization_ready") {
-      return "already_received";
+    const existingResult = this.existingCallbackResult(session);
+    if (existingResult) {
+      return existingResult;
     }
     if (session.status !== "awaiting_callback") {
-      return "unavailable";
+      return { kind: "unavailable" };
+    }
+    if (!session.completion_redirect_uri) {
+      return { kind: "unavailable" };
     }
 
+    // Do not await between reading the pending state and committing its
+    // terminal result. Duplicate callbacks must observe this exact grant.
+    const completionGrant = randomToken(32);
     const expiresAt = Math.min(
       session.expires_at,
       now + CALLBACK_TTL_MS,
@@ -228,14 +255,21 @@ export class OAuthSession extends DurableObject<Env> {
        SET status = ?,
            authorization_code = ?,
            oauth_error = NULL,
+           completion_grant = ?,
            expires_at = ?
        WHERE singleton = 1`,
       "authorization_ready",
       code,
+      completionGrant,
       expiresAt,
     );
     await this.ctx.storage.setAlarm(expiresAt);
-    return "stored";
+    return {
+      kind: "stored",
+      completionRedirectUri: session.completion_redirect_uri,
+      completionGrant,
+      oauthError: null,
+    };
   }
 
   async recordAuthorizationError(
@@ -245,10 +279,10 @@ export class OAuthSession extends DurableObject<Env> {
   ): Promise<CallbackResult> {
     const session = this.readSession();
     if (!session) {
-      return "unavailable";
+      return { kind: "unavailable" };
     }
     if (session.expires_at <= now) {
-      return "expired";
+      return { kind: "expired" };
     }
     if (
       session.oauth_configuration_hash === null ||
@@ -257,16 +291,17 @@ export class OAuthSession extends DurableObject<Env> {
         session.oauth_configuration_hash,
       )
     ) {
-      return "unavailable";
+      return { kind: "unavailable" };
     }
-    if (
-      session.status === "authorization_error" ||
-      session.status === "authorization_ready"
-    ) {
-      return "already_received";
+    const existingResult = this.existingCallbackResult(session);
+    if (existingResult) {
+      return existingResult;
     }
     if (session.status !== "awaiting_callback") {
-      return "unavailable";
+      return { kind: "unavailable" };
+    }
+    if (!session.completion_redirect_uri) {
+      return { kind: "unavailable" };
     }
 
     const expiresAt = Math.min(
@@ -278,6 +313,7 @@ export class OAuthSession extends DurableObject<Env> {
        SET status = ?,
            oauth_error = ?,
            authorization_code = NULL,
+           completion_grant = NULL,
            expires_at = ?
        WHERE singleton = 1`,
       "authorization_error",
@@ -285,13 +321,19 @@ export class OAuthSession extends DurableObject<Env> {
       expiresAt,
     );
     await this.ctx.storage.setAlarm(expiresAt);
-    return "stored";
+    return {
+      kind: "stored",
+      completionRedirectUri: session.completion_redirect_uri,
+      completionGrant: null,
+      oauthError,
+    };
   }
 
   beginExchange(
     consumeSecretHash: string,
     codeChallenge: string,
     oauthConfigurationHash: string,
+    completionGrant: string | null,
     now: number,
   ): BeginExchangeResult {
     const session = this.readSession();
@@ -309,6 +351,17 @@ export class OAuthSession extends DurableObject<Env> {
       session.code_challenge !== null &&
       timingSafeEqualBase64Url(codeChallenge, session.code_challenge);
     if (!secretMatches || !challengeMatches) {
+      return { kind: "unauthorized" };
+    }
+    const completionMatches =
+      session.completion_redirect_uri !== null &&
+      session.completion_grant !== null &&
+      completionGrant !== null &&
+      timingSafeEqualBase64Url(
+        completionGrant,
+        session.completion_grant,
+      );
+    if (!completionMatches) {
       return { kind: "unauthorized" };
     }
     const configurationMatches =
@@ -398,6 +451,8 @@ export class OAuthSession extends DurableObject<Env> {
            consume_secret_hash,
            code_challenge,
            oauth_configuration_hash,
+           completion_redirect_uri,
+           completion_grant,
            authorization_code,
            oauth_error,
            created_at,
@@ -408,6 +463,38 @@ export class OAuthSession extends DurableObject<Env> {
          WHERE singleton = 1`,
       )
       .toArray()[0];
+  }
+
+  private existingCallbackResult(
+    session: SessionRow,
+  ): CallbackResult | undefined {
+    if (!session.completion_redirect_uri) {
+      return undefined;
+    }
+    if (
+      session.completion_grant &&
+      (
+        session.status === "authorization_ready" ||
+        session.status === "exchanging" ||
+        session.status === "completed"
+      )
+    ) {
+      return {
+        kind: "already_received",
+        completionRedirectUri: session.completion_redirect_uri,
+        completionGrant: session.completion_grant,
+        oauthError: null,
+      };
+    }
+    if (session.status === "authorization_error" && session.oauth_error) {
+      return {
+        kind: "already_received",
+        completionRedirectUri: session.completion_redirect_uri,
+        completionGrant: null,
+        oauthError: session.oauth_error,
+      };
+    }
+    return undefined;
   }
 }
 
@@ -432,11 +519,6 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
   if (url.pathname === "/v1/oauth/callback") {
     requireMethod(request, "GET");
     return receiveCallback(request, url, env);
-  }
-
-  if (url.pathname === "/v1/oauth/complete") {
-    requireMethod(request, "GET");
-    return callbackPage(true, 200);
   }
 
   const exchangeMatch = url.pathname.match(
@@ -466,17 +548,16 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
 async function startSession(request: Request, env: Env): Promise<Response> {
   const config = requireRuntimeConfiguration(env);
-  requireSessionStartCredential(request, config.sessionStartKey);
   const body = await readJsonRecord(request);
   rejectUnknownKeys(body, [
-    "accountId",
     "codeChallenge",
+    "completionRedirectUri",
     "consumeSecretHash",
   ]);
 
   const codeChallenge = requireString(body, "codeChallenge");
   const consumeSecretHash = requireString(body, "consumeSecretHash");
-  const requestedAccountId = optionalString(body, "accountId");
+  const completionRedirectUri = requireString(body, "completionRedirectUri");
 
   if (!BASE64URL_SHA256_PATTERN.test(codeChallenge)) {
     throw new HttpError(
@@ -492,14 +573,11 @@ async function startSession(request: Request, env: Env): Promise<Response> {
       "consumeSecretHash must be a base64url SHA-256 digest.",
     );
   }
-  if (
-    requestedAccountId !== undefined &&
-    requestedAccountId !== config.accountId
-  ) {
+  if (!isAllowedCompletionRedirectUri(completionRedirectUri)) {
     throw new HttpError(
       400,
-      "account_not_allowed",
-      "The requested HubSpot account is not allowed by this broker.",
+      "invalid_completion_redirect_uri",
+      "completionRedirectUri must be a local hsapi loopback callback.",
     );
   }
 
@@ -518,6 +596,7 @@ async function startSession(request: Request, env: Env): Promise<Response> {
       consumeSecretHash,
       codeChallenge,
       configurationHash,
+      completionRedirectUri,
       now,
       expiresAt,
     );
@@ -596,10 +675,15 @@ async function receiveCallback(
     );
   }
 
-  if (result === "expired" || result === "unavailable") {
+  if (result.kind === "expired" || result.kind === "unavailable") {
     return callbackPage(false, 410);
   }
-  return completionRedirect();
+  return loopbackCompletionRedirect(
+    result.completionRedirectUri,
+    state,
+    result.completionGrant,
+    result.oauthError ?? undefined,
+  );
 }
 
 async function exchangeSession(
@@ -618,13 +702,23 @@ async function exchangeSession(
   }
 
   const body = await readJsonRecord(request);
-  rejectUnknownKeys(body, ["codeVerifier"]);
+  rejectUnknownKeys(body, ["codeVerifier", "completionGrant"]);
   const codeVerifier = requireString(body, "codeVerifier");
+  const completionGrant = requireString(body, "completionGrant");
   if (!PKCE_VERIFIER_PATTERN.test(codeVerifier)) {
     throw new HttpError(
       400,
       "invalid_code_verifier",
       "codeVerifier is not a valid RFC 7636 verifier.",
+    );
+  }
+  if (
+    !CONSUME_SECRET_PATTERN.test(completionGrant)
+  ) {
+    throw new HttpError(
+      400,
+      "invalid_completion_grant",
+      "completionGrant is not a valid one-time completion credential.",
     );
   }
 
@@ -644,6 +738,7 @@ async function exchangeSession(
     consumeSecretHash,
     codeChallenge,
     configurationHash,
+    completionGrant,
     Date.now(),
   );
 
@@ -710,7 +805,7 @@ async function exchangeSession(
       redirect_uri: config.redirectUri,
     });
     issuedRefreshToken = token.refreshToken;
-    assertAllowedAccount(config, token);
+    assertTokenAccount(token);
     const brokerCredential = await issueBrokerCredential(
       signingKey,
       token.refreshToken,
@@ -751,9 +846,21 @@ async function exchangeSession(
 async function refreshToken(request: Request, env: Env): Promise<Response> {
   const config = requireRuntimeConfiguration(env);
   const body = await readJsonRecord(request);
-  rejectUnknownKeys(body, ["brokerCredential", "refreshToken"]);
+  rejectUnknownKeys(body, [
+    "brokerCredential",
+    "expectedHubId",
+    "refreshToken",
+  ]);
   const refreshTokenValue = requireString(body, "refreshToken");
   const brokerCredential = requireString(body, "brokerCredential");
+  const expectedHubId = optionalString(body, "expectedHubId");
+  if (expectedHubId !== undefined && !ACCOUNT_ID_PATTERN.test(expectedHubId)) {
+    throw new HttpError(
+      400,
+      "invalid_expected_hub_id",
+      "expectedHubId must be a numeric HubSpot account ID when provided.",
+    );
+  }
   const signingKey = await importSigningKey(config.signingKey);
 
   const refreshTokenDigest = await sha256Base64Url(refreshTokenValue);
@@ -789,7 +896,7 @@ async function refreshToken(request: Request, env: Env): Promise<Response> {
       refreshTokenValue,
     );
     issuedRefreshToken = token.refreshToken;
-    assertAllowedAccount(config, token);
+    assertTokenAccount(token, expectedHubId);
     const replacementCredential = await issueBrokerCredential(
       signingKey,
       token.refreshToken,
@@ -846,6 +953,7 @@ async function revokeToken(request: Request, env: Env): Promise<Response> {
 async function revokeHubSpotRefreshToken(
   config: RuntimeConfiguration,
   refreshTokenValue: string,
+  timeoutMs = HUBSPOT_UPSTREAM_TIMEOUT_MS,
 ): Promise<void> {
   await withHubSpotOAuthResponse(
     HUBSPOT_REVOKE_URL,
@@ -870,6 +978,7 @@ async function revokeHubSpotRefreshToken(
         await response.body.cancel();
       }
     },
+    timeoutMs,
   );
 }
 
@@ -878,7 +987,11 @@ async function bestEffortRevokeHubSpotRefreshToken(
   refreshTokenValue: string,
 ): Promise<void> {
   try {
-    await revokeHubSpotRefreshToken(config, refreshTokenValue);
+    await revokeHubSpotRefreshToken(
+      config,
+      refreshTokenValue,
+      HUBSPOT_CLEANUP_TIMEOUT_MS,
+    );
   } catch {
     // Never mask the primary exchange error with cleanup failure.
   }
@@ -913,11 +1026,12 @@ async function withHubSpotOAuthResponse<T>(
   input: string,
   init: RequestInit,
   consume: (response: Response) => Promise<T>,
+  timeoutMs = HUBSPOT_UPSTREAM_TIMEOUT_MS,
 ): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(),
-    HUBSPOT_UPSTREAM_TIMEOUT_MS,
+    timeoutMs,
   );
   try {
     let response: Response;
@@ -1059,15 +1173,16 @@ async function upstreamError(response: Response): Promise<UpstreamOAuthError> {
   return new UpstreamOAuthError(response.status, oauthError);
 }
 
-function assertAllowedAccount(
-  config: RuntimeConfiguration,
+function assertTokenAccount(
   token: HubSpotToken,
+  expectedAccountId?: string | null,
 ): void {
   if (token.hubId === undefined) {
     throw new UpstreamOAuthError(502, "missing_hub_id");
   }
   if (
-    String(token.hubId) !== config.accountId
+    expectedAccountId &&
+    String(token.hubId) !== expectedAccountId
   ) {
     throw new HttpError(
       403,
@@ -1082,10 +1197,7 @@ function buildAuthorizationUrl(
   state: string,
   codeChallenge: string,
 ): string {
-  const url = new URL(
-    `/oauth/${encodeURIComponent(config.accountId)}/authorize`,
-    "https://app.hubspot.com",
-  );
+  const url = new URL("/oauth/authorize", "https://app.hubspot.com");
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", config.redirectUri);
   url.searchParams.set("scope", config.requiredScopes.join(" "));
@@ -1164,8 +1276,7 @@ async function oauthConfigurationHash(
 ): Promise<string> {
   return sha256Base64Url(
     JSON.stringify({
-      version: 1,
-      accountId: config.accountId,
+      version: 2,
       clientId: config.clientId,
       redirectUri: config.redirectUri,
       requiredScopes: config.requiredScopes,
@@ -1246,24 +1357,18 @@ async function enforceRateLimit(env: Env, key: string): Promise<void> {
 function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
   const clientId = String(env.HUBSPOT_CLIENT_ID ?? "").trim();
   const clientSecret = String(env.HUBSPOT_CLIENT_SECRET ?? "").trim();
-  const sessionStartKey = String(env.BROKER_SESSION_START_KEY ?? "").trim();
   const redirectUri = String(env.HUBSPOT_REDIRECT_URI ?? "").trim();
-  const accountId = String(env.HUBSPOT_ACCOUNT_ID ?? "").trim();
   const signingKey = String(env.BROKER_SIGNING_KEY ?? "");
   const requiredScopes = parseConfiguredScopes(env.HUBSPOT_REQUIRED_SCOPES);
   const optionalScopes = parseConfiguredScopes(env.HUBSPOT_OPTIONAL_SCOPES);
   const requiredScopeSet = new Set(requiredScopes ?? []);
   const secretsAreDistinct =
-    !timingSafeEqualText(clientSecret, signingKey) &&
-    !timingSafeEqualText(clientSecret, sessionStartKey) &&
-    !timingSafeEqualText(signingKey, sessionStartKey);
+    !timingSafeEqualText(clientSecret, signingKey);
 
   if (
     !CLIENT_ID_PATTERN.test(clientId) ||
     clientId === "00000000-0000-4000-8000-000000000001" ||
-    !ACCOUNT_ID_PATTERN.test(accountId) ||
     clientSecret.length < 8 ||
-    !BROKER_SESSION_START_KEY_PATTERN.test(sessionStartKey) ||
     signingKey.length < 32 ||
     requiredScopes === undefined ||
     optionalScopes === undefined ||
@@ -1281,10 +1386,8 @@ function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
     );
   }
   return {
-    accountId,
     clientId,
     clientSecret,
-    sessionStartKey,
     redirectUri,
     requiredScopes,
     optionalScopes,
@@ -1314,6 +1417,27 @@ function isAllowedRedirectUri(value: string): boolean {
       (url.protocol === "https:" ||
         (url.protocol === "http:" &&
           (url.hostname === "localhost" || url.hostname === "127.0.0.1")))
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedCompletionRedirectUri(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const port = Number(url.port);
+    return (
+      url.protocol === "http:" &&
+      url.hostname === "127.0.0.1" &&
+      Number.isInteger(port) &&
+      port >= 1024 &&
+      port <= 65535 &&
+      !url.username &&
+      !url.password &&
+      !url.search &&
+      !url.hash &&
+      url.pathname === "/oauth/hsapi/callback"
     );
   } catch {
     return false;
@@ -1478,26 +1602,6 @@ function requireBearerToken(request: Request): string {
   return token;
 }
 
-function requireSessionStartCredential(
-  request: Request,
-  expectedKey: string,
-): void {
-  const authorization = request.headers.get("authorization") ?? "";
-  const match = authorization.match(/^Bearer ([A-Za-z0-9_-]{43})$/);
-  const presentedKey = match?.[1];
-  if (
-    !presentedKey ||
-    !timingSafeEqualBase64Url(presentedKey, expectedKey)
-  ) {
-    throw new HttpError(
-      401,
-      "invalid_broker_client",
-      "A valid broker client credential is required to start OAuth.",
-      { "WWW-Authenticate": "Bearer" },
-    );
-  }
-}
-
 function sanitizeOAuthError(value: string): string {
   const sanitized = value
     .toLowerCase()
@@ -1561,9 +1665,24 @@ function emptyResponse(status: number): Response {
   });
 }
 
-function completionRedirect(): Response {
+function loopbackCompletionRedirect(
+  redirectUri: string,
+  state: string,
+  completionGrant?: string | null,
+  oauthError?: string,
+): Response {
+  const target = new URL(redirectUri);
+  target.searchParams.set("state", state);
+  if (completionGrant) {
+    target.searchParams.set("completion_grant", completionGrant);
+  } else {
+    target.searchParams.set(
+      "error",
+      sanitizeOAuthError(oauthError || "authorization_error"),
+    );
+  }
   const headers = securityHeaders();
-  headers.set("Location", "/v1/oauth/complete");
+  headers.set("Location", target.toString());
   return new Response(null, {
     status: 303,
     headers,

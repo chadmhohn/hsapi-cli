@@ -175,11 +175,10 @@ async function startHostedBrokerLogin(source, input) {
   const action = 'auth login broker session start failed';
   const { response, payload } = await brokerJsonRequest(source, 'v1/oauth/sessions', {
     action,
-    bearer: input.brokerStartKey,
     body: {
       codeChallenge: input.codeChallenge,
-      consumeSecretHash: input.consumeSecretHash,
-      ...(input.accountId ? { accountId: String(input.accountId) } : {})
+      completionRedirectUri: input.completionRedirectUri,
+      consumeSecretHash: input.consumeSecretHash
     }
   });
   if (response.status !== 201 && response.status !== 200) {
@@ -199,7 +198,7 @@ async function startHostedBrokerLogin(source, input) {
   validateHubSpotAuthorizationUrl(
     parsedAuthorizationUrl,
     sessionId,
-    input.accountId,
+    null,
     action
   );
   const rawExpiresIn = Number(payload.expiresIn);
@@ -219,7 +218,8 @@ async function exchangeHostedBrokerLogin(source, input) {
     action,
     bearer: input.consumeSecret,
     body: {
-      codeVerifier: input.codeVerifier
+      codeVerifier: input.codeVerifier,
+      completionGrant: input.completionGrant
     }
   });
   if (response.status === 202) {
@@ -242,7 +242,10 @@ async function refreshHostedBrokerTokens(source, input) {
     action,
     body: {
       refreshToken: input.refreshToken,
-      brokerCredential: input.brokerCredential
+      brokerCredential: input.brokerCredential,
+      ...(input.expectedHubId
+        ? { expectedHubId: String(input.expectedHubId) }
+        : {})
     }
   });
   if (response.status !== 200) throw brokerHttpError(action, response, payload);

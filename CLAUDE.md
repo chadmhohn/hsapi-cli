@@ -41,16 +41,26 @@ When a user needs a portal profile:
 3. Start from the matching portal-neutral template under `examples/`.
 4. Keep the real config and token cache outside the package. Put only
    environment-variable names in the config, never credential values.
-5. Never ask the user to paste a token, client secret, broker start credential,
-   authorization code, or cache contents into chat.
-6. Run `hsapi auth doctor --portal <name> --require-env` before live access.
-   For hosted OAuth, follow with `auth login` and `auth whoami`. For
-   ServiceKey/private-app auth, preview and then run the read-only
-   `account details` identity check.
+5. Never ask the user to paste a token, client secret, authorization code, or
+   cache contents into chat.
+6. For normal hosted OAuth, configure only `mode: "hosted_broker"` and an
+   external `tokenCachePath`, then run `auth doctor`, `auth login`, and
+   `auth whoami`. The CLI uses its bundled broker, HubSpot presents the account
+   chooser, and the returned `hub_id` binds an unpinned cache. Do not ask for a
+   portal ID, broker credential, or local HubSpot app credentials.
+7. The shared broker requires hsapi v0.5 or later. Update v0.4.x hosted
+   installations and replace their old hosted profiles with the current
+   template before browser login.
+8. Treat `portalId` as an optional expected-account pin and `brokerUrl` as an
+   optional private-deployment override. Use either only when the operator
+   explicitly supplies it.
+9. For ServiceKey/private-app auth, preview and then run the read-only
+   `account details` identity check. Before combining it with OAuth, verify the
+   ServiceKey belongs to the same HubSpot account as the OAuth `hub_id`.
 
 `ServiceKey` maps to `auth.portalBearer` and is a HubSpot private-app access
 token. Hosted OAuth teammates do not need the HubSpot app client ID or client
-secret locally. Never invent a broker URL, portal ID, or enrollment credential.
+secret locally. Never invent an optional broker URL or portal-ID pin.
 
 ## MCP Tool Selection (for agents using the MCP server)
 
