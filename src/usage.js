@@ -10,7 +10,7 @@ const HOSTED_OAUTH_SAMPLE = path.join(PACKAGE_ROOT, 'examples', 'portals.oauth-h
 // virtual commands built on other endpoints, and bridge surfaces.
 const STATIC_COMMAND_LINES = [
   'hsapi profiles list [--json]',
-  'hsapi request <METHOD> <PATH_OR_URL> [--portal <name>] [--query k=v] [--body <json|@file>] [--yes] [--read-only] [--paginate]',
+  'hsapi request <METHOD> <PATH_OR_URL> [--portal <name>] [--query k=v] [--body <json|@file>] [--accept <media-type>] [--yes] [--read-only] [--paginate]',
   'hsapi crm object-types [--family core|commerce|activity|optional|all] [--names-only]',
   'hsapi crm resolve-object <name|objectTypeId> [--custom-fallback]',
   'hsapi crm count <objectType> [--portal <name>] [--filter property:OP:value] [--search text]',

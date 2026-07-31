@@ -13,10 +13,15 @@ Common commands:
 - `hsapi lists get <listId>`
 - `hsapi lists get-by-name <objectTypeId> <listName>`
 - `hsapi lists create --name <name> --object-type-id <objectTypeId> --processing-type MANUAL`
+- `hsapi lists members-add <listId> --record-ids 101,102 --yes`
+- `hsapi lists members-remove <listId> --record-ids 103 --yes`
 - `hsapi lists membership-update <listId> --add 101,102 --remove 103 --yes`
+- `hsapi lists update-filters <listId> --filter-branch @filter-branch.json --yes`
 - `hsapi lists memberships-clear <listId> --yes`
 
-Manual and snapshot lists can have memberships updated directly. Dynamic lists are filter-driven; update the list filter body rather than trying to add/remove members manually.
+Manual and snapshot lists can have memberships updated directly. Dynamic lists are filter-driven; use `update-filters` rather than trying to add or remove members manually. A filter update replaces the complete filter definition, so fetch the current list with filters and preserve every branch that should remain.
+
+HubSpot Agent CLI build 609 introduced the equivalent family under the name `segments`. HSAPI keeps this public-API functionality native under `lists`; the separate Agent CLI bridge remains limited to first-party-only saved reports and CRM saved views.
 
 Use `--ids-only`, `--names-only`, or `--id-name-map` for list discovery when full list definitions are unnecessary. These helpers are compact and can be paired with `--max-results`.
 

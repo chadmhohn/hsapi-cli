@@ -11,6 +11,7 @@ interface StartResponse {
   authorizationUrl: string;
   expiresIn: number;
   interval: number;
+  brokerRole: "local" | "remote";
 }
 
 interface TokenResponse {
@@ -19,9 +20,12 @@ interface TokenResponse {
   brokerCredential: string;
   expiresIn: number;
   tokenType: string;
-  hubId?: number;
-  userId?: number;
-  scopes?: string[];
+  hubId: number;
+  userId: number;
+  scopes: string[];
+  clientId: string;
+  isUserLevel: boolean;
+  hubDomain?: string;
 }
 
 interface ExchangeReady {
@@ -84,7 +88,45 @@ const retiredBrokerSessionStartKey = "b".repeat(43);
 const reusedConfigurationSecret = "r".repeat(43);
 const nativeCompletionRedirectUri =
   "http://127.0.0.1:49152/oauth/hsapi/callback";
+const remoteCompletionRedirectUri =
+  "https://remote-mcp.test/hubspot/callback";
 const callbackCompletionGrants = new Map<string, string>();
+
+function introspectionResponse(options: {
+  accessToken: string;
+  hubId?: number;
+  userId?: number;
+  scopes?: string[];
+  isUserLevel?: boolean;
+  hubDomain?: string;
+  active?: boolean;
+  clientId?: string;
+  expiresIn?: number;
+  token?: string;
+  tokenUse?: string;
+  tokenType?: string;
+}): Response {
+  const hubId = options.hubId ?? 123456789;
+  const userId = options.userId ?? 111;
+  return Response.json({
+    active: options.active ?? true,
+    token: options.token ?? options.accessToken,
+    hub_id: hubId,
+    user_id: userId,
+    client_id:
+      options.clientId ?? "11111111-1111-4111-8111-111111111111",
+    hub_domain: options.hubDomain ?? "example.test",
+    scopes: options.scopes ?? ["oauth"],
+    signed_access_token: {
+      hubId,
+      userId,
+      isUserLevel: options.isUserLevel ?? true,
+    },
+    expires_in: options.expiresIn ?? 1700,
+    token_use: options.tokenUse ?? "access_token",
+    token_type: options.tokenType ?? "Bearer",
+  });
+}
 
 afterEach(async () => {
   vi.restoreAllMocks();
@@ -108,6 +150,7 @@ describe("hsapi OAuth broker", () => {
 
     expect(start.expiresIn).toBe(600);
     expect(start.interval).toBe(1);
+    expect(start.brokerRole).toBe("local");
     expect(start.sessionId).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
     const authorizationUrl = new URL(start.authorizationUrl);
@@ -121,6 +164,8 @@ describe("hsapi OAuth broker", () => {
     expect(optionalScopes).toContain(
       "crm.objects.marketing_events.write",
     );
+    expect(optionalScopes).not.toContain("cpq.price_books.read");
+    expect(optionalScopes).not.toContain("cpq.price_books.write");
     expect(authorizationUrl.searchParams.get("state")).toBe(start.sessionId);
     expect(authorizationUrl.searchParams.get("code_challenge")).toBe(
       await sha256Base64Url(verifier),
@@ -147,6 +192,100 @@ describe("hsapi OAuth broker", () => {
     expect(prematureExchange.headers.get("cache-control")).toContain(
       "no-store",
     );
+  });
+
+  it("allows only an exact configured HTTPS completion with narrowed optional scopes", async () => {
+    const remoteEnv = remoteBrokerEnv();
+    const requestedScopes = [
+      "crm.objects.contacts.read",
+      "crm.objects.contracts.read",
+    ];
+    const startResponse = await postJsonWithEnv("/v1/oauth/sessions", {
+      codeChallenge: await sha256Base64Url(verifier),
+      completionRedirectUri: remoteCompletionRedirectUri,
+      consumeSecretHash: await sha256Base64Url(consumeSecret),
+      optionalScopes: requestedScopes,
+    }, remoteEnv);
+    expect(startResponse.status).toBe(201);
+    const start = await startResponse.json<StartResponse>();
+    expect(start.brokerRole).toBe("remote");
+    const authorizationUrl = new URL(start.authorizationUrl);
+    expect(authorizationUrl.searchParams.get("optional_scope")).toBe(
+      requestedScopes.join(" "),
+    );
+
+    const callback = await dispatchWithEnv(
+      `https://broker.test/v1/oauth/callback?code=remote-code&state=${start.sessionId}`,
+      remoteEnv,
+      { headers: { "CF-Connecting-IP": "192.0.2.14" } },
+    );
+    expect(callback.status).toBe(303);
+    const completion = new URL(String(callback.headers.get("location")));
+    expect(`${completion.origin}${completion.pathname}`).toBe(
+      remoteCompletionRedirectUri,
+    );
+    expect(completion.searchParams.get("state")).toBe(start.sessionId);
+    expect(completion.searchParams.get("completion_grant")).toMatch(
+      /^[A-Za-z0-9_-]{43}$/,
+    );
+    expect(completion.searchParams.has("code")).toBe(false);
+  });
+
+  it("requires a configured remote completion to narrow optional scopes", async () => {
+    const remoteEnv = remoteBrokerEnv();
+    const missing = await postJsonWithEnv("/v1/oauth/sessions", {
+      codeChallenge: await sha256Base64Url(verifier),
+      completionRedirectUri: remoteCompletionRedirectUri,
+      consumeSecretHash: await sha256Base64Url(consumeSecret),
+    }, remoteEnv);
+    expect(missing.status).toBe(400);
+    expect(await missing.json()).toMatchObject({
+      error: "invalid_optional_scopes",
+    });
+
+    for (const optionalScopes of [
+      ["crm.objects.contacts.read", "not.configured.read"],
+      ["crm.objects.contacts.read", "crm.objects.contacts.read"],
+    ]) {
+      const rejected = await postJsonWithEnv("/v1/oauth/sessions", {
+        codeChallenge: await sha256Base64Url(verifier),
+        completionRedirectUri: remoteCompletionRedirectUri,
+        consumeSecretHash: await sha256Base64Url(consumeSecret),
+        optionalScopes,
+      }, remoteEnv);
+      expect(rejected.status).toBe(400);
+      expect(await rejected.json()).toMatchObject({
+        error: "invalid_optional_scopes",
+      });
+    }
+  });
+
+  it("keeps local and remote completion protocols mutually exclusive", async () => {
+    const localToRemote = await postJson("/v1/oauth/sessions", {
+      codeChallenge: await sha256Base64Url(verifier),
+      completionRedirectUri: remoteCompletionRedirectUri,
+      consumeSecretHash: await sha256Base64Url(consumeSecret),
+      optionalScopes: [],
+    });
+    expect(localToRemote.status).toBe(400);
+    expect(await localToRemote.json()).toMatchObject({
+      error: "invalid_completion_redirect_uri",
+    });
+
+    const remoteToLocal = await postJsonWithEnv(
+      "/v1/oauth/sessions",
+      {
+        codeChallenge: await sha256Base64Url(verifier),
+        completionRedirectUri: nativeCompletionRedirectUri,
+        consumeSecretHash: await sha256Base64Url(consumeSecret),
+        optionalScopes: [],
+      },
+      remoteBrokerEnv(),
+    );
+    expect(remoteToLocal.status).toBe(400);
+    expect(await remoteToLocal.json()).toMatchObject({
+      error: "invalid_completion_redirect_uri",
+    });
   });
 
   it("rejects retired remote and account-pinned session starts", async () => {
@@ -179,28 +318,45 @@ describe("hsapi OAuth broker", () => {
       error: "invalid_request",
     });
 
-    const invalidLoopback = await postJson("/v1/oauth/sessions", {
-      codeChallenge: await sha256Base64Url(verifier),
-      completionRedirectUri:
-        "https://attacker.example/oauth/hsapi/callback",
-      consumeSecretHash: await sha256Base64Url(consumeSecret),
-    });
-    expect(invalidLoopback.status).toBe(400);
-    expect(await invalidLoopback.json()).toMatchObject({
-      error: "invalid_completion_redirect_uri",
-    });
+    for (const completionRedirectUri of [
+      "https://attacker.example/oauth/hsapi/callback",
+      "https://remote-mcp.test/not-the-callback",
+      `${remoteCompletionRedirectUri}?next=https://attacker.example`,
+    ]) {
+      const invalidCompletion = await postJson("/v1/oauth/sessions", {
+        codeChallenge: await sha256Base64Url(verifier),
+        completionRedirectUri,
+        consumeSecretHash: await sha256Base64Url(consumeSecret),
+        optionalScopes: [],
+      });
+      expect(invalidCompletion.status).toBe(400);
+      expect(await invalidCompletion.json()).toMatchObject({
+        error: "invalid_completion_redirect_uri",
+      });
+    }
   });
 
   it("hands a native session back to localhost before exchanging any account", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      Response.json({
-        access_token: "native-access-token",
-        refresh_token: "native-refresh-token",
-        expires_in: 1800,
-        token_type: "bearer",
-        hub_id: 999999999,
-        scopes: ["oauth"],
-      }),
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const parameters = new URLSearchParams(String(init?.body ?? ""));
+        if (parameters.get("token_type_hint") === "access_token") {
+          return introspectionResponse({
+            accessToken: "native-access-token",
+            hubId: 999999999,
+            userId: 101,
+            isUserLevel: false,
+          });
+        }
+        return Response.json({
+          access_token: "native-access-token",
+          refresh_token: "native-refresh-token",
+          expires_in: 1800,
+          token_type: "bearer",
+          hub_id: 999999999,
+          scopes: ["oauth"],
+        });
+      },
     );
 
     const start = await startSession();
@@ -225,19 +381,31 @@ describe("hsapi OAuth broker", () => {
     expect(exchanged.status).toBe(200);
     expect(await exchanged.json()).toMatchObject({
       hubId: 999999999,
+      userId: 101,
       scopes: ["oauth"],
+      clientId: "11111111-1111-4111-8111-111111111111",
+      isUserLevel: false,
+      hubDomain: "example.test",
     });
   });
 
   it("reissues one completion grant for sequential and concurrent callback retries", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      Response.json({
-        access_token: "retry-access-token",
-        refresh_token: "retry-refresh-token",
-        expires_in: 1800,
-        token_type: "bearer",
-        hub_id: 123456789,
-      }),
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const parameters = new URLSearchParams(String(init?.body ?? ""));
+        if (parameters.get("token_type_hint") === "access_token") {
+          return introspectionResponse({
+            accessToken: "retry-access-token",
+          });
+        }
+        return Response.json({
+          access_token: "retry-access-token",
+          refresh_token: "retry-refresh-token",
+          expires_in: 1800,
+          token_type: "bearer",
+          hub_id: 123456789,
+        });
+      },
     );
     const start = await startSession();
     const callbackUrl =
@@ -287,6 +455,19 @@ describe("hsapi OAuth broker", () => {
         upstreamRequests.push(parameters);
         upstreamTargets.push(String(input));
         upstreamRedirectModes.push(init?.redirect);
+        if (parameters.get("token_type_hint") === "access_token") {
+          const accessToken = String(parameters.get("token"));
+          const refreshed = accessToken === "access-token-2";
+          return introspectionResponse({
+            accessToken,
+            hubId: 123456789,
+            userId: refreshed ? 222 : 111,
+            scopes: refreshed
+              ? ["oauth", "cpq.quotes.write"]
+              : ["oauth", "crm.objects.marketing_events.write"],
+            hubDomain: "portal.example.test",
+          });
+        }
         if (parameters.get("token_type_hint") === "refresh_token") {
           return new Response(null, { status: 204 });
         }
@@ -295,7 +476,8 @@ describe("hsapi OAuth broker", () => {
             access_token: "access-token-2",
             refresh_token: "refresh-token-2",
             expires_in: 1800,
-            token_type: "bearer",
+            token_type: "Bearer",
+            token_use: "access_token",
             hub_id: 123456789,
             user_id: 222,
             scopes: ["oauth", "cpq.quotes.write"],
@@ -306,6 +488,7 @@ describe("hsapi OAuth broker", () => {
           refresh_token: "refresh-token-1",
           expires_in: 1800,
           token_type: "bearer",
+          token_use: "access_token",
           hub_id: 123456789,
           user_id: 111,
           scopes: ["oauth", "crm.objects.marketing_events.write"],
@@ -334,11 +517,14 @@ describe("hsapi OAuth broker", () => {
     expect(initial).toMatchObject({
       accessToken: "access-token-1",
       refreshToken: "refresh-token-1",
-      expiresIn: 1800,
+      expiresIn: 1700,
       tokenType: "bearer",
       hubId: 123456789,
       userId: 111,
       scopes: ["oauth", "crm.objects.marketing_events.write"],
+      clientId: "11111111-1111-4111-8111-111111111111",
+      isUserLevel: true,
+      hubDomain: "portal.example.test",
     });
     expect(initial.brokerCredential).toMatch(/^v1\.[A-Za-z0-9_-]{43}$/);
 
@@ -363,6 +549,7 @@ describe("hsapi OAuth broker", () => {
     const refreshed = await refreshedResponse.json<TokenResponse>();
     expect(refreshed.refreshToken).toBe("refresh-token-2");
     expect(refreshed.brokerCredential).not.toBe(initial.brokerCredential);
+    expect(refreshed.tokenType).toBe("Bearer");
     expect(refreshed.scopes).toEqual(["oauth", "cpq.quotes.write"]);
 
     const revoked = await postJson("/v1/oauth/tokens/revoke", {
@@ -373,15 +560,148 @@ describe("hsapi OAuth broker", () => {
 
     expect(upstreamRequests.map((request) => request.get("grant_type"))).toEqual([
       "authorization_code",
+      null,
       "refresh_token",
+      null,
       null,
     ]);
     expect(upstreamTargets).toEqual([
       "https://api.hubspot.com/oauth/2026-03/token",
+      "https://api.hubspot.com/oauth/2026-03/token/introspect",
       "https://api.hubspot.com/oauth/2026-03/token",
+      "https://api.hubspot.com/oauth/2026-03/token/introspect",
       "https://api.hubspot.com/oauth/2026-03/token/revoke",
     ]);
-    expect(upstreamRedirectModes).toEqual(["manual", "manual", "manual"]);
+    expect(upstreamRequests[1]?.get("token_type_hint")).toBe("access_token");
+    expect(upstreamRequests[1]?.get("token")).toBe("access-token-1");
+    expect(upstreamRequests[1]?.get("client_id")).toBe(
+      "11111111-1111-4111-8111-111111111111",
+    );
+    expect(upstreamRequests[1]?.get("client_secret")).toBe(
+      "test-only-client-secret",
+    );
+    expect(new URL(upstreamTargets[1] ?? "").search).toBe("");
+    expect(upstreamRedirectModes).toEqual([
+      "manual",
+      "manual",
+      "manual",
+      "manual",
+      "manual",
+    ]);
+  });
+
+  it("rejects issuance responses with a non-Bearer type or wrong token use", async () => {
+    const invalidIssuanceMetadata = [
+      { token_type: "MAC" },
+      { token_type: "Bearer", token_use: "refresh_token" },
+    ];
+    let issuanceIndex = 0;
+    let introspectionCalls = 0;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const parameters = new URLSearchParams(String(init?.body ?? ""));
+        if (parameters.get("token_type_hint") === "access_token") {
+          introspectionCalls += 1;
+          return introspectionResponse({
+            accessToken: String(parameters.get("token")),
+          });
+        }
+        const metadata = invalidIssuanceMetadata[issuanceIndex++];
+        return Response.json({
+          access_token: `invalid-issuance-access-${issuanceIndex}`,
+          refresh_token: `invalid-issuance-refresh-${issuanceIndex}`,
+          expires_in: 1800,
+          ...metadata,
+        });
+      },
+    );
+
+    for (let index = 0; index < invalidIssuanceMetadata.length; index += 1) {
+      const start = await startSession();
+      const callback = await dispatch(
+        `https://broker.test/v1/oauth/callback?code=invalid-issuance-${index}&state=${start.sessionId}`,
+        { headers: { "CF-Connecting-IP": `192.0.2.${70 + index}` } },
+      );
+      expect(callback.status).toBe(303);
+
+      const failed = await exchange(
+        start.sessionId,
+        consumeSecret,
+        verifier,
+      );
+      expect(failed.status).toBe(502);
+      expect(await failed.json()).toMatchObject({
+        error: "hubspot_oauth_error",
+        oauthError: "invalid_upstream_response",
+      });
+    }
+    expect(introspectionCalls).toBe(0);
+  });
+
+  it("rejects introspection with a mismatched token, use, or type", async () => {
+    const invalidIntrospectionMetadata = [
+      { token: "different-access-token" },
+      { tokenUse: "refresh_token" },
+      { tokenType: "MAC" },
+    ];
+    let issuanceIndex = 0;
+    const revokedRefreshTokens: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const parameters = new URLSearchParams(String(init?.body ?? ""));
+        if (parameters.get("token_type_hint") === "refresh_token") {
+          revokedRefreshTokens.push(String(parameters.get("token")));
+          return new Response(null, { status: 204 });
+        }
+        if (parameters.get("token_type_hint") === "access_token") {
+          const accessToken = String(parameters.get("token"));
+          const index = Number(
+            accessToken.slice(accessToken.lastIndexOf("-") + 1),
+          );
+          return introspectionResponse({
+            accessToken,
+            ...invalidIntrospectionMetadata[index],
+          });
+        }
+        const index = issuanceIndex++;
+        return Response.json({
+          access_token: `invalid-introspection-access-${index}`,
+          refresh_token: `invalid-introspection-refresh-${index}`,
+          expires_in: 1800,
+          token_type: "bearer",
+          token_use: "access_token",
+        });
+      },
+    );
+
+    for (
+      let index = 0;
+      index < invalidIntrospectionMetadata.length;
+      index += 1
+    ) {
+      const start = await startSession();
+      const callback = await dispatch(
+        `https://broker.test/v1/oauth/callback?code=invalid-introspection-${index}&state=${start.sessionId}`,
+        { headers: { "CF-Connecting-IP": `192.0.2.${80 + index}` } },
+      );
+      expect(callback.status).toBe(303);
+
+      const failed = await exchange(
+        start.sessionId,
+        consumeSecret,
+        verifier,
+      );
+      expect(failed.status).toBe(502);
+      expect(await failed.json()).toMatchObject({
+        error: "hubspot_oauth_error",
+        oauthError: "invalid_token_introspection",
+      });
+    }
+    expect(revokedRefreshTokens).toEqual([
+      "invalid-introspection-refresh-0",
+      "invalid-introspection-refresh-1",
+      "invalid-introspection-refresh-2",
+    ]);
   });
 
   it("makes a failed upstream exchange terminal instead of replaying the code", async () => {
@@ -498,6 +818,16 @@ describe("hsapi OAuth broker", () => {
         if (parameters.get("token_type_hint") === "refresh_token") {
           return new Response(null, { status: 204 });
         }
+        if (parameters.get("token_type_hint") === "access_token") {
+          return Response.json({
+            active: true,
+            user_id: 111,
+            client_id: "11111111-1111-4111-8111-111111111111",
+            scopes: ["oauth"],
+            signed_access_token: { userId: 111, isUserLevel: true },
+            expires_in: 1700,
+          });
+        }
         return Response.json({
           access_token: "missing-account-access",
           refresh_token: "missing-account-refresh",
@@ -524,13 +854,13 @@ describe("hsapi OAuth broker", () => {
     expect(failed.status).toBe(502);
     expect(await failed.json()).toMatchObject({
       error: "hubspot_oauth_error",
-      oauthError: "missing_hub_id",
+      oauthError: "invalid_token_introspection",
     });
-    expect(upstreamRequests).toHaveLength(2);
-    expect(upstreamRequests[1]?.get("token")).toBe(
+    expect(upstreamRequests).toHaveLength(3);
+    expect(upstreamRequests[2]?.get("token")).toBe(
       "missing-account-refresh",
     );
-    expect(upstreamRequests[1]?.get("token_type_hint")).toBe(
+    expect(upstreamRequests[2]?.get("token_type_hint")).toBe(
       "refresh_token",
     );
   });
@@ -543,6 +873,16 @@ describe("hsapi OAuth broker", () => {
         upstreamRequests.push(parameters);
         if (parameters.get("token_type_hint") === "refresh_token") {
           return new Response(null, { status: 204 });
+        }
+        if (parameters.get("token_type_hint") === "access_token") {
+          const accessToken = String(parameters.get("token"));
+          return introspectionResponse({
+            accessToken,
+            hubId: accessToken === "wrong-account-refresh-access"
+              ? 999999999
+              : 123456789,
+            userId: 111,
+          });
         }
         if (parameters.get("grant_type") === "refresh_token") {
           return Response.json({
@@ -589,25 +929,33 @@ describe("hsapi OAuth broker", () => {
     expect(await failed.json()).toMatchObject({
       error: "account_mismatch",
     });
-    expect(upstreamRequests).toHaveLength(3);
-    expect(upstreamRequests[2]?.get("token")).toBe(
+    expect(upstreamRequests).toHaveLength(5);
+    expect(upstreamRequests[4]?.get("token")).toBe(
       "wrong-account-refresh-token",
     );
-    expect(upstreamRequests[2]?.get("token_type_hint")).toBe(
+    expect(upstreamRequests[4]?.get("token_type_hint")).toBe(
       "refresh_token",
     );
   });
 
   it("allows large tokens up to the 1 MiB upstream JSON cap", async () => {
     let accessTokenSize = 80 * 1024;
-    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
-      Response.json({
-        access_token: "a".repeat(accessTokenSize),
-        refresh_token: "refresh-token",
-        expires_in: 1800,
-        token_type: "bearer",
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const parameters = new URLSearchParams(String(init?.body ?? ""));
+        if (parameters.get("token_type_hint") === "access_token") {
+          return introspectionResponse({
+            accessToken: String(parameters.get("token")),
+          });
+        }
+        return Response.json({
+          access_token: "a".repeat(accessTokenSize),
+          refresh_token: "refresh-token",
+          expires_in: 1800,
+          token_type: "bearer",
           hub_id: 123456789,
-      }),
+        });
+      },
     );
 
     const acceptedStart = await startSession();
@@ -956,6 +1304,29 @@ describe("hsapi OAuth broker", () => {
 
   it.each([
     [
+      "missing broker role",
+      { HSAPI_BROKER_ROLE: "" },
+    ],
+    [
+      "unknown broker role",
+      { HSAPI_BROKER_ROLE: "combined" },
+    ],
+    [
+      "local broker with remote completion allowlist",
+      {
+        HSAPI_BROKER_ROLE: "local",
+        HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS:
+          remoteCompletionRedirectUri,
+      },
+    ],
+    [
+      "remote broker without a completion allowlist",
+      {
+        HSAPI_BROKER_ROLE: "remote",
+        HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS: "",
+      },
+    ],
+    [
       "malformed client ID",
       { HUBSPOT_CLIENT_ID: "not-a-hubspot-client-id" },
     ],
@@ -980,6 +1351,27 @@ describe("hsapi OAuth broker", () => {
     [
       "oauth as an optional scope",
       { HUBSPOT_OPTIONAL_SCOPES: "oauth crm.objects.contacts.read" },
+    ],
+    [
+      "unsafe remote completion URL",
+      {
+        HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS:
+          "https://remote-mcp.test/hubspot/callback?unsafe=true",
+      },
+    ],
+    [
+      "placeholder remote completion URL",
+      {
+        HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS:
+          "https://hsapi-mcp.REPLACE.example/hubspot/callback",
+      },
+    ],
+    [
+      "duplicate remote completion URL",
+      {
+        HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS:
+          `${remoteCompletionRedirectUri} ${remoteCompletionRedirectUri}`,
+      },
     ],
   ])("rejects invalid OAuth configuration: %s", async (_name, overrides) => {
     const invalidEnv = {
@@ -1128,7 +1520,17 @@ async function exchangeWithEnv(
 
 async function postJson(
   path: string,
-  body: Record<string, string>,
+  body: Record<string, unknown>,
+  sourceIp = "192.0.2.12",
+  bearer?: string,
+): Promise<Response> {
+  return postJsonWithEnv(path, body, env, sourceIp, bearer);
+}
+
+async function postJsonWithEnv(
+  path: string,
+  body: Record<string, unknown>,
+  targetEnv: Env,
   sourceIp = "192.0.2.12",
   bearer?: string,
 ): Promise<Response> {
@@ -1139,11 +1541,20 @@ async function postJson(
   if (bearer) {
     headers.Authorization = `Bearer ${bearer}`;
   }
-  return dispatch(`https://broker.test${path}`, {
+  return dispatchWithEnv(`https://broker.test${path}`, targetEnv, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   });
+}
+
+function remoteBrokerEnv(): Env {
+  return {
+    ...env,
+    HSAPI_BROKER_ROLE: "remote",
+    HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS:
+      remoteCompletionRedirectUri,
+  } as unknown as Env;
 }
 
 async function dispatch(
@@ -1208,7 +1619,11 @@ async function testConfigurationHash(targetEnv: Env): Promise<string> {
     value.split(/[\s,]+/u).filter(Boolean);
   return sha256Base64Url(
     JSON.stringify({
-      version: 2,
+      version: 4,
+      brokerRole: String(targetEnv.HSAPI_BROKER_ROLE).trim(),
+      allowedRemoteCompletionRedirectUris: String(
+        targetEnv.HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS ?? "",
+      ).split(/[\s,]+/u).filter(Boolean),
       clientId: String(targetEnv.HUBSPOT_CLIENT_ID).trim(),
       redirectUri: String(targetEnv.HUBSPOT_REDIRECT_URI).trim(),
       requiredScopes: parseScopes(targetEnv.HUBSPOT_REQUIRED_SCOPES),

@@ -1,0 +1,83 @@
+{
+  "uid": "hubspot-api-cli-mcp",
+  "type": "app",
+  "config": {
+    "description": "User-level OAuth app that authenticates the hsapi CLI/MCP as the signed-in HubSpot user, scoped to that user's own permissions.",
+    "name": "HubSpot API CLI/MCP",
+    "logo": "/app/app-logo.png",
+    "distribution": "marketplace",
+    "isUserLevel": true,
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": [
+        "http://localhost:5123/callback",
+        "https://hsapi-oauth.groundworkrevops.com/v1/oauth/callback"
+      ],
+      "requiredScopes": [
+        "oauth"
+      ],
+      "optionalScopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.companies.read",
+        "crm.objects.deals.read",
+        "crm.objects.contacts.write",
+        "crm.objects.companies.write",
+        "crm.objects.deals.write",
+        "crm.objects.tickets.read",
+        "crm.objects.tickets.write",
+        "crm.objects.line_items.read",
+        "crm.objects.line_items.write",
+        "crm.objects.products.read",
+        "crm.objects.products.write",
+        "crm.objects.quotes.read",
+        "crm.objects.owners.read",
+        "crm.objects.subscriptions.read",
+        "crm.objects.carts.read",
+        "crm.objects.orders.read",
+        "crm.objects.invoices.read",
+        "crm.objects.tasks.read",
+        "crm.objects.tasks.write",
+        "crm.objects.notes.read",
+        "crm.objects.notes.write",
+        "crm.objects.calls.read",
+        "crm.objects.calls.write",
+        "crm.objects.meetings.read",
+        "crm.objects.meetings.write",
+        "crm.objects.emails.read",
+        "crm.objects.emails.write",
+        "crm.objects.contracts.read",
+        "crm.objects.marketing_events.read",
+        "crm.schemas.calls.read",
+        "crm.schemas.emails.read",
+        "crm.schemas.meetings.read",
+        "crm.schemas.notes.read",
+        "crm.schemas.tasks.read",
+        "crm.lists.read",
+        "crm.hubsql.execute",
+        "cpq.quote_templates.read",
+        "cpq.quotes.read",
+        "cms.blogs.blog_posts.read",
+        "cms.pages.landing_pages.read",
+        "cms.pages.site_pages.read",
+        "marketing.campaigns.read",
+        "marketing.campaigns.revenue.full.read",
+        "marketing.campaigns.revenue.lite.read",
+        "settings.users.teams.read",
+        "mcp.users.read",
+        "cpq.quotes.write",
+        "crm.objects.marketing_events.write"
+      ]
+    },
+    "permittedUrls": {
+      "fetch": ["https://api.hubapi.com"],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "chad.hohn@radai.com",
+      "documentationUrl": "https://github.com/chadmhohn/hsapi-cli",
+      "supportUrl": "https://github.com/chadmhohn/hsapi-cli/issues",
+      "supportPhone": "+18005555555"
+    }
+  }
+}

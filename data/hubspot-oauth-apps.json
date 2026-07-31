@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-30",
+  "scopeProfiles": {
+    "broadPublicAppOptional": [
+      "crm.objects.contacts.read",
+      "crm.objects.companies.read",
+      "crm.objects.deals.read",
+      "crm.objects.contacts.write",
+      "crm.objects.companies.write",
+      "crm.objects.deals.write",
+      "crm.objects.tickets.read",
+      "crm.objects.tickets.write",
+      "crm.objects.line_items.read",
+      "crm.objects.line_items.write",
+      "crm.objects.products.read",
+      "crm.objects.products.write",
+      "crm.objects.quotes.read",
+      "crm.objects.owners.read",
+      "crm.objects.subscriptions.read",
+      "crm.objects.carts.read",
+      "crm.objects.orders.read",
+      "crm.objects.invoices.read",
+      "crm.objects.tasks.read",
+      "crm.objects.tasks.write",
+      "crm.objects.notes.read",
+      "crm.objects.notes.write",
+      "crm.objects.calls.read",
+      "crm.objects.calls.write",
+      "crm.objects.meetings.read",
+      "crm.objects.meetings.write",
+      "crm.objects.emails.read",
+      "crm.objects.emails.write",
+      "crm.objects.contracts.read",
+      "crm.objects.marketing_events.read",
+      "crm.schemas.calls.read",
+      "crm.schemas.emails.read",
+      "crm.schemas.meetings.read",
+      "crm.schemas.notes.read",
+      "crm.schemas.tasks.read",
+      "crm.lists.read",
+      "crm.hubsql.execute",
+      "cpq.quote_templates.read",
+      "cpq.quotes.read",
+      "cms.blogs.blog_posts.read",
+      "cms.pages.landing_pages.read",
+      "cms.pages.site_pages.read",
+      "marketing.campaigns.read",
+      "marketing.campaigns.revenue.full.read",
+      "marketing.campaigns.revenue.lite.read",
+      "settings.users.teams.read",
+      "mcp.users.read",
+      "cpq.quotes.write",
+      "crm.objects.marketing_events.write"
+    ],
+    "remoteReadRequest": [
+      "crm.objects.contacts.read",
+      "crm.objects.companies.read",
+      "crm.objects.deals.read",
+      "crm.objects.tickets.read",
+      "crm.objects.line_items.read",
+      "crm.objects.products.read",
+      "crm.objects.quotes.read",
+      "crm.objects.subscriptions.read",
+      "crm.objects.carts.read",
+      "crm.objects.orders.read",
+      "crm.objects.invoices.read",
+      "crm.objects.tasks.read",
+      "crm.objects.notes.read",
+      "crm.objects.calls.read",
+      "crm.objects.meetings.read",
+      "crm.objects.emails.read",
+      "crm.objects.contracts.read",
+      "crm.objects.marketing_events.read",
+      "mcp.users.read"
+    ],
+    "remoteWriteRequest": [
+      "crm.objects.contacts.write",
+      "crm.objects.companies.write",
+      "crm.objects.deals.write",
+      "crm.objects.tickets.write",
+      "crm.objects.line_items.write",
+      "crm.objects.products.write",
+      "crm.objects.tasks.write",
+      "crm.objects.notes.write",
+      "crm.objects.calls.write",
+      "crm.objects.meetings.write",
+      "crm.objects.emails.write",
+      "crm.objects.marketing_events.write"
+    ]
+  },
+  "apps": {
+    "localHostedOAuth": {
+      "brokerRole": "local",
+      "requiredScopes": ["oauth"],
+      "optionalScopeProfile": "broadPublicAppOptional",
+      "completionProtocol": "loopback",
+      "appProjectConfig": "hubspot/hsapi-local-oauth-app/src/app/user-level-app-hsmeta.json",
+      "brokerConfig": "cloudflare/hsapi-oauth-broker/wrangler.jsonc",
+      "credentialOwner": "local-hosted-oauth-public-app"
+    },
+    "remoteMcpOAuth": {
+      "brokerRole": "remote",
+      "requiredScopes": ["oauth"],
+      "optionalScopeProfile": "broadPublicAppOptional",
+      "requestedScopeProfiles": ["remoteReadRequest", "remoteWriteRequest"],
+      "completionProtocol": "exact_https",
+      "appProjectConfig": "hubspot/hsapi-remote-mcp-app/src/app/app-hsmeta.json",
+      "brokerConfig": "cloudflare/hsapi-oauth-broker/wrangler.remote.jsonc",
+      "connectorConfig": "cloudflare/hsapi-remote-mcp/wrangler.jsonc",
+      "credentialOwner": "remote-mcp-public-app"
+    }
+  },
+  "pendingScopes": {
+    "customObjects": "A live 2026.03 user-level app upload on 2026-07-30 rejected crm.objects.custom.read as unrecognized even though HubSpot documents it as an optional public-app scope. Keep the implementation staged and recheck before activating these scopes.",
+    "contractWrites": "Add only after HubSpot publishes the public-beta method, path, and scope."
+  },
+  "scopeRecheckCandidates": {
+    "customObjects": [
+      "crm.objects.custom.read",
+      "crm.objects.custom.write",
+      "crm.schemas.custom.read",
+      "crm.schemas.custom.write"
+    ]
+  },
+  "serviceKeyOnlyCapabilities": {
+    "priceBooks": "The cpq.price_books.read and cpq.price_books.write permissions are private-app access scopes, not public-app OAuth scopes. Keep Price Books on the local ServiceKey connector only."
+  }
+}

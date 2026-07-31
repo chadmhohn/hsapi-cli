@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-10",
+  "generatedAt": "2026-07-29",
   "sourceDocs": [
     "https://developers.hubspot.com/docs/api-reference/latest/overview",
     "https://developers.hubspot.com/docs/api-reference/legacy/overview",
@@ -22197,19 +22197,48 @@
     },
     {
       "family": "crm.lists",
-      "name": "crm.lists.put_crm_lists_2026_03_memberships_add",
+      "name": "lists.members_add",
       "method": "PUT",
       "path": "/crm/lists/2026-03/{listId}/memberships/add",
       "versionMode": "latest",
       "risk": "mutation",
-      "status": "catalog-only",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "status": "typed",
+      "command": "hsapi lists members-add <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "record-ids",
+          "kind": "flag",
+          "type": "list",
+          "description": "Record IDs to add (CSV/JSON/@file); alternatively use --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Non-empty JSON array of record IDs."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/guide",
+      "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
+      "requiredScopes": [],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       },
-      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+      "scopeNotes": "HubSpot documents one-of cms.membership.access_groups.write, crm.lists.read, or crm.lists.write; the flat requiredScopes field cannot represent alternatives. Only valid for MANUAL or SNAPSHOT lists. The request body is a JSON array of record IDs."
     },
     {
       "family": "crm.lists",
@@ -22229,19 +22258,54 @@
     },
     {
       "family": "crm.lists",
-      "name": "crm.lists.put_crm_lists_2026_03_update_list_filters",
+      "name": "lists.update_filters",
       "method": "PUT",
       "path": "/crm/lists/2026-03/{listId}/update-list-filters",
       "versionMode": "latest",
       "risk": "mutation",
-      "status": "catalog-only",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "status": "typed",
+      "command": "hsapi lists update-filters <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "filter-branch",
+          "kind": "flag",
+          "type": "json",
+          "description": "Replacement filterBranch object; alternatively use --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Full {\"filterBranch\": {...}} request body."
+        },
+        {
+          "name": "enroll-objects-in-workflows",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Whether memberships added by the filter change should enroll in relevant workflows."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/update-list-filters",
+      "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
+      "requiredScopes": [],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       },
-      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+      "scopeNotes": "HubSpot documents one-of cms.membership.access_groups.write, crm.lists.read, or crm.lists.write; the flat requiredScopes field cannot represent alternatives. Replaces the full filter definition of a DYNAMIC list; retrieve and preserve every filter that should remain before writing."
     },
     {
       "family": "crm.pipelines",
@@ -22277,19 +22341,48 @@
     },
     {
       "family": "crm.lists",
-      "name": "crm.lists.put_crm_v3_lists_memberships_remove",
+      "name": "lists.members_remove",
       "method": "PUT",
-      "path": "/crm/v3/lists/{listId}/memberships/remove",
-      "versionMode": "legacy",
+      "path": "/crm/lists/2026-03/{listId}/memberships/remove",
+      "versionMode": "latest",
       "risk": "mutation",
-      "status": "catalog-only",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/account-information/get-usage-details",
+      "status": "typed",
+      "command": "hsapi lists members-remove <listId>",
+      "args": [
+        {
+          "name": "listId",
+          "kind": "positional",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "record-ids",
+          "kind": "flag",
+          "type": "list",
+          "description": "Record IDs to remove (CSV/JSON/@file); alternatively use --body."
+        },
+        {
+          "name": "body",
+          "kind": "flag",
+          "type": "json",
+          "description": "Non-empty JSON array of record IDs."
+        },
+        {
+          "name": "yes",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Confirm and execute the mutation. Omit to get a blocked preview."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/lists/guide",
+      "contextUrl": "docs/hubspot-api-context/imports-exports-lists.md",
+      "requiredScopes": [],
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
         "fallback": "none"
       },
-      "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+      "scopeNotes": "HubSpot documents one-of cms.membership.access_groups.write, crm.lists.read, or crm.lists.write; the flat requiredScopes field cannot represent alternatives. Only valid for MANUAL or SNAPSHOT lists. The request body is a JSON array of record IDs."
     },
     {
       "family": "marketing.marketing_events",
@@ -22338,6 +22431,769 @@
         "fallback": "none"
       },
       "scopeNotes": "Backfilled from the 2026-06-11 docs sweep (issue #66); auth family and scopes inferred - verify before typed promotion."
+    },
+    {
+      "family": "meta.network_origins",
+      "name": "meta.network_origins.ip_ranges",
+      "method": "GET",
+      "path": "/meta/network-origins/2026-03/ip-ranges",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/ip-ranges/get-origins",
+      "contextUrl": "docs/hubspot-api-context/network-origins.md",
+      "auth": {
+        "required": false,
+        "fallback": "none",
+        "reason": "HubSpot publishes this IP range endpoint without authentication."
+      },
+      "scopeNotes": "Public JSON response. Optional direction and service query filters are repeatable."
+    },
+    {
+      "family": "meta.network_origins",
+      "name": "meta.network_origins.ip_ranges_simple",
+      "method": "GET",
+      "path": "/meta/network-origins/2026-03/ip-ranges/simple",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/ip-ranges/get-simple",
+      "contextUrl": "docs/hubspot-api-context/network-origins.md",
+      "auth": {
+        "required": false,
+        "fallback": "none",
+        "reason": "HubSpot publishes this IP range endpoint without authentication."
+      },
+      "scopeNotes": "Public simple response. Optional direction and service query filters are repeatable."
+    },
+    {
+      "family": "app_management.uninstalls",
+      "name": "app_management.uninstalls.external_install",
+      "method": "DELETE",
+      "path": "/appinstalls/2026-03/external-install",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/app-uninstalls/uninstall-app",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "oauth"
+      ],
+      "auth": {
+        "family": "oauth",
+        "subtype": "installed_app",
+        "fallback": "none",
+        "tokenAudience": "user"
+      },
+      "scopeNotes": "Requires the installed account OAuth access token. A successful call uninstalls the app from that account, returns 204, and triggers an administrator email notification."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.list",
+      "method": "GET",
+      "path": "/feature-flags/2026-03/{appId}/flags/all",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-read"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "The current guide uses a developer account API key; generated OpenAPI labels this operation developers-read. Verify the official auth contract before typed promotion."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.get",
+      "method": "GET",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}",
+      "versionMode": "latest",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-read"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "The current guide uses a developer account API key; generated OpenAPI labels this operation developers-read. Verify the official auth contract before typed promotion."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portals_list",
+      "method": "GET",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-read"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Returns installed-account rollout state. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-read."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portal_get",
+      "method": "GET",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals/{portalId}",
+      "versionMode": "latest",
+      "risk": "sensitive-read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-read"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Returns one installed account's rollout state. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-read."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.update",
+      "method": "PUT",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Changes the app-level default rollout state. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-write."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.delete",
+      "method": "DELETE",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Deletes the app-level flag and can release or hide the feature across the install base. The current guide uses a developer account API key."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portal_update",
+      "method": "PUT",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals/{portalId}",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Changes rollout state for one installed account. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-write."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portal_delete",
+      "method": "DELETE",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals/{portalId}",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Deletes one installed account's explicit rollout state. The current guide uses a developer account API key."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portals_batch_upsert",
+      "method": "POST",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals/batch/upsert",
+      "versionMode": "latest",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Changes rollout state for multiple installed accounts. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-write."
+    },
+    {
+      "family": "app_management.feature_flags",
+      "name": "app_management.feature_flags.portals_batch_delete",
+      "method": "POST",
+      "path": "/feature-flags/2026-03/{appId}/flags/{flagName}/portals/batch/delete",
+      "versionMode": "latest",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/app-management/feature-flags/guide",
+      "contextUrl": "docs/hubspot-api-context/app-management.md",
+      "requiredScopes": [
+        "developers-write"
+      ],
+      "auth": {
+        "family": "developer",
+        "subtype": "developer_api_key",
+        "fallback": "none",
+        "queryParams": [
+          "hapikey"
+        ]
+      },
+      "scopeNotes": "Deletes explicit rollout state for multiple installed accounts. The current guide uses a developer account API key; generated OpenAPI labels this operation developers-write."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.list",
+      "method": "GET",
+      "path": "/commerce/price-books/2026-09-beta/price-books",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi price-books list",
+      "args": [
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Page size (default 20, maximum 100)."
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string",
+          "description": "Paging cursor from a previous response."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Include the beta archived query parameter."
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow paging cursors across result pages."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/get-price-books",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "2026-09 public beta. cpq.price_books.read is a private-app access scope, so a dual-auth profile routes this admin-audience read through its local ServiceKey and the remote OAuth MCP does not expose it."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.create",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/create-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Creates an inactive beta price book. The guide requires name and supportedCurrencies, while the generated schema also marks customProperties required; keep this catalog-only until a beta portal resolves that contract. Mutations require --yes."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.get",
+      "method": "GET",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi price-books get <priceBookId>",
+      "args": [
+        {
+          "name": "priceBookId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "price-book-id"
+          ],
+          "description": "Price book ID (also --price-book-id)."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Request the beta archived representation when supported."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/get-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "2026-09 public-beta read. cpq.price_books.read is a private-app access scope and requires the local ServiceKey connector."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.update",
+      "method": "PATCH",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/update-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Only inactive books can be updated. This shared beta PATCH path also performs the guide's irreversible archive when archived=true, so HSAPI conservatively classifies the whole method/path as destructive and keeps it catalog-only."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.delete",
+      "method": "DELETE",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/delete-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Experimental destructive beta route from the generated operation page/OpenAPI. The narrative guide instead documents PATCH with archived=true and says deletion is irreversible; do not normalize this into a typed command until live beta validation resolves the conflict."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.activate",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/activate",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/activate-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Validates and activates a beta price book. Repeating the call for an active book is a documented 200 no-op, but the state transition still requires --yes."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.deactivate",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/deactivate",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/deactivate-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Deactivates a beta price book so it can be edited and prevents new use. Repeating the call for an inactive book is a documented 200 no-op; the state transition still requires --yes."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.validate",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/validate",
+      "versionMode": "beta",
+      "risk": "read",
+      "readOnlyPost": true,
+      "status": "typed",
+      "command": "hsapi price-books validate <priceBookId>",
+      "args": [
+        {
+          "name": "priceBookId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "price-book-id"
+          ],
+          "description": "Price book ID (also --price-book-id)."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/validate-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Semantically read-only beta POST: runs activation validation without changing status and always returns 200 with isValid and errors. Safe for the read-only MCP executor."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.items_list",
+      "method": "GET",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi price-books items-list <priceBookId>",
+      "args": [
+        {
+          "name": "priceBookId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "price-book-id"
+          ],
+          "description": "Price book ID (also --price-book-id)."
+        },
+        {
+          "name": "limit",
+          "kind": "flag",
+          "type": "integer",
+          "description": "Page size (default 20, maximum 100)."
+        },
+        {
+          "name": "after",
+          "kind": "flag",
+          "type": "string",
+          "description": "Paging cursor from a previous response."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Return archived items instead of active items."
+        },
+        {
+          "name": "paginate",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Follow paging cursors across result pages."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/get-price-book-items",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Lists price book item snapshots for one beta price book; supports limit, after, and archived."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.item_create",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/add-product-to-price-book",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Copies one product snapshot into an inactive beta price book using productId. The public operation page lists cpq.price_books.write only; the family guide separately lists crm.objects.products.read and generated OpenAPI uses an internal product-library alias, so HSAPI does not model that ambiguous product scope as jointly required. The source product is not modified. Mutations require --yes."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.item_get",
+      "method": "GET",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "typed",
+      "command": "hsapi price-books item-get <priceBookId> <priceBookItemId>",
+      "args": [
+        {
+          "name": "priceBookId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "price-book-id"
+          ],
+          "description": "Price book ID (also --price-book-id)."
+        },
+        {
+          "name": "priceBookItemId",
+          "kind": "positional",
+          "type": "string",
+          "required": true,
+          "aliases": [
+            "price-book-item-id"
+          ],
+          "description": "Price book item ID (also --price-book-item-id)."
+        },
+        {
+          "name": "archived",
+          "kind": "flag",
+          "type": "boolean",
+          "description": "Retrieve an archived item."
+        }
+      ],
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/get-price-book-item",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Retrieves one active or archived beta price book item snapshot."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.item_update",
+      "method": "PATCH",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/update-price-book-item",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Updates price fields while the book is inactive. This same beta PATCH path also archives or restores an item with an archived-only body; restore requires archived=true in the query. HSAPI classifies the shared path as destructive and keeps it catalog-only. Generated OpenAPI also lists product-library read auth for this operation, while the endpoint page lists cpq.price_books.write only."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.item_delete",
+      "method": "DELETE",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/delete-price-book-item",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Experimental destructive beta route from the generated operation page/OpenAPI. The narrative guide instead documents PATCH archive/restore and a 90-day recycle-bin purge; do not normalize this into a typed command until live beta validation resolves the conflict."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.items_batch_create",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/create",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/batch/batch-create-price-book-items",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Copies up to 100 product snapshots into an inactive beta price book. The public operation page lists cpq.price_books.write only; the family guide separately lists crm.objects.products.read and generated OpenAPI uses an internal product-library alias, so HSAPI does not model that ambiguous product scope as jointly required. Duplicate product IDs are deduplicated; partial failures return 207. Guide and generated OpenAPI disagree on the full-success status (200 versus 201), so this stays catalog-only."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.items_batch_update",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/update",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/batch/batch-update-price-book-items",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Updates pricing for up to 100 beta price book items while the book is inactive. Duplicate IDs are last-write-wins and partial failures return 207. Mutations require --yes."
+    },
+    {
+      "family": "commerce.price_books",
+      "name": "price_books.items_batch_archive",
+      "method": "POST",
+      "path": "/commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/archive",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/items/batch/batch-archive-price-book-items",
+      "contextUrl": "docs/hubspot-api-context/price-books.md",
+      "tierRequirement": "Revenue Hub Professional",
+      "requiredScopes": [
+        "cpq.price_books.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "scopeNotes": "Archives up to 100 beta price book items and returns 204. Archived items are documented as purged after 90 days; explicit confirmation is required."
     }
   ]
 }

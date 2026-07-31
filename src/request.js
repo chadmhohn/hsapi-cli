@@ -80,6 +80,18 @@ const DEFAULT_PAGINATE_MAX_RESULTS = 1000;
 
 const CRM_SEARCH_WINDOW_LIMIT = 10000;
 
+function acceptHeader(flags = {}) {
+  const raw = flags.accept;
+  if (raw === undefined) return 'application/json';
+  if (Array.isArray(raw)) fail('--accept may be provided only once.');
+  if (raw === true || raw === '') fail('Missing required --accept value.');
+  const value = String(raw).trim();
+  if (!value || value.length > 256 || /[\r\n]/.test(value)) {
+    fail('Invalid --accept value. Provide one media type without line breaks.');
+  }
+  return value;
+}
+
 function appendQuery(url, flags) {
   for (const item of values(flags.query)) {
     const [key, ...rest] = String(item).split('=');
@@ -181,13 +193,14 @@ async function hubspotFetchAllowError(portal, method, inputPath, flags, body, en
   const url = buildUrl(portal, inputPath, flags);
   const endpoint = endpointOverride || findEndpointDefinition(method, url.pathname);
   const auth = requestAuthMetadata(portal, endpoint);
+  const accept = acceptHeader(flags);
   if (boolFlag(flags, 'show-request')) {
-    showRequestPreview(portal, method, url, body, endpoint, { auth });
+    showRequestPreview(portal, method, url, body, endpoint, { auth, accept });
   }
 
   const credential = await resolveRequestCredential(portal, auth);
   const headers = {
-    Accept: 'application/json'
+    Accept: accept
   };
   applyCredentialToRequest(url, headers, credential);
 
@@ -235,14 +248,15 @@ async function hubspotFetch(portal, method, inputPath, flags, body, endpointOver
   const url = buildUrl(portal, inputPath, flags);
   const endpoint = endpointOverride || findEndpointDefinition(method, url.pathname);
   const auth = requestAuthMetadata(portal, endpoint);
+  const accept = acceptHeader(flags);
   if (boolFlag(flags, 'show-request')) {
-    showRequestPreview(portal, method, url, body, endpoint, { auth });
+    showRequestPreview(portal, method, url, body, endpoint, { auth, accept });
   }
 
   const credential = await resolveRequestCredential(portal, auth);
 
   const headers = {
-    Accept: 'application/json'
+    Accept: accept
   };
   applyCredentialToRequest(url, headers, credential);
 
@@ -387,7 +401,7 @@ function showRequestPreview(portal, method, url, body, endpoint, options = {}) {
   const auth = options.auth || requestAuthMetadata(portal, endpoint);
   const previewUrl = previewUrlForAuth(url, auth);
   const headers = {
-    Accept: 'application/json'
+    Accept: options.accept || 'application/json'
   };
   if (auth.family === AUTH_FAMILIES.PORTAL_BEARER) headers.Authorization = `Bearer $${portal.tokenEnv}`;
   if (auth.family === AUTH_FAMILIES.OAUTH) headers.Authorization = 'Bearer <oauth-access-token>';
@@ -904,6 +918,7 @@ async function collectSearchPages(portal, objectType, flags, baseBody, endpointO
 }
 
 module.exports = {
+  acceptHeader,
   CRM_SEARCH_WINDOW_LIMIT,
   DEFAULT_PAGINATE_MAX_RESULTS,
   MAX_RETRY_AFTER_MS,

@@ -12,6 +12,10 @@ The same installed package provides both surfaces:
 - CLI: `hsapi ...`
 - MCP server: `hsapi-mcp` or `hsapi mcp serve`
 
+It also explains how that local connector fits beside the optional Cloudflare
+remote connector. The remote Worker has not been deployed by this repository
+change; see `docs/REMOTE_MCP.md` before registering a URL.
+
 ## Security Model
 
 Do not put HubSpot tokens, OAuth refresh tokens, client secrets, developer API keys, personal access keys, token caches, or real customer data in this repo or in committed config files.
@@ -25,7 +29,9 @@ Use this shape instead:
    in that private config and provide actual values through the local user
    environment, a password manager, a local secret lookup wrapper, or another
    private secret manager.
-4. Register one MCP server entry per portal profile and pass `HSAPI_PORTAL` for that entry.
+4. Register one local MCP server entry per portal profile and pass
+   `HSAPI_PORTAL` for that entry. If an approved remote Worker is deployed,
+   register it separately by URL and never add a ServiceKey to that connector.
 
 Desktop apps often do not inherit the terminal environment that installed the package. After changing persistent environment variables or MCP config, fully quit and restart the desktop app.
 
@@ -258,6 +264,21 @@ Use the HubSpot MCP server only. Read portal-auth-setup, then run auth doctor fo
 Expected tool groups use the normalized MCP server entry name, such as
 `mcp__hubspot_service_key_example__...`.
 
+For the two-connector model, keep the names explicit:
+
+- `hubspot-oauth-remote` points at the operator-verified HTTPS `/mcp` URL and
+  completes its own OAuth flow; and
+- `hubspot-local-superset` starts `hsapi-mcp` with the private local profile
+  path and optional `HSAPI_PORTAL` selection.
+
+Use the remote connector first for capabilities reported by
+`hsapi_remote_capabilities`. Select the local connector explicitly only when
+the requested operation needs its broader OAuth/ServiceKey boundary. The
+conceptual config shape is
+`examples/mcp-dual-connector.sample.json`; adapt its `url` field through the
+client's remote/custom-connector setup rather than pasting it into a client
+that supports only stdio.
+
 ## 6. Claude Desktop Quickstart
 
 Open Claude Desktop's MCP config from the app settings when available, or edit the config file directly.
@@ -336,8 +357,12 @@ Do not assume that the same local server is available in every Claude surface.
 Anthropic currently documents local `claude_desktop_config.json` servers as a
 Claude Desktop-only mechanism; they are not available in Cowork or claude.ai.
 Those surfaces require a separately hosted remote MCP server and remote
-connector. This package does not currently deploy that remote transport:
-https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp
+connector. This repository includes the OAuth-only Worker under
+`cloudflare/hsapi-remote-mcp`. A transition production deployment exists; the
+target dedicated remote app/broker cutover is documented in
+[`docs/OAUTH_APP_SPLIT.md`](OAUTH_APP_SPLIT.md). See Anthropic's
+[remote custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
+for its client-specific setup.
 
 Claude Desktop also supports installable desktop extensions. This package
 currently documents the explicit local JSON process configuration so its
@@ -348,6 +373,14 @@ For another sandboxed agent product, first verify whether its client can spawn
 a host-side stdio MCP server. If it cannot, deploy an approved remote MCP
 transport instead of copying the local JSON shape into the sandbox. Never make
 the task sandbox itself the secret store.
+
+The hosted connector is not the local server moved to Cloudflare. It is a
+smaller user-OAuth scope boundary: no ServiceKey, no local portal config, named
+and raw HubSpot calls within the granted scopes, and all writes (including
+destructive CRM operations) behind `hsapi.write` plus one-time confirmation.
+Contracts remain read-only, Price Books remain local-only, and custom objects
+await live OAuth-scope revalidation. Keep the local connector for the explicitly
+authorized superset.
 
 ### What the MCP subprocess test established (validated 2026-06-10)
 

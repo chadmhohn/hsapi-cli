@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-05-09",
+  "generatedAt": "2026-07-29",
   "sourceUrl": "https://developers.hubspot.com/docs/developer-tooling/platform/apis-by-tier",
-  "lastModified": "2026-04-29",
-  "note": "Generated from HubSpot APIs by tier docs. Availability still depends on app scopes, object access, portal configuration, and product-tier entitlements. The Free product group represents HubSpot's broad/global API surface and should not be used by itself to conclude that subscription-gated features such as custom object schemas are available in a portal.",
+  "lastModified": "2026-04-14",
+  "note": "Generated from HubSpot APIs by tier docs, with product-specific guide overrides where the broad matrix conflicts with a current API guide. Availability still depends on app scopes, object access, portal configuration, beta enrollment, and product-tier entitlements. The Free product group represents HubSpot's broad/global API surface and should not be used by itself to conclude that subscription-gated features are available in a portal.",
   "products": [
     {
       "hub": {
@@ -250,12 +250,6 @@
           "name": "Contacts",
           "minTier": "free",
           "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contacts/guide",
-          "disclaimer": null
-        },
-        {
-          "name": "Contracts",
-          "minTier": "free",
-          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contracts/guide",
           "disclaimer": null
         },
         {
@@ -1099,7 +1093,7 @@
     },
     {
       "hub": {
-        "name": "Commerce Hub",
+        "name": "Revenue Hub",
         "id": "commerce",
         "icon": "https://developers.hubspot.com/hubfs/Knowledge_Base_2023-24-25/developer/icons/CommerceHub.svg"
       },
@@ -1133,6 +1127,18 @@
           "minTier": "pro",
           "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/conversations/visitor-identification/create-visitor-identification",
           "disclaimer": null
+        },
+        {
+          "name": "Contracts",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contracts/guide",
+          "disclaimer": "The current product-specific Contracts guide requires Revenue Hub Professional and overrides the broader APIs-by-tier matrix row that still lists Contracts in the global Free group."
+        },
+        {
+          "name": "Price Books",
+          "minTier": "pro",
+          "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/guide",
+          "disclaimer": "2026-09 public beta; access also requires beta enrollment and a private app with the documented Price Books access scopes."
         },
         {
           "name": "Events",

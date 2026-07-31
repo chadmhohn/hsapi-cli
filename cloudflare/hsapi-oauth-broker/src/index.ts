@@ -11,6 +11,8 @@ const MAX_UPSTREAM_JSON_BODY_BYTES = 1024 * 1024;
 const HUBSPOT_UPSTREAM_TIMEOUT_MS = 20 * 1_000;
 const HUBSPOT_CLEANUP_TIMEOUT_MS = 5 * 1_000;
 const HUBSPOT_TOKEN_URL = "https://api.hubspot.com/oauth/2026-03/token";
+const HUBSPOT_INTROSPECTION_URL =
+  "https://api.hubspot.com/oauth/2026-03/token/introspect";
 const HUBSPOT_REVOKE_URL =
   "https://api.hubspot.com/oauth/2026-03/token/revoke";
 const BASE64URL_SHA256_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -72,7 +74,7 @@ type BeginExchangeResult =
   | { kind: "consumed" }
   | { kind: "expired" };
 
-interface HubSpotToken {
+interface HubSpotIssuedToken {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
@@ -82,7 +84,18 @@ interface HubSpotToken {
   scopes?: string[];
 }
 
+interface HubSpotToken extends HubSpotIssuedToken {
+  hubId: number;
+  userId: number;
+  scopes: string[];
+  clientId: string;
+  isUserLevel: boolean;
+  hubDomain?: string;
+}
+
 interface RuntimeConfiguration {
+  brokerRole: "local" | "remote";
+  allowedRemoteCompletionRedirectUris: string[];
   clientId: string;
   clientSecret: string;
   redirectUri: string;
@@ -503,10 +516,12 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
   if (url.pathname === "/healthz") {
     requireMethod(request, "GET");
+    const brokerRole = configuredBrokerRole(env);
     return jsonResponse({
       ok: true,
       service: SERVICE_NAME,
       environment: env.ENVIRONMENT,
+      brokerRole: brokerRole ?? null,
       ready: isRuntimeConfigured(env),
     });
   }
@@ -553,11 +568,13 @@ async function startSession(request: Request, env: Env): Promise<Response> {
     "codeChallenge",
     "completionRedirectUri",
     "consumeSecretHash",
+    "optionalScopes",
   ]);
 
   const codeChallenge = requireString(body, "codeChallenge");
   const consumeSecretHash = requireString(body, "consumeSecretHash");
   const completionRedirectUri = requireString(body, "completionRedirectUri");
+  const requestedOptionalScopes = optionalScopeArray(body, "optionalScopes");
 
   if (!BASE64URL_SHA256_PATTERN.test(codeChallenge)) {
     throw new HttpError(
@@ -573,13 +590,29 @@ async function startSession(request: Request, env: Env): Promise<Response> {
       "consumeSecretHash must be a base64url SHA-256 digest.",
     );
   }
-  if (!isAllowedCompletionRedirectUri(completionRedirectUri)) {
+  const completionKind = allowedCompletionRedirectKind(
+    completionRedirectUri,
+    config.allowedRemoteCompletionRedirectUris,
+    config.brokerRole,
+  );
+  if (!completionKind) {
     throw new HttpError(
       400,
       "invalid_completion_redirect_uri",
-      "completionRedirectUri must be a local hsapi loopback callback.",
+      `completionRedirectUri is not permitted by the ${config.brokerRole} broker role.`,
     );
   }
+  if (completionKind === "remote" && requestedOptionalScopes === undefined) {
+    throw new HttpError(
+      400,
+      "invalid_optional_scopes",
+      "Remote completion sessions must provide optionalScopes explicitly.",
+    );
+  }
+  const sessionOptionalScopes = resolveSessionOptionalScopes(
+    requestedOptionalScopes,
+    config.optionalScopes,
+  );
 
   const sourceKey = request.headers.get("CF-Connecting-IP") ?? "unknown";
   await enforceRateLimit(env, `start:${sourceKey}`);
@@ -616,9 +649,11 @@ async function startSession(request: Request, env: Env): Promise<Response> {
         config,
         sessionId,
         codeChallenge,
+        sessionOptionalScopes,
       ),
       expiresIn: SESSION_TTL_SECONDS,
       interval: RETRY_AFTER_SECONDS,
+      brokerRole: config.brokerRole,
     },
     201,
   );
@@ -678,7 +713,7 @@ async function receiveCallback(
   if (result.kind === "expired" || result.kind === "unavailable") {
     return callbackPage(false, 410);
   }
-  return loopbackCompletionRedirect(
+  return completionRedirect(
     result.completionRedirectUri,
     state,
     result.completionGrant,
@@ -796,7 +831,7 @@ async function exchangeSession(
   let issuedRefreshToken: string | undefined;
   try {
     const signingKey = await importSigningKey(config.signingKey);
-    const token = await requestHubSpotToken(config, {
+    const issuedToken = await requestHubSpotToken(config, {
       client_id: config.clientId,
       client_secret: config.clientSecret,
       code: exchange.authorizationCode,
@@ -804,7 +839,8 @@ async function exchangeSession(
       grant_type: "authorization_code",
       redirect_uri: config.redirectUri,
     });
-    issuedRefreshToken = token.refreshToken;
+    issuedRefreshToken = issuedToken.refreshToken;
+    const token = await introspectHubSpotAccessToken(config, issuedToken);
     assertTokenAccount(token);
     const brokerCredential = await issueBrokerCredential(
       signingKey,
@@ -885,7 +921,7 @@ async function refreshToken(request: Request, env: Env): Promise<Response> {
 
   let issuedRefreshToken: string | undefined;
   try {
-    const token = await requestHubSpotToken(
+    const issuedToken = await requestHubSpotToken(
       config,
       {
         client_id: config.clientId,
@@ -895,7 +931,8 @@ async function refreshToken(request: Request, env: Env): Promise<Response> {
       },
       refreshTokenValue,
     );
-    issuedRefreshToken = token.refreshToken;
+    issuedRefreshToken = issuedToken.refreshToken;
+    const token = await introspectHubSpotAccessToken(config, issuedToken);
     assertTokenAccount(token, expectedHubId);
     const replacementCredential = await issueBrokerCredential(
       signingKey,
@@ -1001,7 +1038,7 @@ async function requestHubSpotToken(
   config: RuntimeConfiguration,
   parameters: Record<string, string>,
   fallbackRefreshToken?: string,
-): Promise<HubSpotToken> {
+): Promise<HubSpotIssuedToken> {
   return withHubSpotOAuthResponse(
     HUBSPOT_TOKEN_URL,
     {
@@ -1018,6 +1055,35 @@ async function requestHubSpotToken(
       }
       const payload = await readLimitedUpstreamJson(response);
       return normalizeHubSpotToken(payload, fallbackRefreshToken);
+    },
+  );
+}
+
+async function introspectHubSpotAccessToken(
+  config: RuntimeConfiguration,
+  token: HubSpotIssuedToken,
+): Promise<HubSpotToken> {
+  return withHubSpotOAuthResponse(
+    HUBSPOT_INTROSPECTION_URL,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        token: token.accessToken,
+        token_type_hint: "access_token",
+      }),
+    },
+    async (response) => {
+      if (!response.ok) {
+        throw await upstreamError(response);
+      }
+      const payload = await readLimitedUpstreamJson(response);
+      return normalizeHubSpotIntrospection(payload, token, config);
     },
   );
 }
@@ -1117,7 +1183,7 @@ async function readLimitedUpstreamJson(response: Response): Promise<unknown> {
 function normalizeHubSpotToken(
   payload: unknown,
   fallbackRefreshToken?: string,
-): HubSpotToken {
+): HubSpotIssuedToken {
   if (!isJsonRecord(payload)) {
     throw new UpstreamOAuthError(502, "invalid_upstream_response");
   }
@@ -1126,18 +1192,21 @@ function normalizeHubSpotToken(
     nonEmptyString(payload.refresh_token) ?? fallbackRefreshToken;
   const expiresIn = finiteNumber(payload.expires_in);
   const tokenType = nonEmptyString(payload.token_type);
+  const tokenUse = payload.token_use;
   if (
     !accessToken ||
     !refreshTokenValue ||
     expiresIn === undefined ||
     !Number.isInteger(expiresIn) ||
     expiresIn <= 0 ||
-    !tokenType
+    !tokenType ||
+    tokenType.toLowerCase() !== "bearer" ||
+    (tokenUse !== undefined && tokenUse !== "access_token")
   ) {
     throw new UpstreamOAuthError(502, "invalid_upstream_response");
   }
 
-  const result: HubSpotToken = {
+  const result: HubSpotIssuedToken = {
     accessToken,
     refreshToken: refreshTokenValue,
     expiresIn,
@@ -1156,6 +1225,63 @@ function normalizeHubSpotToken(
     result.scopes = scopes;
   }
   return result;
+}
+
+function normalizeHubSpotIntrospection(
+  payload: unknown,
+  token: HubSpotIssuedToken,
+  config: RuntimeConfiguration,
+): HubSpotToken {
+  if (!isJsonRecord(payload)) {
+    throw new UpstreamOAuthError(502, "invalid_token_introspection");
+  }
+  const hubId = positiveInteger(payload.hub_id);
+  const userId = positiveInteger(payload.user_id);
+  const clientId = nonEmptyString(payload.client_id);
+  const expiresIn = positiveInteger(payload.expires_in);
+  const scopes = validatedScopeArray(payload.scopes);
+  const introspectedToken = nonEmptyString(payload.token);
+  const tokenUse = nonEmptyString(payload.token_use);
+  const tokenType = nonEmptyString(payload.token_type);
+  const signedAccessToken = isJsonRecord(payload.signed_access_token)
+    ? payload.signed_access_token
+    : undefined;
+  const isUserLevel = signedAccessToken?.isUserLevel;
+  const hubDomain = safeHubDomain(payload.hub_domain);
+  const signedHubId = positiveInteger(signedAccessToken?.hubId);
+  const signedUserId = positiveInteger(signedAccessToken?.userId);
+
+  if (
+    payload.active !== true ||
+    !hubId ||
+    !userId ||
+    clientId !== config.clientId ||
+    !introspectedToken ||
+    !timingSafeEqualText(introspectedToken, token.accessToken) ||
+    tokenUse !== "access_token" ||
+    tokenType?.toLowerCase() !== "bearer" ||
+    !expiresIn ||
+    !scopes ||
+    typeof isUserLevel !== "boolean" ||
+    config.requiredScopes.some((scope) => !scopes.includes(scope)) ||
+    (token.hubId !== undefined && token.hubId !== hubId) ||
+    (token.userId !== undefined && token.userId !== userId) ||
+    (signedHubId !== undefined && signedHubId !== hubId) ||
+    (signedUserId !== undefined && signedUserId !== userId)
+  ) {
+    throw new UpstreamOAuthError(502, "invalid_token_introspection");
+  }
+
+  return {
+    ...token,
+    expiresIn: Math.min(token.expiresIn, expiresIn),
+    hubId,
+    userId,
+    scopes,
+    clientId,
+    isUserLevel,
+    ...(hubDomain ? { hubDomain } : {}),
+  };
 }
 
 async function upstreamError(response: Response): Promise<UpstreamOAuthError> {
@@ -1177,9 +1303,6 @@ function assertTokenAccount(
   token: HubSpotToken,
   expectedAccountId?: string | null,
 ): void {
-  if (token.hubId === undefined) {
-    throw new UpstreamOAuthError(502, "missing_hub_id");
-  }
   if (
     expectedAccountId &&
     String(token.hubId) !== expectedAccountId
@@ -1196,15 +1319,16 @@ function buildAuthorizationUrl(
   config: RuntimeConfiguration,
   state: string,
   codeChallenge: string,
+  optionalScopes: string[],
 ): string {
   const url = new URL("/oauth/authorize", "https://app.hubspot.com");
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", config.redirectUri);
   url.searchParams.set("scope", config.requiredScopes.join(" "));
-  if (config.optionalScopes.length > 0) {
+  if (optionalScopes.length > 0) {
     url.searchParams.set(
       "optional_scope",
-      config.optionalScopes.join(" "),
+      optionalScopes.join(" "),
     );
   }
   url.searchParams.set("state", state);
@@ -1276,7 +1400,10 @@ async function oauthConfigurationHash(
 ): Promise<string> {
   return sha256Base64Url(
     JSON.stringify({
-      version: 2,
+      version: 4,
+      brokerRole: config.brokerRole,
+      allowedRemoteCompletionRedirectUris:
+        config.allowedRemoteCompletionRedirectUris,
       clientId: config.clientId,
       redirectUri: config.redirectUri,
       requiredScopes: config.requiredScopes,
@@ -1355,6 +1482,11 @@ async function enforceRateLimit(env: Env, key: string): Promise<void> {
 }
 
 function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
+  const brokerRole = configuredBrokerRole(env);
+  const allowedRemoteCompletionRedirectUris =
+    parseAllowedRemoteCompletionRedirectUris(
+      env.HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS,
+    );
   const clientId = String(env.HUBSPOT_CLIENT_ID ?? "").trim();
   const clientSecret = String(env.HUBSPOT_CLIENT_SECRET ?? "").trim();
   const redirectUri = String(env.HUBSPOT_REDIRECT_URI ?? "").trim();
@@ -1367,7 +1499,7 @@ function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
 
   if (
     !CLIENT_ID_PATTERN.test(clientId) ||
-    clientId === "00000000-0000-4000-8000-000000000001" ||
+    clientId.startsWith("00000000-0000-4000-8000-") ||
     clientSecret.length < 8 ||
     signingKey.length < 32 ||
     requiredScopes === undefined ||
@@ -1377,7 +1509,12 @@ function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
     optionalScopes.includes("oauth") ||
     optionalScopes.some((scope) => requiredScopeSet.has(scope)) ||
     !secretsAreDistinct ||
-    !isAllowedRedirectUri(redirectUri)
+    !isAllowedRedirectUri(redirectUri) ||
+    allowedRemoteCompletionRedirectUris === undefined ||
+    !brokerRole ||
+    (brokerRole === "local" && allowedRemoteCompletionRedirectUris.length !== 0) ||
+    (brokerRole === "remote" && allowedRemoteCompletionRedirectUris.length === 0) ||
+    (brokerRole === "remote" && !redirectUri.startsWith("https://"))
   ) {
     throw new HttpError(
       503,
@@ -1386,6 +1523,8 @@ function requireRuntimeConfiguration(env: Env): RuntimeConfiguration {
     );
   }
   return {
+    brokerRole,
+    allowedRemoteCompletionRedirectUris,
     clientId,
     clientSecret,
     redirectUri,
@@ -1423,7 +1562,15 @@ function isAllowedRedirectUri(value: string): boolean {
   }
 }
 
-function isAllowedCompletionRedirectUri(value: string): boolean {
+function allowedCompletionRedirectKind(
+  value: string,
+  allowedRemoteRedirectUris: string[],
+  brokerRole: "local" | "remote",
+): "loopback" | "remote" | undefined {
+  if (brokerRole === "remote" && allowedRemoteRedirectUris.includes(value)) {
+    return "remote";
+  }
+  if (brokerRole !== "local") return undefined;
   try {
     const url = new URL(value);
     const port = Number(url.port);
@@ -1438,10 +1585,72 @@ function isAllowedCompletionRedirectUri(value: string): boolean {
       !url.search &&
       !url.hash &&
       url.pathname === "/oauth/hsapi/callback"
-    );
+    ) ? "loopback" : undefined;
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+function configuredBrokerRole(env: Env): "local" | "remote" | undefined {
+  const value = String(env.HSAPI_BROKER_ROLE ?? "").trim();
+  return value === "local" || value === "remote" ? value : undefined;
+}
+
+function parseAllowedRemoteCompletionRedirectUris(
+  value: unknown,
+): string[] | undefined {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const entries = value
+    .split(/[\s,]+/u)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (entries.length > 10 || new Set(entries).size !== entries.length) {
+    return undefined;
+  }
+  for (const entry of entries) {
+    try {
+      const url = new URL(entry);
+      if (
+        CONFIGURATION_PLACEHOLDER_PATTERN.test(entry) ||
+        url.protocol !== "https:" ||
+        url.port !== "" ||
+        Boolean(url.username) ||
+        Boolean(url.password) ||
+        Boolean(url.search) ||
+        Boolean(url.hash) ||
+        url.pathname === "/" ||
+        url.toString() !== entry
+      ) {
+        return undefined;
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  return entries;
+}
+
+function resolveSessionOptionalScopes(
+  requested: string[] | undefined,
+  configured: string[],
+): string[] {
+  if (requested === undefined) {
+    return configured;
+  }
+  const configuredSet = new Set(configured);
+  if (requested.some((scope) => !configuredSet.has(scope))) {
+    throw new HttpError(
+      400,
+      "invalid_optional_scopes",
+      "optionalScopes must be a duplicate-free subset of the broker-configured optional scopes.",
+    );
+  }
+  return requested;
 }
 
 function parseConfiguredScopes(value: unknown): string[] | undefined {
@@ -1587,6 +1796,35 @@ function optionalString(body: JsonRecord, key: string): string | undefined {
   return value;
 }
 
+function optionalScopeArray(
+  body: JsonRecord,
+  key: string,
+): string[] | undefined {
+  const value = body[key];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(value) ||
+    value.length > 100 ||
+    !value.every(
+      (scope): scope is string =>
+        typeof scope === "string" &&
+        scope.length > 0 &&
+        scope.length <= 200 &&
+        /^[A-Za-z0-9._:-]+$/.test(scope),
+    ) ||
+    new Set(value).size !== value.length
+  ) {
+    throw new HttpError(
+      400,
+      "invalid_optional_scopes",
+      "optionalScopes must be a duplicate-free array of valid scope identifiers.",
+    );
+  }
+  return value;
+}
+
 function requireBearerToken(request: Request): string {
   const authorization = request.headers.get("authorization") ?? "";
   const match = authorization.match(/^Bearer ([A-Za-z0-9\-._~]+)$/i);
@@ -1628,10 +1866,41 @@ function finiteNumber(value: unknown): number | undefined {
     : undefined;
 }
 
+function positiveInteger(value: unknown): number | undefined {
+  const numeric = finiteNumber(value);
+  return numeric !== undefined && Number.isSafeInteger(numeric) && numeric > 0
+    ? numeric
+    : undefined;
+}
+
 function stringArray(value: unknown): string[] | undefined {
   return Array.isArray(value) &&
     value.every((item): item is string => typeof item === "string")
     ? value
+    : undefined;
+}
+
+function validatedScopeArray(value: unknown): string[] | undefined {
+  const scopes = stringArray(value);
+  if (
+    !scopes ||
+    new Set(scopes).size !== scopes.length ||
+    !scopes.every(
+      (scope) =>
+        scope.length > 0 &&
+        scope.length <= 200 &&
+        /^[A-Za-z0-9._:-]+$/.test(scope),
+    )
+  ) {
+    return undefined;
+  }
+  return scopes;
+}
+
+function safeHubDomain(value: unknown): string | undefined {
+  const domain = nonEmptyString(value);
+  return domain && domain.length <= 255 && !/[\u0000-\u001f\u007f]/.test(domain)
+    ? domain
     : undefined;
 }
 
@@ -1665,7 +1934,7 @@ function emptyResponse(status: number): Response {
   });
 }
 
-function loopbackCompletionRedirect(
+function completionRedirect(
   redirectUri: string,
   state: string,
   completionGrant?: string | null,

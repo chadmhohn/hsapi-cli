@@ -1,0 +1,35 @@
+{
+  "_comment": "Repo-safe conceptual MCP client config. Adapt the remote URL field to your client's custom-connector format. Never add OAuth tokens, refresh tokens, ServiceKeys, client secrets, or a real portal config to this file.",
+  "mcpServers": {
+    "hubspot-oauth-remote": {
+      "url": "https://hsapi-mcp.example.com/mcp"
+    },
+    "hubspot-local-superset": {
+      "command": "hsapi-mcp",
+      "env": {
+        "HSAPI_PORTALS_CONFIG": "/path/outside-package/hsapi/portals.json",
+        "HSAPI_PORTAL": "oauth-service-key-example"
+      }
+    }
+  },
+  "routingPolicy": {
+    "defaultConnector": "hubspot-oauth-remote",
+    "localConnectorRequiresExplicitSelection": true,
+    "remoteAcceptsServiceKey": false,
+    "remoteWritesEnabledByDefault": true,
+    "priceBookWritesEnabledByDefault": false,
+    "remoteDefaultHubSpotScopes": "reviewed read/write scopes, including confirmation-gated destructive CRM operations",
+    "oauthAppBoundary": {
+      "localAndRemoteUseDifferentHubSpotApps": true,
+      "localBrokerRole": "local",
+      "remoteBrokerRole": "remote",
+      "sharedGitRepository": true
+    },
+    "notes": [
+      "Call hsapi_remote_identity and hsapi_remote_capabilities before remote execution.",
+      "Use endpoint help for named operations; use raw method/path execution when the path maps to an exposed OAuth scope.",
+      "Use the local connector only for an authorized capability the remote manifest or current public-app grant does not provide.",
+      "Do not treat the local connector as an automatic fallback from an OAuth permission error."
+    ]
+  }
+}

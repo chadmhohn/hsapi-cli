@@ -3,5 +3,6 @@
 .wrangler/
 .wrangler-config/
 wrangler.operator.jsonc
+wrangler.*.operator.jsonc
 coverage/
 node_modules/

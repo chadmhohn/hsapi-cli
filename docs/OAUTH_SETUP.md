@@ -7,7 +7,8 @@ on OAuth broker setup and operations.
 
 ## What this gives you
 
-Each teammate authorizes the shared HubSpot app in a browser. `hsapi` then acts
+Each teammate authorizes the local hosted-OAuth HubSpot app in a browser.
+`hsapi` then acts
 with that user's HubSpot identity and permissions. The normal hosted flow does
 not require a teammate to receive the HubSpot client secret or a private-app
 token.
@@ -26,9 +27,19 @@ and account product entitlements.
 The hosted broker is the recommended team flow. Local mode remains supported
 for development and recovery.
 
-The shared broker accepts only the native localhost-completion protocol in
-hsapi v0.5 and later. A v0.4.x hosted installation must update and replace its
-old hosted profile with the current template before using the shared broker.
+These modes describe OAuth for the installed CLI and local stdio MCP server.
+They are distinct from the Cloudflare remote MCP Worker. The remote Worker uses
+a different HubSpot public app and an independent remote-role broker; it keeps
+the upstream grant server-side and exposes only an explicit public-app
+capability allowlist. It never accepts a ServiceKey. See
+[`docs/REMOTE_MCP.md`](REMOTE_MCP.md) and
+[`docs/OAUTH_APP_SPLIT.md`](OAUTH_APP_SPLIT.md).
+
+For installed `hsapi`, the bundled local-role broker accepts only the native
+localhost-completion protocol in v0.5 and later. The remote-role broker accepts
+only the remote MCP Worker's exact allowlisted HTTPS callback; it is not a CLI
+profile option. A v0.4.x hosted installation must update and replace its old
+hosted profile with the current template before using the bundled local broker.
 
 ## Hosted broker setup
 
@@ -57,7 +68,8 @@ The bundled-broker operator:
 - keeps the HubSpot client secret and broker signing key in the hosted secret
   store;
 - publishes and validates the broker health and exact callback; and
-- operates one app across the HubSpot accounts whose users authorize it.
+- operates the local app across the HubSpot accounts whose users authorize it,
+  independently from the remote MCP app and broker.
 
 The teammate:
 
@@ -237,8 +249,11 @@ removes the local cache but does not make a server-side revocation request.
 Build-time acceptance and runtime endpoint support are separate.
 
 The July 18, 2026 live validation used an isolated developer test account, not
-either configured customer portal. The app declared `oauth` plus 49 optional
-scopes. Consent displayed all 49 optional permissions and **All** was selected.
+either configured customer portal. That historical app build declared `oauth`
+plus 49 optional scopes. Consent displayed all 49 optional permissions and
+**All** was selected. The current checked-in app manifest adds the two Price
+Books beta scopes for a future fresh validation; this historical result does
+not prove either one.
 
 HubSpot granted `oauth` plus 46 optional scopes. These three permissions were
 disabled in consent and were not issued:
@@ -295,12 +310,30 @@ combined profile. The credential stays in the named environment variable; it
 is never copied into JSON. `hsapi` does not silently retry an OAuth failure
 with the ServiceKey.
 
-Known boundaries include destructive CRM archives, several owner/pipeline and
-schema surfaces, custom-object operations not accepted by the user-level app,
+Known boundaries include ServiceKey-only Price Books, several owner/pipeline
+and schema surfaces, custom-object operations not accepted by the user-level app,
 and the eight warning-tier routes with the explicit token-type 403 listed
 above. `hsapi` does not silently retry a failed OAuth call with a stronger
 credential. Use `--show-request` to inspect the cataloged token audience before
 unfamiliar writes.
+
+In the recommended two-connector setup, these stronger-token operations stay
+on the explicitly selected local stdio connector. Never copy the
+`portalBearer` token, its environment-variable name, or a combined local
+profile into the Cloudflare remote Worker. The remote connector does not retry
+a missing scope or user-level-token rejection through the local connector.
+
+The remote manifest currently allows Contracts reads but no writes. Price
+Books permissions are private-app access scopes, so those endpoints remain on
+the local ServiceKey connector and are excluded from the public-app request and
+remote manifest. The checked-in optional-scope request includes the exact
+reviewed remote write scopes; named and raw writes, including destructive CRM
+operations, still require `hsapi.write`, a blocked preview, and one-time
+confirmation. Any future write
+rollout must add only the exact reviewed OAuth scope and obtain fresh consent. Custom-object
+execution and the future Contracts write beta remain disabled until the next
+live public-app scope/endpoint recheck is recorded. Requested optional scopes
+are not proof of granted scopes or runtime acceptance.
 
 ## Troubleshooting
 

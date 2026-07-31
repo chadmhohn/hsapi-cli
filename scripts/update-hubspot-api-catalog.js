@@ -17,6 +17,12 @@ function repoRelativePath(filePath) {
 
 const SOURCE_DOCS = [
   {
+    id: 'sitemap',
+    url: 'https://developers.hubspot.com/docs/sitemap.xml',
+    required: false,
+    note: 'Broad canonical docs index, including date-versioned beta references.'
+  },
+  {
     id: 'llms',
     url: 'https://developers.hubspot.com/docs/llms.txt',
     required: false,
@@ -67,7 +73,7 @@ Flags:
                  Write docs/hubspot-api-updates/YYYY-MM-DD.proposals.json.
   --candidate-url  Add a docs URL to inspect for proposals. Repeatable.
   --candidate-file Add a local HTML/text/Markdown file to inspect for proposals. Repeatable.
-  --proposal-limit Limit network candidate docs fetched for proposal mode. Default: 12.
+  --proposal-limit Limit network candidate docs fetched for proposal mode. Default: 24.
   --max-proposals  Limit emitted endpoint proposals. Default: 200. Use 0 for no cap.
   --date          Override the report date.
   --json          Print JSON only.
@@ -184,7 +190,9 @@ function normalizeApiPath(rawPath) {
     // added for issue #66: families the catalog now covers but the extractor was blind to
     '/settings/', '/business-units/', '/sandboxes/', '/email/', '/engagements/',
     '/analytics/', '/scheduler/', '/visitor-identification/', '/form-integrations/',
-    '/submissions/', '/webhooks-journal/', '/crm-object-schemas/'
+    '/submissions/', '/webhooks-journal/', '/crm-object-schemas/',
+    '/feature-flags/', '/appinstalls/', '/meta/network-origins/', '/media-bridge/',
+    '/commerce/', '/data-studio/', '/forecast-settings/'
   ];
   if (!API_PATH_PREFIXES.some((prefix) => pathOnly.startsWith(prefix))) {
     return null;
@@ -192,7 +200,25 @@ function normalizeApiPath(rawPath) {
   return pathOnly.replace(/\/+$/, '') || '/';
 }
 
+function pageLocalCandidateText(text) {
+  const source = String(text || '');
+  if (!/<(?:html|main|article)\b/i.test(source)) return source;
+
+  // Mintlify/Next pages can embed the entire docs navigation or API inventory in
+  // script payloads. Prefer rendered page content so one endpoint page cannot
+  // manufacture proposals for unrelated families.
+  for (const tagName of ['main', 'article']) {
+    const fragments = [];
+    const pattern = new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'gi');
+    let match;
+    while ((match = pattern.exec(source)) !== null) fragments.push(match[1]);
+    if (fragments.length) return fragments.join('\n');
+  }
+  return source;
+}
+
 function extractEndpointReferences(text) {
+  const localText = pageLocalCandidateText(text);
   const endpoints = [];
   const patterns = [
     /\b(GET|POST|PUT|PATCH|DELETE)\s+(\/[A-Za-z0-9_./{}:-]+(?:\?[^\s<`"']+)?)/gi,
@@ -202,7 +228,7 @@ function extractEndpointReferences(text) {
   ];
   for (const pattern of patterns) {
     let match;
-    while ((match = pattern.exec(text)) !== null) {
+    while ((match = pattern.exec(localText)) !== null) {
       const method = match[1].startsWith('/') ? match[2] : match[1];
       const rawPath = match[1].startsWith('/') ? match[1] : match[2];
       const pathName = normalizeApiPath(rawPath);
@@ -287,6 +313,20 @@ function duplicates(values) {
   return [...dupes].sort();
 }
 
+function isHubSpotDocsLoginRedirect(finalUrl, text = '') {
+  const rawUrl = String(finalUrl || '');
+  if (rawUrl.includes('/docs/login') || /\/docs\/login\?redirect=/.test(String(text || ''))) {
+    return true;
+  }
+  try {
+    const parsed = new URL(rawUrl);
+    return parsed.hostname === 'app.hubspot.com'
+      && (parsed.pathname === '/myaccounts' || parsed.pathname.startsWith('/myaccounts/'));
+  } catch (_error) {
+    return false;
+  }
+}
+
 async function fetchSource(source) {
   const startedAt = Date.now();
   try {
@@ -299,7 +339,7 @@ async function fetchSource(source) {
     });
     const finalUrl = response.url || source.url;
     const text = await response.text();
-    const loginRedirect = finalUrl.includes('/docs/login') || /\/docs\/login\?redirect=/.test(text);
+    const loginRedirect = isHubSpotDocsLoginRedirect(finalUrl, text);
     return {
       id: source.id,
       url: source.url,
@@ -330,41 +370,58 @@ async function fetchSource(source) {
 
 async function fetchCandidateDoc(url) {
   const startedAt = Date.now();
-  try {
-    const response = await fetch(url, {
-      redirect: 'follow',
-      headers: {
-        accept: 'text/html,text/plain,application/json;q=0.9,*/*;q=0.8',
-        'user-agent': 'hsapi-cli-catalog-diff-assistant/0.0'
-      }
-    });
-    const finalUrl = response.url || url;
-    const text = await response.text();
-    const loginRedirect = finalUrl.includes('/docs/login') || /\/docs\/login\?redirect=/.test(text);
-    return {
-      sourceType: 'url',
-      url,
-      finalUrl,
-      ok: response.ok && !loginRedirect,
-      status: response.status,
-      note: loginRedirect ? 'HubSpot returned the docs login page; no endpoint references extracted.' : null,
-      bytes: text.length,
-      durationMs: Date.now() - startedAt,
-      endpointReferences: loginRedirect ? [] : extractEndpointReferences(text)
-    };
-  } catch (error) {
-    return {
-      sourceType: 'url',
-      url,
-      finalUrl: null,
-      ok: false,
-      status: null,
-      note: error.message,
-      bytes: 0,
-      durationMs: Date.now() - startedAt,
-      endpointReferences: []
-    };
+  const canonicalUrl = normalizeUrl(url) || url;
+  const markdownUrl = canonicalMarkdownUrl(canonicalUrl);
+  const attempts = markdownUrl && markdownUrl !== canonicalUrl
+    ? [markdownUrl, canonicalUrl]
+    : [canonicalUrl];
+  let lastResult = null;
+
+  for (const attemptUrl of attempts) {
+    try {
+      const response = await fetch(attemptUrl, {
+        redirect: 'follow',
+        headers: {
+          accept: 'text/markdown,text/plain,text/html,application/json;q=0.9,*/*;q=0.8',
+          'user-agent': 'hsapi-cli-catalog-diff-assistant/0.0'
+        }
+      });
+      const finalUrl = response.url || attemptUrl;
+      const text = await response.text();
+      const loginRedirect = isHubSpotDocsLoginRedirect(finalUrl, text);
+      lastResult = {
+        sourceType: 'url',
+        url: canonicalUrl,
+        finalUrl,
+        extractionUrl: attemptUrl,
+        ok: response.ok && !loginRedirect,
+        status: response.status,
+        note: loginRedirect ? 'HubSpot returned the docs login page; no endpoint references extracted.' : null,
+        bytes: text.length,
+        durationMs: Date.now() - startedAt,
+        endpointReferences: loginRedirect ? [] : extractEndpointReferences(text)
+      };
+      // A successful Markdown representation is page-local even when the page
+      // is a guide with no literal endpoint signature, so do not fall back to
+      // the global HTML payload merely because zero references were found.
+      if (lastResult.ok) return lastResult;
+    } catch (error) {
+      lastResult = {
+        sourceType: 'url',
+        url: canonicalUrl,
+        finalUrl: null,
+        extractionUrl: attemptUrl,
+        ok: false,
+        status: null,
+        note: error.message,
+        bytes: 0,
+        durationMs: Date.now() - startedAt,
+        endpointReferences: []
+      };
+    }
   }
+
+  return lastResult;
 }
 
 function readCandidateFile(filePath) {
@@ -383,8 +440,85 @@ function readCandidateFile(filePath) {
   };
 }
 
+function canonicalDocPageUrl(rawUrl) {
+  const normalized = normalizeUrl(rawUrl);
+  if (!normalized) return null;
+  const url = new URL(normalized);
+  if (url.pathname.endsWith('.md')) url.pathname = url.pathname.slice(0, -3);
+  return url.toString();
+}
+
+function docUrlClassification(rawUrl) {
+  const normalized = canonicalDocPageUrl(rawUrl);
+  if (!normalized) return { priority: 5, stratum: 'invalid' };
+  const parts = new URL(normalized).pathname.split('/').filter(Boolean);
+  const referenceIndex = parts.indexOf('api-reference');
+  if (referenceIndex < 0) {
+    return { priority: 4, stratum: parts.slice(0, 4).join('/') || 'root' };
+  }
+
+  const referenceParts = parts.slice(referenceIndex + 1);
+  const version = referenceParts[0] || 'unversioned';
+  let priority = 3;
+  if (/^\d{4}-\d{2}-beta$/.test(version)) priority = 0;
+  else if (version === 'latest') priority = 1;
+  else if (/^\d{4}-\d{2}$/.test(version)) priority = 2;
+  else if (version === 'legacy') priority = 3;
+
+  const familyParts = referenceParts.slice(1, 3);
+  return {
+    priority,
+    stratum: `${version}/${familyParts.join('/') || 'overview'}`
+  };
+}
+
+function candidateDocRank(rawUrl) {
+  const pathname = new URL(canonicalDocPageUrl(rawUrl)).pathname;
+  if (/\/(?:guide|overview)$/.test(pathname)) return 0;
+  return 1;
+}
+
+function selectRepresentativeDocUrls(rawUrls, limit) {
+  if (!Number.isInteger(limit) || limit <= 0) return [];
+  const urls = unique(rawUrls.map(canonicalDocPageUrl));
+  const buckets = new Map();
+  for (const url of urls) {
+    const classification = docUrlClassification(url);
+    const key = `${classification.priority}:${classification.stratum}`;
+    if (!buckets.has(key)) {
+      buckets.set(key, { ...classification, urls: [] });
+    }
+    buckets.get(key).urls.push(url);
+  }
+
+  const priorityGroups = new Map();
+  for (const bucket of buckets.values()) {
+    bucket.urls.sort((left, right) => candidateDocRank(left) - candidateDocRank(right) || left.localeCompare(right));
+    if (!priorityGroups.has(bucket.priority)) priorityGroups.set(bucket.priority, []);
+    priorityGroups.get(bucket.priority).push(bucket);
+  }
+
+  const selected = [];
+  for (const priority of [...priorityGroups.keys()].sort((left, right) => left - right)) {
+    const tierBuckets = priorityGroups.get(priority)
+      .sort((left, right) => left.stratum.localeCompare(right.stratum));
+    let remaining = true;
+    while (remaining && selected.length < limit) {
+      remaining = false;
+      for (const bucket of tierBuckets) {
+        if (!bucket.urls.length) continue;
+        remaining = true;
+        selected.push(bucket.urls.shift());
+        if (selected.length >= limit) break;
+      }
+    }
+    if (selected.length >= limit) break;
+  }
+  return selected;
+}
+
 function compareDocs(health, fetchedSources) {
-  const catalogDocs = new Set(health.docsUrls.map(normalizeUrl));
+  const catalogDocs = new Set(health.docsUrls.map(canonicalDocPageUrl));
   const discovered = unique(fetchedSources.flatMap((source) => source.discoveredLinks));
   const discoveredApiDocs = discovered.filter((url) => {
     const pathname = new URL(url).pathname;
@@ -393,35 +527,96 @@ function compareDocs(health, fetchedSources) {
       || pathname.includes('/developer-tooling/platform/apis-by-tier')
       || pathname.includes('/developer-tooling/platform/usage-guidelines');
   });
-  const uncatalogedOfficialDocs = discoveredApiDocs
-    .filter((url) => !catalogDocs.has(url))
-    .slice(0, 50);
+  const allUncatalogedOfficialDocs = discoveredApiDocs
+    .map(canonicalDocPageUrl)
+    .filter((url) => url && !catalogDocs.has(url));
+  const uncatalogedOfficialDocs = selectRepresentativeDocUrls(allUncatalogedOfficialDocs, 50);
   const failedRequiredSources = fetchedSources
     .filter((source) => source.required && !source.ok)
     .map((source) => source.id);
   return {
     discoveredLinkCount: discovered.length,
     discoveredApiDocCount: discoveredApiDocs.length,
+    uncatalogedOfficialDocCount: unique(allUncatalogedOfficialDocs).length,
     uncatalogedOfficialDocs,
     failedRequiredSources
   };
 }
 
+function inferFamilyFromApiPath(apiPath) {
+  const pathName = String(apiPath || '')
+    .toLowerCase()
+    .replace(/\/(?:v\d+|\d{4}-\d{2}(?:-beta)?)(?=\/|$)/g, '');
+  const mappings = [
+    ['/meta/network-origins/', 'meta.network_origins'],
+    ['/feature-flags/', 'app_management.feature_flags'],
+    ['/appinstalls/', 'app_management.uninstalls'],
+    ['/media-bridge/', 'media_bridge'],
+    ['/commerce/payment-links/', 'commerce.payment_links'],
+    ['/commerce/price-books/', 'commerce.price_books'],
+    ['/commerce/', 'commerce'],
+    ['/data-studio/', 'data_studio.file_ingestion'],
+    ['/forecast-settings/', 'forecast_settings'],
+    ['/marketing/aeo/', 'marketing.aeo'],
+    ['/marketing/forms/', 'marketing.forms'],
+    ['/marketing/', 'marketing'],
+    ['/automation/flows', 'automation.flows'],
+    ['/automation/', 'automation'],
+    ['/conversations/', 'conversations'],
+    ['/communication-preferences/', 'communication_preferences'],
+    ['/crm/lists/', 'crm.lists'],
+    ['/crm/imports/', 'crm.imports'],
+    ['/crm/exports/', 'crm.exports'],
+    ['/crm/associations/', 'crm.associations'],
+    ['/crm/properties/', 'crm.properties'],
+    ['/crm/property-validations/', 'crm.properties'],
+    ['/crm/schemas/', 'crm.schemas'],
+    ['/crm/objects/', 'crm.objects'],
+    ['/crm/', 'crm.objects'],
+    ['/account-info/', 'account'],
+    ['/files/', 'files'],
+    ['/webhooks-journal/', 'webhooks.journal'],
+    ['/webhooks/', 'webhooks'],
+    ['/oauth/', 'auth.oauth'],
+    ['/events/', 'events'],
+    ['/cms/', 'cms'],
+    ['/settings/', 'settings'],
+    ['/business-units/', 'business_units'],
+    ['/sandboxes/', 'sandboxes'],
+    ['/email/', 'email'],
+    ['/engagements/', 'engagements.v1'],
+    ['/analytics/', 'analytics'],
+    ['/scheduler/', 'scheduler'],
+    ['/visitor-identification/', 'conversations.visitor_identification'],
+    ['/form-integrations/', 'marketing.forms.submissions'],
+    ['/submissions/', 'marketing.forms.submissions'],
+    ['/crm-object-schemas/', 'crm_object_schemas.schemas']
+  ];
+  const match = mappings.find(([prefix]) => (
+    pathName === prefix.replace(/\/$/, '') || pathName.startsWith(prefix)
+  ));
+  return match ? match[1] : null;
+}
+
 function inferFamily(rawUrl, apiPath) {
-  const text = `${rawUrl || ''} ${apiPath || ''}`.toLowerCase();
-  if (text.includes('/account')) return 'account';
-  if (text.includes('/associations')) return 'crm.associations';
-  if (text.includes('/properties') || text.includes('/property-validations')) return 'crm.properties';
-  if (text.includes('/objects') || text.includes('/schemas') || text.includes('/crm/')) return 'crm.objects';
+  const pathFamily = inferFamilyFromApiPath(apiPath);
+  if (pathFamily) return pathFamily;
+
+  const text = String(rawUrl || '').toLowerCase();
+  if (text.includes('/revenue/price-books') || text.includes('/commerce/price-books')) return 'commerce.price_books';
   if (text.includes('/lists')) return 'crm.lists';
   if (text.includes('/imports')) return 'crm.imports';
   if (text.includes('/exports')) return 'crm.exports';
+  if (text.includes('/associations')) return 'crm.associations';
+  if (text.includes('/properties') || text.includes('/property-validations')) return 'crm.properties';
+  if (text.includes('/objects') || text.includes('/schemas') || text.includes('/crm/')) return 'crm.objects';
+  if (text.includes('/account')) return 'account';
   if (text.includes('/files')) return 'files';
   if (text.includes('/webhooks')) return 'webhooks';
   if (text.includes('/communication-preferences')) return 'communication_preferences';
   if (text.includes('/conversations')) return 'conversations';
   if (text.includes('/events')) return 'events';
-  if (text.includes('/oauth') || text.includes('/authentication')) return 'auth';
+  if (text.includes('/oauth') || text.includes('/authentication')) return 'auth.oauth';
   return 'unclassified';
 }
 
@@ -439,9 +634,34 @@ function slug(value) {
 function inferRisk(endpoint) {
   const pathName = endpointPath(endpoint);
   if (endpoint.method === 'GET' || endpoint.method === 'HEAD' || endpoint.method === 'OPTIONS') return 'read';
-  if (endpoint.method === 'POST' && (/\/search$/.test(pathName) || /\/batch\/read$/.test(pathName))) return 'read';
+  if (endpoint.method === 'POST' && (/\/search$/.test(pathName) || /\/batch\/read$/.test(pathName) || /\/validate$/.test(pathName))) return 'read';
   if (endpoint.method === 'DELETE' || /\/archive$|\/purge$|\/delete$/.test(pathName)) return 'destructive';
   return 'mutation';
+}
+
+function canonicalMarkdownUrl(rawUrl) {
+  const normalized = normalizeUrl(rawUrl);
+  if (!normalized) return null;
+  const url = new URL(normalized);
+  if (url.hostname !== 'developers.hubspot.com' || !url.pathname.startsWith('/docs/')) return null;
+  if (/\.(?:md|xml|txt|json)$/i.test(url.pathname)) return normalized;
+  url.pathname = `${url.pathname}.md`;
+  return url.toString();
+}
+
+function inferVersionMode(pathName, docsUrl) {
+  const explicitVersion = String(pathName || '')
+    .split('/')
+    .find((segment) => /^(?:v\d+|\d{4}-\d{2}(?:-beta)?)$/.test(segment));
+  if (explicitVersion) {
+    if (/^\d{4}-\d{2}-beta$/.test(explicitVersion)) return 'beta';
+    if (/^\d{4}-\d{2}$/.test(explicitVersion)) return 'latest';
+    if (explicitVersion === 'v3') return 'v3';
+    if (explicitVersion === 'v4') return 'v4';
+    return 'legacy';
+  }
+  if (/\/docs\/api-reference\/\d{4}-\d{2}-beta(?:\/|$)/.test(String(docsUrl || ''))) return 'beta';
+  return 'legacy';
 }
 
 function proposedName(family, endpoint) {
@@ -470,7 +690,7 @@ function buildEndpointProposal(reference, docsUrl) {
     name: proposedName(family, reference),
     method: reference.method,
     path: reference.path,
-    versionMode: reference.path.includes('/2026-03/') ? 'latest' : 'legacy',
+    versionMode: inferVersionMode(reference.path, docsUrl),
     risk,
     status: 'proposed',
     auth: {
@@ -548,14 +768,20 @@ function versionDuplicateOf(matchers, candidate) {
 }
 
 async function buildDiffProposals(catalog, comparison, flags) {
-  const explicitUrls = values(flags['candidate-url']).map(normalizeUrl).filter(Boolean);
+  const explicitUrls = unique(values(flags['candidate-url']).map(canonicalDocPageUrl));
   const uncatalogedUrls = comparison.uncatalogedOfficialDocs || [];
-  const proposalLimit = flags['proposal-limit'] === undefined ? 12 : Number(flags['proposal-limit']);
+  const proposalLimit = flags['proposal-limit'] === undefined ? 24 : Number(flags['proposal-limit']);
   if (!Number.isInteger(proposalLimit) || proposalLimit < 0) fail('--proposal-limit must be a non-negative integer.');
   const maxProposals = flags['max-proposals'] === undefined ? 200 : Number(flags['max-proposals']);
   if (!Number.isInteger(maxProposals) || maxProposals < 0) fail('--max-proposals must be a non-negative integer.');
 
-  const candidateUrls = unique([...explicitUrls, ...uncatalogedUrls]).slice(0, proposalLimit);
+  const selectedExplicitUrls = explicitUrls.slice(0, proposalLimit);
+  const explicitSet = new Set(selectedExplicitUrls);
+  const representativeUrls = selectRepresentativeDocUrls(
+    uncatalogedUrls.filter((url) => !explicitSet.has(canonicalDocPageUrl(url))),
+    Math.max(0, proposalLimit - selectedExplicitUrls.length)
+  );
+  const candidateUrls = [...selectedExplicitUrls, ...representativeUrls];
   const candidateFiles = values(flags['candidate-file']);
   const docs = [
     ...candidateFiles.map(readCandidateFile),
@@ -570,7 +796,7 @@ async function buildDiffProposals(catalog, comparison, flags) {
   const docOnlyProposals = [];
 
   for (const doc of docs) {
-    const docsUrl = doc.sourceType === 'file' ? doc.path : normalizeUrl(doc.finalUrl || doc.url || '');
+    const docsUrl = doc.sourceType === 'file' ? doc.path : canonicalDocPageUrl(doc.url || doc.finalUrl || '');
     const newReferences = doc.endpointReferences.filter((endpoint) => !endpointExists(catalog, endpoint));
     for (const reference of newReferences) {
       endpointProposals.push(buildEndpointProposal(reference, docsUrl || doc.url || doc.path));
@@ -586,6 +812,10 @@ async function buildDiffProposals(catalog, comparison, flags) {
   const novelProposals = [];
   const versionDuplicates = [];
   for (const proposal of dedupedProposals) {
+    if (proposal.versionMode === 'beta') {
+      novelProposals.push(proposal);
+      continue;
+    }
     const duplicateOf = versionDuplicateOf(neutralMatchers, proposal);
     if (duplicateOf) {
       versionDuplicates.push({ method: proposal.method, path: proposal.path, duplicateOf });
@@ -771,7 +1001,19 @@ async function main() {
   if (!result.ok) process.exitCode = 2;
 }
 
-main().catch((error) => {
-  console.error(error.stack || error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.stack || error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  canonicalMarkdownUrl,
+  extractEndpointReferences,
+  inferFamily,
+  inferVersionMode,
+  isHubSpotDocsLoginRedirect,
+  pageLocalCandidateText,
+  selectRepresentativeDocUrls,
+};

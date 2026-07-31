@@ -64,8 +64,25 @@ function crmAudienceEndpoint(resolution, method, path) {
       readOnlyPost: catalogEndpoint.readOnlyPost,
       risk: catalogEndpoint.risk
     });
+    const objectMetadata = resolution && resolution.catalogEntry ? resolution.catalogEntry : {};
+    const readLike = catalogEndpoint.method === 'GET'
+      || (catalogEndpoint.method === 'POST' && catalogEndpoint.readOnlyPost === true);
+    const scopeNotes = [catalogEndpoint.scopeNotes];
+    if (readLike && objectMetadata.readScope) {
+      scopeNotes.push(`The selected ${resolution.objectType} object requires ${objectMetadata.readScope}.`);
+    }
+    if (!readLike && objectMetadata.writeAvailability === 'pending_public_beta') {
+      scopeNotes.push(`Current date-versioned ${resolution.objectType} writes are not published; request construction is not confirmed write support.`);
+    }
+    const combinedScopeNotes = scopeNotes.filter(Boolean).join(' ');
     return {
       ...catalogEndpoint,
+      contextUrl: objectMetadata.contextUrl || catalogEndpoint.contextUrl,
+      tierRequirement: objectMetadata.tierRequirement || catalogEndpoint.tierRequirement,
+      requiredScopes: readLike && objectMetadata.readScope
+        ? [objectMetadata.readScope]
+        : catalogEndpoint.requiredScopes,
+      scopeNotes: combinedScopeNotes || catalogEndpoint.scopeNotes,
       auth: { ...catalogEndpoint.auth, tokenAudience }
     };
   }

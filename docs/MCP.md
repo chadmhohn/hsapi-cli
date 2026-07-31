@@ -1,11 +1,26 @@
 # MCP Server Mode
 
-`hsapi` can run in two modes:
+The installed `hsapi` package can run in two local modes:
 
 - Direct CLI mode: an operator or agent runs `hsapi ...` commands directly in a shell.
 - MCP server mode: an MCP client starts `hsapi-mcp` or `hsapi mcp serve` over stdio and calls the exposed tools.
 
-Both modes use the same portal config, endpoint catalog, auth resolvers, request builder, mutation gates, origin guard, output projection, and redaction logic. MCP mode is an adapter over the CLI core, not a separate HubSpot implementation.
+Both local modes use the same portal config, endpoint catalog, auth resolvers,
+request builder, mutation gates, origin guard, output projection, and redaction
+logic. Local MCP mode is an adapter over the CLI core, not a separate HubSpot
+implementation.
+
+A separate Cloudflare package provides an OAuth-only remote MCP surface. The
+recommended client setup keeps both connectors explicit:
+
+- `hubspot-oauth-remote` for the user-level OAuth app's reviewed, allowlisted OAuth
+  capabilities; and
+- `hubspot-local-superset` for local OAuth plus an explicitly configured
+  ServiceKey/private-app credential when an authorized operation requires it.
+
+There is no automatic credential or connector fallback. The remote Worker
+never accepts a ServiceKey. See [`docs/REMOTE_MCP.md`](REMOTE_MCP.md) and the
+repo-safe [`examples/mcp-dual-connector.sample.json`](../examples/mcp-dual-connector.sample.json).
 
 ## Direct CLI Mode
 
@@ -37,7 +52,10 @@ The equivalent long form is:
 hsapi mcp serve
 ```
 
-The server uses stdio transport. Clients own the process lifetime and pass config through environment variables. ## Tool Surface
+The server uses stdio transport. Clients own the process lifetime and pass
+config through environment variables.
+
+## Local Tool Surface
 
 ### Meta / catalog tools (`readOnlyHint: true` — always-approvable)
 
@@ -90,7 +108,7 @@ HubSpot command.
 Use these for all read operations. They permanently block mutations and are safe to always-approve in any MCP client that respects `readOnlyHint`:
 
 - `hsapi_command_execute_read`: run a catalog-backed typed command. Mutations are blocked with `mutation_not_allowed` — there is no `confirmMutation` escape hatch. An offline catalog fast path skips the preview round-trip for known-read commands.
-- `hsapi_request_execute_read`: run a catalog-backed generic request. DELETE/PUT/PATCH and unsafe POST are blocked before any network call. GET/HEAD/OPTIONS always proceed; POST requires the endpoint to be catalog-marked `readOnly: true` (e.g. search endpoints).
+- `hsapi_request_execute_read`: run a catalog-backed generic request. DELETE/PUT/PATCH and unsafe POST are blocked before any network call. GET/HEAD/OPTIONS always proceed; POST requires `readOnly: true` in the tool call and a catalog entry marked `readOnlyPost: true` (for example CRM search or Price Books validation). Set the optional top-level `accept` field for non-JSON representations such as the network-origins plaintext endpoint.
 
 ### Execute tools — write variants (`readOnlyHint: false` — require per-call approval)
 
@@ -157,6 +175,57 @@ Most generic MCP clients use an `mcpServers` object:
 If the client cannot inject secrets securely, use a wrapper command that loads credentials from the local secret manager and then execs `hsapi-mcp`. Do not place private app tokens, OAuth refresh tokens, client secrets, developer API keys, personal access keys, token caches, or local OpenClaw config contents in package files or client config committed to source control.
 
 For copy/paste local setup on Codex Desktop or Claude Desktop, including Windows paths and multi-portal examples, see `docs/DESKTOP_MCP_QUICKSTART.md`.
+
+## Remote OAuth Connector
+
+The remote Worker is stateless MCP at `<PUBLIC_ORIGIN>/mcp`. An MCP client
+completes downstream OAuth with the Worker; the Worker completes a separate
+upstream HubSpot user-level OAuth app flow. The downstream bearer is never
+sent to HubSpot, and HubSpot tokens are never returned through tools.
+
+Remote tools remain OAuth-only, while the executors support both named and
+scope-bound raw requests:
+
+- `hsapi_remote_identity`: selected HubSpot account and effective tool-scope metadata;
+- `hsapi_remote_capabilities`: the effective endpoint/object/scope boundary for
+  the current grant; and
+- `hsapi_remote_endpoint_help`: exact path parameters, scope/gate status, and
+  an executor input example for one endpoint ID; and
+- `hsapi_request_execute_read`: named `endpointId` reads or raw
+  `method`/`path` reads with optional query/body.
+
+`hsapi_request_execute` is registered only when `REMOTE_WRITES_ENABLED=true`
+and the downstream grant includes `hsapi.write`. The checked-in staging and
+production templates enable the reviewed write scopes. Named and raw mutations,
+including destructive CRM operations, require the exact HubSpot write scope and
+a short-lived, single-use confirmation token bound to the exact preview. The
+model may complete that second call when the preview matches the user's request.
+Raw callers cannot override the HubSpot origin, authorization header, portal, or
+auth mode.
+
+The default HubSpot optional-scope request contains the reviewed remote read and
+write profiles. A write remains unavailable unless its path maps to a scope in
+the Worker manifest and fresh consent grants that scope.
+
+Remote consent/upstream state and mutation confirmations use separate SQLite
+Durable Objects for atomic one-time consumption. Deployment creates only the
+OAuth-provider KV namespace; both Durable Object classes stay declaratively
+bound in Wrangler config. The exact production config must route its declared
+canonical origin to the Worker and pass a production dry run.
+
+Contracts currently support remote list/get/search/batch reads; writes await the
+published public beta. Price Books are
+local ServiceKey-only because their permissions are not public-app OAuth
+scopes. Custom-object execution remains disabled pending the early-August scope
+and hosted-MCP recheck.
+
+Use the local connector explicitly for stronger-token endpoints, custom-object
+work until that recheck is complete, Price Books, and local Agent
+CLI report/view bridges. Full deployment and negative-test guidance is in
+[`cloudflare/hsapi-remote-mcp/README.md`](../cloudflare/hsapi-remote-mcp/README.md).
+The dedicated app/broker provisioning and coordinated cutover order are in
+[`docs/OAUTH_APP_SPLIT.md`](OAUTH_APP_SPLIT.md). The current production Worker
+is a transition deployment until that split is completed and revalidated.
 
 ## Neutral Token Source
 

@@ -184,6 +184,10 @@ async function startHostedBrokerLogin(source, input) {
   if (response.status !== 201 && response.status !== 200) {
     throw brokerHttpError(action, response, payload);
   }
+  const brokerRole = configString(payload && payload.brokerRole);
+  if (brokerRole && brokerRole !== 'local') {
+    throw new Error(`${action}: configured broker is not a local hosted-OAuth broker.`);
+  }
   const sessionId = requiredBrokerString(payload, 'sessionId', action);
   if (!BROKER_SESSION_ID_PATTERN.test(sessionId)) {
     throw new Error(`${action}: hosted OAuth broker returned an invalid sessionId.`);
@@ -206,6 +210,7 @@ async function startHostedBrokerLogin(source, input) {
   return {
     sessionId,
     authorizationUrl: parsedAuthorizationUrl,
+    brokerRole: brokerRole || null,
     expiresIn: Number.isInteger(rawExpiresIn) && rawExpiresIn > 0 ? rawExpiresIn : null,
     intervalSeconds: Number.isInteger(rawInterval) && rawInterval > 0 ? rawInterval : null
   };

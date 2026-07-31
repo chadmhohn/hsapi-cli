@@ -199,6 +199,32 @@ function listMembershipBodyFromFlags(flags) {
   };
 }
 
+function listRecordIdsBodyFromFlags(flags, commandName) {
+  const explicitBody = parseBody(flags.body);
+  if (explicitBody !== undefined) {
+    if (!Array.isArray(explicitBody) || explicitBody.length === 0) {
+      fail(`${commandName} --body must be a non-empty JSON array of record IDs.`);
+    }
+    return explicitBody.map((recordId) => String(recordId));
+  }
+
+  const recordIds = parseStringList(requireFlag(flags, 'record-ids'), 'record-ids');
+  if (!recordIds.length) fail(`${commandName} --record-ids must include at least one record ID.`);
+  return recordIds;
+}
+
+function listFilterUpdateBodyFromFlags(flags) {
+  const explicitBody = parseBody(flags.body);
+  if (explicitBody !== undefined) return assertObjectBody(explicitBody, 'lists update-filters --body');
+
+  return {
+    filterBranch: assertObjectBody(
+      parseBody(requireFlag(flags, 'filter-branch')),
+      'lists update-filters --filter-branch'
+    )
+  };
+}
+
 function exportStartBodyFromFlags(flags) {
   const explicitBody = parseBody(flags.body || flags.export);
   if (explicitBody !== undefined) return explicitBody;
@@ -1620,7 +1646,9 @@ module.exports = {
   importMultipartFromFlags,
   inputsBodyFromFlags,
   listCreateBodyFromFlags,
+  listFilterUpdateBodyFromFlags,
   listMembershipBodyFromFlags,
+  listRecordIdsBodyFromFlags,
   listSearchBodyFromFlags,
   mappedBodyFromFlags,
   marketingEmailBodyFromFlags,

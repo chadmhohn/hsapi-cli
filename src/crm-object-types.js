@@ -274,7 +274,11 @@ const CRM_OBJECT_TYPE_CATALOG = [
     label: 'Contracts',
     aliases: ['contract'],
     docsUrl: 'https://developers.hubspot.com/docs/api-reference/latest/crm/objects/contracts/guide',
-    notes: 'The standard path name is authoritative; HubSpot does not currently document a stable object type ID for contracts.'
+    contextUrl: 'docs/hubspot-api-context/contracts.md',
+    tierRequirement: 'Revenue Hub Professional',
+    readScope: 'crm.objects.contracts.read',
+    writeAvailability: 'pending_public_beta',
+    notes: 'The current 2026-03 Contracts API documents reads only. The standard path name is authoritative; HubSpot does not currently document a stable object type ID. Do not treat generic CRM mutation request construction as confirmed current contract-write support.'
   },
   {
     family: 'optional',
@@ -322,6 +326,10 @@ function crmObjectCatalogEntryForOutput(entry) {
     docsUrl: entry.docsUrl
   };
   if (entry.aliases && entry.aliases.length) output.aliases = [...entry.aliases];
+  if (entry.contextUrl) output.contextUrl = entry.contextUrl;
+  if (entry.tierRequirement) output.tierRequirement = entry.tierRequirement;
+  if (entry.readScope) output.readScope = entry.readScope;
+  if (entry.writeAvailability) output.writeAvailability = entry.writeAvailability;
   if (entry.notes) output.notes = entry.notes;
   return output;
 }
