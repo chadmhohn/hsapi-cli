@@ -22,6 +22,7 @@ const {
   gdprDeleteBodyFromFlags,
   mergeBodyFromFlags,
   recordCreateBodyFromFlags,
+  recordUpdateBodyFromFlags,
 } = require('../command-inputs');
 const {
   collectPages,
@@ -520,8 +521,7 @@ async function runCrm(portal, action, rest, flags) {
   if (action === 'update') {
     const id = rest[1];
     if (!id) fail('crm update requires object id.');
-    const properties = assertObjectBody(parseBody(flags.properties), 'crm update --properties');
-    const body = { properties };
+    const body = recordUpdateBodyFromFlags(flags);
     printJson(await guardedFetch(portal, 'PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`, flags, body, { endpoint: audienceEndpointFor('PATCH', `/crm/objects/2026-03/${pathPart(objectType)}/${pathPart(id)}`) }));
     return;
   }

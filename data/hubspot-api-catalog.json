@@ -11258,13 +11258,13 @@
           "name": "properties",
           "kind": "flag",
           "type": "json",
-          "required": true
+          "description": "Record properties object. Required unless --body is supplied."
         },
         {
           "name": "body",
           "kind": "flag",
           "type": "json",
-          "description": "Full record body; overrides --properties/--associations."
+          "description": "Full record update body; overrides --properties."
         },
         {
           "name": "yes",
