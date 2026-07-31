@@ -112,6 +112,8 @@ const AGENT_CLI_SPECS = Object.freeze({
   }),
 });
 
+const AGENT_CLI_REQUIRED_FAMILIES = Object.freeze(Object.keys(AGENT_CLI_SPECS));
+
 function usage() {
   return buildUsage(DEFAULT_CONFIG, CATALOG_FILE);
 }
@@ -280,11 +282,55 @@ function runAgentCliCommand(binary, args, options = {}) {
 }
 
 function parseAgentCliVersion(text) {
-  const match = /(?:^|\s)(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(String(text || ''));
+  const value = String(text || '');
+  const match = /(?:^|\s)(\d+)\.(\d+)\.(\d+)(?:\s|$)/.exec(value);
   if (!match) return null;
+  const buildMatch = /\bbuild\s+([A-Za-z0-9._-]+)/i.exec(value);
+  const commitMatch = /\bcommit\s+([A-Za-z0-9._-]+)/i.exec(value);
+  const buildRaw = buildMatch ? buildMatch[1] : null;
+  const build = buildRaw && /^\d+$/.test(buildRaw) ? Number(buildRaw) : buildRaw;
+  const versionLine = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.includes(match[0].trim()));
   return {
     raw: `${match[1]}.${match[2]}.${match[3]}`,
     parts: match.slice(1, 4).map(Number),
+    build: build || null,
+    buildRaw,
+    commit: commitMatch ? commitMatch[1] : null,
+    full: versionLine || value.trim(),
+  };
+}
+
+function parseAgentCliCommandFamilies(text) {
+  const families = [];
+  let inCommands = false;
+  for (const line of String(text || '').split(/\r?\n/)) {
+    if (/^Commands:\s*$/.test(line)) {
+      inCommands = true;
+      continue;
+    }
+    if (!inCommands) continue;
+    if (/^(?:Arguments|Options|Examples):\s*$/.test(line)) break;
+    const match = /^\s{2,}([a-z][a-z0-9-]*)\s{2,}/.exec(line);
+    if (!match || match[1] === 'help' || families.includes(match[1])) continue;
+    families.push(match[1]);
+  }
+  return families;
+}
+
+function agentCliCapabilityProbe(binary, result, requiredFamilies = AGENT_CLI_REQUIRED_FAMILIES) {
+  const commandFamilies = result && result.ok
+    ? parseAgentCliCommandFamilies(result.stdout)
+    : [];
+  const missingRequiredFamilies = requiredFamilies.filter((family) => !commandFamilies.includes(family));
+  return {
+    ok: Boolean(result && result.ok && commandFamilies.length && missingRequiredFamilies.length === 0),
+    command: agentCliCommandPreview(binary, ['--help']),
+    commandFamilies,
+    requiredFamilies: [...requiredFamilies],
+    missingRequiredFamilies,
   };
 }
 
@@ -378,11 +424,39 @@ function runAgentCliPreflight(portal, flags, options = {}) {
       binary,
       auth,
       version: version ? version.raw : null,
+      build: version ? version.build : null,
+      versionString: version ? version.full : null,
       versionResult,
       error: versionResult.ok
         ? `HubSpot Agent CLI ${AGENT_CLI_MIN_VERSION} or newer is required for reports and views.`
         : 'HubSpot Agent CLI was not available. Install it separately from HubSpot; HSAPI does not bundle or auto-upgrade it.',
     };
+  }
+
+  let capabilityResult;
+  let capabilityProbe;
+  if (options.includeCapabilities === true) {
+    capabilityResult = runAgentCliCommand(binary, ['--help'], { env, timeout: 30000, maxLines: 200 });
+    capabilityProbe = agentCliCapabilityProbe(binary, capabilityResult);
+    if (!capabilityProbe.ok) {
+      const error = !capabilityResult.ok
+        ? 'HubSpot Agent CLI capability probe failed while running its read-only --help command.'
+        : capabilityProbe.commandFamilies.length === 0
+          ? 'HubSpot Agent CLI capability probe could not parse any top-level command families from --help.'
+          : `HubSpot Agent CLI is missing required command families: ${capabilityProbe.missingRequiredFamilies.join(', ')}.`;
+      return {
+        ok: false,
+        binary,
+        auth,
+        version: version.raw,
+        build: version.build,
+        versionString: version.full,
+        versionResult,
+        capabilityResult,
+        capabilityProbe,
+        error,
+      };
+    }
   }
 
   const whoamiResult = runAgentCliCommand(binary, ['whoami'], { env, timeout: 30000, maxLines: 80 });
@@ -392,8 +466,11 @@ function runAgentCliPreflight(portal, flags, options = {}) {
       ok: false,
       binary,
       version: version.raw,
+      build: version.build,
+      versionString: version.full,
       auth,
       identity,
+      capabilityProbe,
       whoamiResult,
       error: authMode === 'oauth'
         ? 'HubSpot Agent CLI OAuth is not authenticated. Run hubspot auth login, then retry.'
@@ -405,8 +482,11 @@ function runAgentCliPreflight(portal, flags, options = {}) {
       ok: false,
       binary,
       version: version.raw,
+      build: version.build,
+      versionString: version.full,
       auth,
       identity,
+      capabilityProbe,
       whoamiResult,
       error: `HubSpot Agent CLI account ${identity.portalId} does not match selected HSAPI portal ${portal.name} (${auth.expectedPortalId}). Refusing cross-portal delegation.`,
     };
@@ -415,11 +495,18 @@ function runAgentCliPreflight(portal, flags, options = {}) {
     ok: true,
     binary,
     version: version.raw,
+    build: version.build,
+    versionString: version.full,
     minimumVersion: AGENT_CLI_MIN_VERSION,
     auth,
     identity,
+    capabilityProbe,
     env,
-    checks: options.includeResults === true ? { version: versionResult, whoami: whoamiResult } : undefined,
+    checks: options.includeResults === true ? {
+      version: versionResult,
+      capability: capabilityResult,
+      whoami: whoamiResult,
+    } : undefined,
   };
 }
 
@@ -434,6 +521,8 @@ function agentCliPreflightSummary(preflight) {
   return {
     ok: preflight.ok,
     version: preflight.version || null,
+    build: preflight.build === undefined ? null : preflight.build,
+    versionString: preflight.versionString || null,
     identity,
   };
 }
@@ -516,7 +605,7 @@ async function runAgentCliDoctor(portal, flags) {
       ready: null,
       dryRun: true,
       showRequest: true,
-      message: 'Agent CLI doctor would run version and whoami checks only. No report or view command was executed.',
+      message: 'Agent CLI doctor would run version, top-level --help capability, and whoami checks only. No report or view command was executed.',
       delegated: true,
       delegatedTo: 'official_hubspot_agent_cli',
       provider: 'hubspot_agent_cli',
@@ -524,12 +613,16 @@ async function runAgentCliDoctor(portal, flags) {
       auth,
       checks: [
         agentCliCommandPreview(binary, ['--version']),
+        agentCliCommandPreview(binary, ['--help']),
         agentCliCommandPreview(binary, ['whoami']),
       ],
     });
     return;
   }
-  const preflight = runAgentCliPreflight(portal, flags, { includeResults: true });
+  const preflight = runAgentCliPreflight(portal, flags, {
+    includeResults: true,
+    includeCapabilities: true,
+  });
   const output = {
     ok: preflight.ok,
     ready: preflight.ok,
@@ -543,12 +636,16 @@ async function runAgentCliDoctor(portal, flags) {
     agentCli: {
       binary,
       version: preflight.version || null,
+      build: preflight.build === undefined ? null : preflight.build,
+      versionString: preflight.versionString || null,
       minimumVersion: AGENT_CLI_MIN_VERSION,
     },
+    capabilityProbe: preflight.capabilityProbe || null,
     auth: preflight.auth || auth,
     identity: preflight.identity || null,
     checks: preflight.checks || {
       version: preflight.versionResult,
+      capability: preflight.capabilityResult,
       whoami: preflight.whoamiResult,
     },
   };
@@ -633,7 +730,9 @@ module.exports = {
   AGENT_CLI_AUTH_MODES,
   AGENT_CLI_INTERNAL_FLAGS,
   AGENT_CLI_MIN_VERSION,
+  AGENT_CLI_REQUIRED_FAMILIES,
   AGENT_CLI_SPECS,
+  agentCliCapabilityProbe,
   agentCliAuthContract,
   agentCliAuthMode,
   agentCliAuthSelection,
@@ -651,6 +750,7 @@ module.exports = {
   agentCliSpec,
   agentCliStructuredOutput,
   agentCliTextSummary,
+  parseAgentCliCommandFamilies,
   parseAgentCliVersion,
   parseAgentCliWhoami,
   runAgentCliBridge,

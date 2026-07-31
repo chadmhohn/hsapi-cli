@@ -523,7 +523,24 @@ const call = {
 };
 fs.appendFileSync(process.env.HSAPI_MOCK_AGENT_LOG, JSON.stringify(call) + '\\n');
 if (args[0] === '--version') {
-  console.log('hubspot 0.10.0 (build test, commit mock)');
+  console.log(process.env.HSAPI_MOCK_AGENT_VERSION || 'hubspot 0.10.0 (build 609, commit mock)');
+  process.exit(0);
+}
+if (args[0] === '--help') {
+  const commandFamilies = String(process.env.HSAPI_MOCK_AGENT_COMMANDS || 'objects,reports,views,segments')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  console.log('HubSpot CLI for agents');
+  console.log('');
+  console.log('Commands:');
+  for (const family of commandFamilies) {
+    console.log('  ' + family.padEnd(14) + 'Mock command family');
+  }
+  console.log('  help          Print help');
+  console.log('');
+  console.log('Options:');
+  console.log('  -h, --help    Print help');
   process.exit(0);
 }
 if (args[0] === 'whoami') {
@@ -1033,13 +1050,36 @@ test('02b first-party Agent CLI bridge keeps portal identity and mutation gates'
   assert.strictEqual(doctorOutput.ready, true);
   assert.strictEqual(doctorOutput.delegatedTo, 'official_hubspot_agent_cli');
   assert.strictEqual(doctorOutput.identity.portalId, '999');
+  assert.strictEqual(doctorOutput.agentCli.version, '0.10.0');
+  assert.strictEqual(doctorOutput.agentCli.build, 609);
+  assert.strictEqual(doctorOutput.agentCli.versionString, 'hubspot 0.10.0 (build 609, commit mock)');
+  assert.deepStrictEqual(doctorOutput.capabilityProbe.commandFamilies, ['objects', 'reports', 'views', 'segments']);
+  assert.deepStrictEqual(doctorOutput.capabilityProbe.requiredFamilies, ['reports', 'views']);
+  assert.deepStrictEqual(doctorOutput.capabilityProbe.missingRequiredFamilies, []);
+  assert.strictEqual(doctorOutput.capabilityProbe.ok, true);
   assert(!doctor.stdout.includes('profile-service-key-secret'));
   assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
     ['--version'],
+    ['--help'],
     ['whoami']
   ]);
   assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.authMode === 'service-key'));
   assert(readMockAgentCalls(mockAgent.logPath).every((call) => call.noAutoUpgrade === '1'));
+
+  fs.writeFileSync(mockAgent.logPath, '');
+  const missingFamilyDoctor = await run(['agent-cli', 'doctor', '--portal', 'test', '--agent-auth', 'service-key', ...binArgs], {
+    ...env,
+    HSAPI_MOCK_AGENT_COMMANDS: 'objects,reports'
+  });
+  assert.strictEqual(missingFamilyDoctor.status, 1, missingFamilyDoctor.stderr || missingFamilyDoctor.stdout);
+  const missingFamilyOutput = parseJsonOutput(missingFamilyDoctor);
+  assert.strictEqual(missingFamilyOutput.ready, false);
+  assert.match(missingFamilyOutput.message, /missing required command families: views/);
+  assert.deepStrictEqual(missingFamilyOutput.capabilityProbe.missingRequiredFamilies, ['views']);
+  assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
+    ['--version'],
+    ['--help']
+  ]);
 
   fs.writeFileSync(mockAgent.logPath, '');
   const list = await run(['reports', 'list', '--portal', 'test', '--agent-auth', 'service-key', ...binArgs], env);
@@ -1056,6 +1096,8 @@ test('02b first-party Agent CLI bridge keeps portal identity and mutation gates'
     user: 'mock@example.com',
     scopeCount: 2
   });
+  assert.strictEqual(listOutput.preflight.build, 609);
+  assert.strictEqual(listOutput.preflight.versionString, 'hubspot 0.10.0 (build 609, commit mock)');
   assert.deepStrictEqual(readMockAgentCalls(mockAgent.logPath).map((call) => call.args), [
     ['--version'],
     ['whoami'],
@@ -1289,6 +1331,8 @@ test('07 block (7)', async () => {
     assert(toolNames.includes('hsapi_reports_write'));
     assert(toolNames.includes('hsapi_views_read'));
     assert(toolNames.includes('hsapi_views_write'));
+    const requestReadTool = mcp.responses[1].result.tools.find((tool) => tool.name === 'hsapi_request_execute_read');
+    assert.strictEqual(requestReadTool.inputSchema.properties.accept.type, 'string');
     const profiles = mcpStructuredContent(mcp.responses[2]);
     assert.strictEqual(profiles.ok, true);
     assert.strictEqual(profiles.profiles[0].name, 'test');
@@ -1559,7 +1603,7 @@ test('11 Issue #17 (slice 1): catalog argspecs + hsapi help + per-command --help
       const fullUsage = await run(['help'], baseEnv);
       assert.strictEqual(fullUsage.status, 0);
       assert.match(fullUsage.stdout, /Typed commands \(generated from the endpoint catalog/);
-      assert.match(fullUsage.stdout, /hsapi lists create\|search\|get\|get-by-name\|update-name\|delete\|restore\|memberships\|membership-update\|memberships-clear\|record-memberships \.\.\. \[--portal <name>\] \[--yes\]/);
+      assert.match(fullUsage.stdout, /hsapi lists create\|search\|get\|get-by-name\|update-name\|delete\|restore\|memberships\|membership-update\|memberships-clear\|record-memberships\|members-add\|update-filters\|members-remove \.\.\. \[--portal <name>\] \[--yes\]/);
       assert.match(fullUsage.stdout, /hsapi account details\|usage\|subscription\|audit-logs\|login-activity\|security-activity \.\.\. \[--portal <name>\]\n/);
 
       const usageCatalog = writeTempCatalog((catalog) => {
@@ -7549,6 +7593,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
         res.writeHead(201, { 'content-type': 'application/json' });
         res.end(JSON.stringify({
           sessionId: brokerSessionId,
+          brokerRole: 'local',
           authorizationUrl: `https://app.hubspot.com/oauth/authorize?client_id=test-client&redirect_uri=https%3A%2F%2Fauth.example.test%2Fcallback&state=${brokerSessionId}`,
           expiresIn: 600,
           interval: 1
@@ -7616,6 +7661,7 @@ test('93 hosted OAuth broker transport, config isolation, metadata, and redactio
       consumeSecretHash: 'consume-hash-123',
     });
     assert.strictEqual(session.sessionId, brokerSessionId);
+    assert.strictEqual(session.brokerRole, 'local');
     assert.strictEqual(session.authorizationUrl.origin, 'https://app.hubspot.com');
     assert.strictEqual(session.expiresIn, 600);
     assert.strictEqual(session.intervalSeconds, 1);
@@ -8582,4 +8628,431 @@ resolveOAuthCredential(portal, {
     else process.env[clientSecretEnv] = priorClientSecret;
     await new Promise((resolve) => refreshServer.close(resolve));
   }
+});
+
+test('stable 2026-03 additions cover Segments parity, network origins, app uninstall, and feature flags', async () => {
+  const env = { ...baseEnv, HSAPI_TEST_TOKEN: 'profile-token' };
+
+  await expectShowRequest(['lists', 'members-add', '123', '--record-ids', '101,102'], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/crm/lists/2026-03/123/memberships/add',
+    endpointId: 'lists.members_add',
+    body: ['101', '102']
+  });
+  await expectShowRequest(['lists', 'members-remove', '123', '--body', '[101,"102"]'], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/crm/lists/2026-03/123/memberships/remove',
+    endpointId: 'lists.members_remove',
+    body: ['101', '102']
+  });
+  const filterPreview = await expectShowRequest([
+    'lists', 'update-filters', '123',
+    '--filter-branch', '{"filterBranchType":"OR","filterBranches":[],"filters":[]}',
+    '--enroll-objects-in-workflows', 'false'
+  ], env, {
+    requests,
+    method: 'PUT',
+    pathname: '/crm/lists/2026-03/123/update-list-filters',
+    endpointId: 'lists.update_filters',
+    body: {
+      filterBranch: {
+        filterBranchType: 'OR',
+        filterBranches: [],
+        filters: []
+      }
+    }
+  });
+  assert.strictEqual(filterPreview.request.query.enrollObjectsInWorkflows, 'false');
+
+  const blockedMembers = await run(['lists', 'members-add', '123', '--record-ids', '101'], env);
+  assert.strictEqual(blockedMembers.status, 2, 'members-add without --yes must return a blocked preview');
+  assert.match(parseJsonOutput(blockedMembers).message, /Mutation blocked/);
+  const missingRecordIds = await run(['lists', 'members-remove', '123', '--show-request'], env);
+  assert.notStrictEqual(missingRecordIds.status, 0);
+  assert.match(missingRecordIds.stderr, /--record-ids/);
+
+  const definitions = new Map(endpointDefinitions(CATALOG_FILE).map((definition) => [definition.id, definition]));
+  const stableCatalogIds = [
+    'meta.network_origins.ip_ranges',
+    'meta.network_origins.ip_ranges_simple',
+    'app_management.uninstalls.external_install',
+    'app_management.feature_flags.list',
+    'app_management.feature_flags.get',
+    'app_management.feature_flags.portals_list',
+    'app_management.feature_flags.portal_get',
+    'app_management.feature_flags.update',
+    'app_management.feature_flags.delete',
+    'app_management.feature_flags.portal_update',
+    'app_management.feature_flags.portal_delete',
+    'app_management.feature_flags.portals_batch_upsert',
+    'app_management.feature_flags.portals_batch_delete'
+  ];
+  for (const id of stableCatalogIds) assert(definitions.has(id), `${id} should be cataloged`);
+  for (const id of ['lists.members_add', 'lists.update_filters', 'lists.members_remove']) {
+    const definition = definitions.get(id);
+    assert.deepStrictEqual(definition.requiredScopes, [], `${id} must not model HubSpot's alternative scopes as jointly required`);
+    assert.match(definition.scopeNotes, /one-of cms\.membership\.access_groups\.write, crm\.lists\.read, or crm\.lists\.write/);
+  }
+
+  const ipPreview = await expectShowRequest([
+    'request', 'GET', '/meta/network-origins/2026-03/ip-ranges',
+    '--query', 'direction=EGRESS', '--query', 'service=API'
+  ], { ...baseEnv, HSAPI_TEST_TOKEN: '', HUBSPOT_ACCESS_TOKEN: '' }, {
+    requests,
+    method: 'GET',
+    pathname: '/meta/network-origins/2026-03/ip-ranges',
+    endpointId: 'meta.network_origins.ip_ranges'
+  });
+  assert.strictEqual(ipPreview.auth.required, false);
+  assert.strictEqual(ipPreview.authFamily, null);
+  assert.strictEqual(ipPreview.auth.credentialSource, null);
+  assert(!Object.prototype.hasOwnProperty.call(ipPreview.request.headers, 'Authorization'));
+  assert.strictEqual(ipPreview.request.query.direction, 'EGRESS');
+  assert.strictEqual(ipPreview.request.query.service, 'API');
+  const ipRequestCount = requests.length;
+  const ipResult = await run([
+    'request', 'GET', '/meta/network-origins/2026-03/ip-ranges/simple',
+    '--query', 'service=EMAIL', '--accept', 'text/plain'
+  ], { ...baseEnv, HSAPI_TEST_TOKEN: '', HUBSPOT_ACCESS_TOKEN: '' });
+  assert.strictEqual(ipResult.status, 0, ipResult.stderr || ipResult.stdout);
+  assert.strictEqual(requests.length, ipRequestCount + 1);
+  const receivedIpRequest = requests.at(-1);
+  assert.strictEqual(new URL(receivedIpRequest.url, baseUrl).pathname, '/meta/network-origins/2026-03/ip-ranges/simple');
+  assert.strictEqual(receivedIpRequest.headers.accept, 'text/plain');
+  assert(!Object.prototype.hasOwnProperty.call(receivedIpRequest.headers, 'authorization'));
+
+  const invalidAcceptRequestCount = requests.length;
+  const invalidAccept = await run([
+    'request', 'GET', '/meta/network-origins/2026-03/ip-ranges/simple',
+    '--accept', 'text/plain\r\nX-Test: injected'
+  ], { ...baseEnv, HSAPI_TEST_TOKEN: '', HUBSPOT_ACCESS_TOKEN: '' });
+  assert.notStrictEqual(invalidAccept.status, 0);
+  assert.match(invalidAccept.stderr, /Invalid --accept/);
+  assert.strictEqual(requests.length, invalidAcceptRequestCount, 'invalid Accept values must fail before network I/O');
+
+  const mcpIpPreview = await runMcpConversation([
+    {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'hsapi-network-origins-test', version: '0.0.0' }
+      }
+    },
+    {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: {
+        name: 'hsapi_request_execute_read',
+        arguments: {
+          portal: 'test',
+          method: 'GET',
+          path: '/meta/network-origins/2026-03/ip-ranges/simple',
+          accept: 'text/plain',
+          showRequest: true
+        }
+      }
+    }
+  ], { ...baseEnv, HSAPI_TEST_TOKEN: '', HUBSPOT_ACCESS_TOKEN: '' }, 2);
+  assert.strictEqual(mcpIpPreview.stderr, '');
+  const mcpIpOutput = mcpStructuredContent(mcpIpPreview.responses[1]);
+  assert.strictEqual(mcpIpOutput.preview.request.headers.Accept, 'text/plain');
+  assert.strictEqual(mcpIpOutput.preview.auth.required, false);
+
+  const featureEnv = {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: developerOnlyConfig,
+    HSAPI_DEVELOPER_API_KEY: ''
+  };
+  const featurePreview = await expectShowRequest([
+    'request', 'GET', '/feature-flags/2026-03/123/flags/all'
+  ], featureEnv, {
+    requests,
+    method: 'GET',
+    pathname: '/feature-flags/2026-03/123/flags/all',
+    endpointId: 'app_management.feature_flags.list'
+  });
+  assert.strictEqual(featurePreview.authFamily, AUTH_FAMILIES.DEVELOPER);
+  assert.strictEqual(featurePreview.authSubtype, DEVELOPER_AUTH_SUBTYPES.DEVELOPER_API_KEY);
+  assert.strictEqual(featurePreview.request.query.hapikey, '$HSAPI_DEVELOPER_API_KEY');
+  assert.deepStrictEqual(featurePreview.endpoint.requiredScopes, ['developers-read']);
+  assert(!Object.prototype.hasOwnProperty.call(featurePreview.request.headers, 'Authorization'));
+
+  const blockedFeatureWrite = await run([
+    'request', 'PUT', '/feature-flags/2026-03/123/flags/hs-release-mcp-server',
+    '--body', '{"defaultState":"ON"}'
+  ], featureEnv);
+  assert.strictEqual(blockedFeatureWrite.status, 2, 'feature flag writes must require --yes');
+  const blockedFeatureOutput = parseJsonOutput(blockedFeatureWrite);
+  assert.match(blockedFeatureOutput.message, /Mutation blocked/);
+
+  const oauthCachePath = path.join(os.tmpdir(), `hsapi-uninstall-preview-${process.pid}.json`);
+  const oauthConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.OAUTH,
+      oauth: {
+        mode: 'local',
+        clientIdEnv: 'HSAPI_UNINSTALL_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_UNINSTALL_CLIENT_SECRET',
+        tokenCachePath: oauthCachePath
+      }
+    }
+  });
+  const uninstallPreview = await expectShowRequest([
+    'request', 'DELETE', '/appinstalls/2026-03/external-install'
+  ], {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: oauthConfig,
+    HUBSPOT_ACCESS_TOKEN: '',
+    HSAPI_UNINSTALL_CLIENT_ID: '',
+    HSAPI_UNINSTALL_CLIENT_SECRET: ''
+  }, {
+    requests,
+    method: 'DELETE',
+    pathname: '/appinstalls/2026-03/external-install',
+    endpointId: 'app_management.uninstalls.external_install'
+  });
+  assert.strictEqual(uninstallPreview.endpoint.risk, 'destructive');
+  assert.deepStrictEqual(uninstallPreview.endpoint.requiredScopes, ['oauth']);
+  assert.strictEqual(uninstallPreview.authFamily, AUTH_FAMILIES.OAUTH);
+  assert.strictEqual(uninstallPreview.auth.tokenAudience, 'user');
+  assert.strictEqual(uninstallPreview.request.headers.Authorization, 'Bearer <oauth-access-token>');
+  const uninstallRequestCount = requests.length;
+  const blockedUninstall = await run([
+    'request', 'DELETE', '/appinstalls/2026-03/external-install'
+  ], {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: oauthConfig,
+    HUBSPOT_ACCESS_TOKEN: ''
+  });
+  assert.strictEqual(blockedUninstall.status, 2, 'app uninstall must require --yes');
+  assert.match(parseJsonOutput(blockedUninstall).message, /Mutation blocked/);
+  assert.strictEqual(requests.length, uninstallRequestCount);
+});
+
+test('Contracts reads are explicit and Price Books beta stays on guarded ServiceKey access', async () => {
+  const priceBookDefinitions = endpointDefinitions(CATALOG_FILE)
+    .filter((definition) => definition.family === 'commerce.price_books');
+  assert.strictEqual(priceBookDefinitions.length, 16, 'all 16 published Price Books beta method/path pairs must be cataloged');
+
+  const expectedPairs = [
+    'DELETE /commerce/price-books/2026-09-beta/price-books/{priceBookId}',
+    'DELETE /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}',
+    'GET /commerce/price-books/2026-09-beta/price-books',
+    'GET /commerce/price-books/2026-09-beta/price-books/{priceBookId}',
+    'GET /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items',
+    'GET /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}',
+    'PATCH /commerce/price-books/2026-09-beta/price-books/{priceBookId}',
+    'PATCH /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/{priceBookItemId}',
+    'POST /commerce/price-books/2026-09-beta/price-books',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/activate',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/deactivate',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/archive',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/create',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/items/batch/update',
+    'POST /commerce/price-books/2026-09-beta/price-books/{priceBookId}/validate'
+  ].sort();
+  assert.deepStrictEqual(
+    priceBookDefinitions.map((definition) => `${definition.method} ${definition.pathTemplate}`).sort(),
+    expectedPairs
+  );
+
+  const definitionsById = new Map(priceBookDefinitions.map((definition) => [definition.id, definition]));
+  const typedReadIds = [
+    'price_books.list',
+    'price_books.get',
+    'price_books.validate',
+    'price_books.items_list',
+    'price_books.item_get'
+  ];
+  assert.deepStrictEqual(
+    priceBookDefinitions.filter((definition) => definition.status === 'typed').map((definition) => definition.id).sort(),
+    [...typedReadIds].sort()
+  );
+  for (const definition of priceBookDefinitions) {
+    assert.strictEqual(definition.versionMode, 'beta');
+    assert.strictEqual(definition.tierRequirement, 'Revenue Hub Professional');
+    assert.strictEqual(definition.contextUrl, 'docs/hubspot-api-context/price-books.md');
+    assert.match(definition.docsUrl, /\/api-reference\/2026-09-beta\/revenue\/price-books\//);
+    assert.strictEqual(definition.auth.tokenAudience, 'admin');
+  }
+  assert.strictEqual(definitionsById.get('price_books.validate').risk, 'read');
+  assert.strictEqual(definitionsById.get('price_books.validate').readOnlyPost, true);
+  assert.deepStrictEqual(definitionsById.get('price_books.validate').requiredScopes, ['cpq.price_books.read']);
+  assert.strictEqual(definitionsById.get('price_books.delete').risk, 'destructive');
+  assert.strictEqual(definitionsById.get('price_books.item_delete').risk, 'destructive');
+  assert.strictEqual(definitionsById.get('price_books.items_batch_archive').risk, 'destructive');
+  assert.deepStrictEqual(definitionsById.get('price_books.item_create').requiredScopes, ['cpq.price_books.write']);
+  assert.match(definitionsById.get('price_books.item_create').scopeNotes, /does not model that ambiguous product scope as jointly required/);
+  assert.deepStrictEqual(definitionsById.get('price_books.items_batch_create').requiredScopes, ['cpq.price_books.write']);
+
+  const oauthCachePath = path.join(os.tmpdir(), `hsapi-price-books-preview-${process.pid}.json`);
+  const priceBooksConfig = writeTempConfig(baseUrl, {
+    tokenEnv: null,
+    auth: {
+      defaultFamily: AUTH_FAMILIES.PORTAL_BEARER,
+      oauth: {
+        mode: 'local',
+        clientIdEnv: 'HSAPI_PRICE_BOOKS_CLIENT_ID',
+        clientSecretEnv: 'HSAPI_PRICE_BOOKS_CLIENT_SECRET',
+        refreshTokenEnv: 'HSAPI_PRICE_BOOKS_REFRESH_TOKEN',
+        tokenCachePath: oauthCachePath
+      },
+      portalBearer: {
+        tokenEnv: 'HSAPI_PRICE_BOOKS_ADMIN_TOKEN',
+        kind: 'private_app'
+      }
+    }
+  });
+  const env = {
+    ...baseEnv,
+    HSAPI_PORTALS_CONFIG: priceBooksConfig,
+    HSAPI_PRICE_BOOKS_CLIENT_ID: '',
+    HSAPI_PRICE_BOOKS_CLIENT_SECRET: '',
+    HSAPI_PRICE_BOOKS_REFRESH_TOKEN: '',
+    HSAPI_PRICE_BOOKS_ADMIN_TOKEN: 'admin-token'
+  };
+
+  const contractList = await expectShowRequest([
+    'crm', 'list', 'contracts', '--properties', 'hs_name,hs_contract_effective_date'
+  ], env, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/contracts',
+    endpointId: 'objects.list'
+  });
+  assert.strictEqual(contractList.auth.tokenAudience, 'user');
+  assert.strictEqual(contractList.auth.credentialSource.identity, 'user');
+  assert.deepStrictEqual(contractList.endpoint.requiredScopes, ['crm.objects.contracts.read']);
+  assert.strictEqual(contractList.endpoint.tierRequirement, 'Revenue Hub Professional');
+  assert.strictEqual(contractList.endpoint.contextUrl, 'docs/hubspot-api-context/contracts.md');
+  assert.strictEqual(contractList.request.query.properties, 'hs_contract_effective_date');
+
+  const contractGet = await expectShowRequest([
+    'crm', 'get', 'contracts', '398334119041', '--properties', 'hs_name'
+  ], env, {
+    requests,
+    method: 'GET',
+    pathname: '/crm/objects/2026-03/contracts/398334119041',
+    endpointId: 'objects.get'
+  });
+  assert.strictEqual(contractGet.auth.tokenAudience, 'user');
+  assert.deepStrictEqual(contractGet.endpoint.requiredScopes, ['crm.objects.contracts.read']);
+  const contractTypes = parseJsonOutput(await run(['crm', 'object-types', '--family', 'optional'], env));
+  const contractType = contractTypes.objectTypes.find((entry) => entry.objectType === 'contracts');
+  assert(contractType, 'contracts must remain a discoverable standard CRM object');
+  assert.strictEqual(contractType.tierRequirement, 'Revenue Hub Professional');
+  assert.strictEqual(contractType.readScope, 'crm.objects.contracts.read');
+  assert.strictEqual(contractType.writeAvailability, 'pending_public_beta');
+  assert.strictEqual(contractType.contextUrl, 'docs/hubspot-api-context/contracts.md');
+  assert.match(contractType.notes, /documents reads only/);
+
+  const tiersData = JSON.parse(fs.readFileSync(path.join(WORKSPACE_ROOT, 'data', 'hubspot-api-tiers.json'), 'utf8'));
+  const globalFeatures = tiersData.products.find((product) => product.hub.id === 'free').features;
+  const revenueProduct = tiersData.products.find((product) => product.hub.id === 'commerce');
+  assert.strictEqual(revenueProduct.hub.name, 'Revenue Hub');
+  assert(!globalFeatures.some((feature) => feature.name === 'Contracts'), 'Contracts must not remain mislabeled as a Free API');
+  for (const featureName of ['Contracts', 'Price Books']) {
+    const feature = revenueProduct.features.find((candidate) => candidate.name === featureName);
+    assert(feature, `${featureName} must appear in the Revenue Hub tier matrix`);
+    assert.strictEqual(feature.minTier, 'pro');
+  }
+
+  const listPreview = await expectShowRequest([
+    'price-books', 'list', '--limit', '50', '--after', 'cursor-1', '--archived'
+  ], env, {
+    requests,
+    method: 'GET',
+    pathname: '/commerce/price-books/2026-09-beta/price-books',
+    endpointId: 'price_books.list'
+  });
+  assert.strictEqual(listPreview.request.query.limit, '50');
+  assert.strictEqual(listPreview.request.query.after, 'cursor-1');
+  assert.strictEqual(listPreview.request.query.archived, 'true');
+  assert.strictEqual(listPreview.auth.tokenAudience, 'admin');
+  assert.strictEqual(listPreview.auth.credentialSource.identity, 'admin');
+
+  await expectShowRequest(['price-books', 'get', 'book-1'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/commerce/price-books/2026-09-beta/price-books/book-1',
+    endpointId: 'price_books.get'
+  });
+  await expectShowRequest(['price-books', 'items-list', 'book-1', '--limit', '100'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/commerce/price-books/2026-09-beta/price-books/book-1/items',
+    endpointId: 'price_books.items_list'
+  });
+  await expectShowRequest(['price-books', 'item-get', 'book-1', 'item-1', '--archived'], env, {
+    requests,
+    method: 'GET',
+    pathname: '/commerce/price-books/2026-09-beta/price-books/book-1/items/item-1',
+    endpointId: 'price_books.item_get'
+  });
+  const validatePreview = await expectShowRequest(['price-books', 'validate', 'book-1'], env, {
+    requests,
+    method: 'POST',
+    pathname: '/commerce/price-books/2026-09-beta/price-books/book-1/validate',
+    endpointId: 'price_books.validate'
+  });
+  assert.strictEqual(validatePreview.endpoint.readOnlyPost, true);
+  assert.strictEqual(validatePreview.endpoint.risk, 'read');
+
+  const mutationRequestCount = requests.length;
+  const blockedCreate = await run([
+    'request', 'POST', '/commerce/price-books/2026-09-beta/price-books',
+    '--body', '{"name":"Test","supportedCurrencies":["USD"]}'
+  ], env);
+  assert.strictEqual(blockedCreate.status, 2, 'Price Books writes must return a blocked preview without --yes');
+  const blockedCreateOutput = parseJsonOutput(blockedCreate);
+  assert.match(blockedCreateOutput.message, /Mutation blocked/);
+
+  const blockedDelete = await run([
+    'request', 'DELETE', '/commerce/price-books/2026-09-beta/price-books/book-1'
+  ], env);
+  assert.strictEqual(blockedDelete.status, 2, 'experimental Price Books DELETE must require confirmation');
+  const blockedDeleteOutput = parseJsonOutput(blockedDelete);
+  assert.match(blockedDeleteOutput.message, /Mutation blocked/);
+  assert.strictEqual(requests.length, mutationRequestCount, 'blocked Price Books mutations must not make network requests');
+
+  const mcpValidate = await runMcpConversation([
+    {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-06-18',
+        capabilities: {},
+        clientInfo: { name: 'hsapi-price-books-test', version: '0.0.0' }
+      }
+    },
+    {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: {
+        name: 'hsapi_request_execute_read',
+        arguments: {
+          portal: 'test',
+          method: 'POST',
+          path: '/commerce/price-books/2026-09-beta/price-books/book-1/validate',
+          readOnly: true,
+          showRequest: true
+        }
+      }
+    }
+  ], env, 2);
+  assert.strictEqual(mcpValidate.stderr, '');
+  const mcpValidateOutput = mcpStructuredContent(mcpValidate.responses[1]);
+  assert.strictEqual(mcpValidateOutput.ok, true, JSON.stringify(mcpValidateOutput));
+  assert.strictEqual(mcpValidateOutput.preview.endpoint.id, 'price_books.validate');
+  assert.strictEqual(mcpValidateOutput.preview.endpoint.readOnlyPost, true);
 });

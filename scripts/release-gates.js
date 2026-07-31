@@ -94,7 +94,13 @@ const REQUIRED_DOC_PHRASES = [
   ['docs/INSTALL.md', 'portals.oauth-service-key.sample.json'],
   ['docs/DESKTOP_MCP_QUICKSTART.md', 'npx --yes --package=github:chadmhohn/hsapi-cli'],
   ['cloudflare/hsapi-oauth-broker/README.md', 'Normal hosted users'],
-  ['cloudflare/hsapi-oauth-broker/README.md', 'wrangler.operator.jsonc']
+  ['cloudflare/hsapi-oauth-broker/README.md', 'wrangler.operator.jsonc'],
+  ['README.md', 'OAuth-only remote MCP'],
+  ['docs/MCP.md', 'REMOTE_WRITES_ENABLED'],
+  ['docs/REMOTE_MCP.md', 'ServiceKey'],
+  ['docs/OAUTH_APP_SPLIT.md', 'Local and Remote OAuth App Operations'],
+  ['SECURITY.md', 'OAuth-only'],
+  ['cloudflare/hsapi-remote-mcp/README.md', 'wrangler.operator.jsonc']
 ];
 
 const DISALLOWED_PACKAGE_PATHS = [
@@ -130,6 +136,13 @@ const REQUIRED_NEUTRAL_TOKEN_FILES = [
 
 const REQUIRED_AUTH_BOUNDARY_PACKAGE_FILES = [
   'docs/CMS_PROJECTS_AUTH_BOUNDARY.md'
+];
+
+const REQUIRED_REMOTE_MCP_PACKAGE_FILES = [
+  'docs/REMOTE_MCP.md',
+  'docs/OAUTH_APP_SPLIT.md',
+  'cloudflare/hsapi-remote-mcp/README.md',
+  'examples/mcp-dual-connector.sample.json'
 ];
 
 const REQUIRED_PORTAL_ONBOARDING_FILES = [
@@ -688,7 +701,11 @@ function validatePackagedFiles(failures) {
 function validateWorkerCheckoutNeutrality(failures) {
   const configPath = 'cloudflare/hsapi-oauth-broker/wrangler.jsonc';
   const configText = readText(configPath);
-  const placeholderClientId = '00000000-0000-4000-8000-000000000001';
+  const remoteConfigPath = 'cloudflare/hsapi-oauth-broker/wrangler.remote.jsonc';
+  const remoteConfigText = readText(remoteConfigPath);
+  const localPlaceholderClientId = '00000000-0000-4000-8000-000000000001';
+  const remotePlaceholderClientId = '00000000-0000-4000-8000-000000000002';
+  const placeholderClientIds = new Set([localPlaceholderClientId, remotePlaceholderClientId]);
   const syntheticTestAccountIds = new Set(['123456789', '999999999']);
 
   if (/"HUBSPOT_ACCOUNT_ID"\s*:\s*"\d{5,}"/.test(configText)) {
@@ -697,22 +714,54 @@ function validateWorkerCheckoutNeutrality(failures) {
 
   const clientIds = [...configText.matchAll(/"HUBSPOT_CLIENT_ID"\s*:\s*"([^"]+)"/g)]
     .map((match) => match[1]);
-  if (!clientIds.length || clientIds.some((value) => value !== placeholderClientId)) {
-    failures.push(`${configPath} must use only the documented placeholder HubSpot client ID.`);
+  if (!clientIds.length || clientIds.some((value) => value !== localPlaceholderClientId)) {
+    failures.push(`${configPath} must use only the documented local-app placeholder HubSpot client ID.`);
+  }
+
+  const remoteClientIds = [...remoteConfigText.matchAll(/"HUBSPOT_CLIENT_ID"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
+  if (!remoteClientIds.length || remoteClientIds.some((value) => value !== remotePlaceholderClientId)) {
+    failures.push(`${remoteConfigPath} must use only the documented remote-app placeholder HubSpot client ID.`);
+  }
+  if ((configText.match(/"HSAPI_BROKER_ROLE"\s*:\s*"local"/g) || []).length !== 3) {
+    failures.push(`${configPath} must declare the local broker role in every environment.`);
+  }
+  if ((configText.match(/"HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS"\s*:\s*""/g) || []).length !== 3) {
+    failures.push(`${configPath} must reject remote completion redirects in every environment.`);
+  }
+  if ((remoteConfigText.match(/"HSAPI_BROKER_ROLE"\s*:\s*"remote"/g) || []).length !== 3) {
+    failures.push(`${remoteConfigPath} must declare the remote broker role in every environment.`);
+  }
+  const remoteCompletionRedirects = [
+    ...remoteConfigText.matchAll(/"HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS"\s*:\s*"([^"]+)"/g)
+  ].map((match) => match[1]);
+  if (
+    remoteCompletionRedirects.length !== 3
+    || remoteCompletionRedirects.some((value) => !value.startsWith('https://') || !value.endsWith('/hubspot/callback'))
+  ) {
+    failures.push(`${remoteConfigPath} must allow one exact HTTPS remote MCP completion callback per environment.`);
   }
 
   const redirectUris = [...configText.matchAll(/"HUBSPOT_REDIRECT_URI"\s*:\s*"([^"]+)"/g)]
     .map((match) => match[1]);
+  const remoteRedirectUris = [...remoteConfigText.matchAll(/"HUBSPOT_REDIRECT_URI"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
   if (
     !redirectUris.length
     || redirectUris.some((value) => value.includes('.workers.dev') && !value.includes('.REPLACE.workers.dev'))
+    || remoteRedirectUris.length !== 3
+    || remoteRedirectUris.some((value) => !value.startsWith('https://'))
+    || remoteRedirectUris.some((value) => value.includes('.workers.dev') && !value.includes('.REPLACE.workers.dev'))
   ) {
-    failures.push(`${configPath} must not contain a concrete Cloudflare Worker callback hostname.`);
+    failures.push('OAuth broker configs must use neutral callback placeholders and the remote broker must use HTTPS callbacks.');
   }
 
   const workerGitignore = readText('cloudflare/hsapi-oauth-broker/.gitignore');
   if (!workerGitignore.split(/\r?\n/).includes('wrangler.operator.jsonc')) {
     failures.push('The Worker must ignore wrangler.operator.jsonc so deployment-specific public metadata stays local.');
+  }
+  if (!workerGitignore.split(/\r?\n/).includes('wrangler.*.operator.jsonc')) {
+    failures.push('The Worker must ignore role-specific operator configs so deployment metadata stays local.');
   }
 
   const workerPackage = readJson('cloudflare/hsapi-oauth-broker/package.json');
@@ -720,6 +769,12 @@ function validateWorkerCheckoutNeutrality(failures) {
     const script = workerPackage.scripts && workerPackage.scripts[scriptName];
     if (!script || !script.includes('--config wrangler.operator.jsonc')) {
       failures.push(`Worker script ${scriptName} must deploy through the gitignored operator config.`);
+    }
+  }
+  for (const scriptName of ['deploy:remote:staging', 'deploy:remote:production']) {
+    const script = workerPackage.scripts && workerPackage.scripts[scriptName];
+    if (!script || !script.includes('--config wrangler.remote.operator.jsonc')) {
+      failures.push(`Worker script ${scriptName} must deploy through the gitignored remote operator config.`);
     }
   }
 
@@ -753,7 +808,7 @@ function validateWorkerCheckoutNeutrality(failures) {
     const clientIds = [...text.matchAll(/\bHUBSPOT_CLIENT_ID\b["']?\s*[:=]\s*["']([0-9a-f-]{36})["']/gi)]
       .map((match) => match[1]);
     if (
-      clientIds.some((value) => value !== placeholderClientId && !syntheticUuidPattern.test(value))
+      clientIds.some((value) => !placeholderClientIds.has(value) && !syntheticUuidPattern.test(value))
     ) {
       failures.push(`Tracked Worker file ${relativePath} contains a non-placeholder HubSpot client ID.`);
     }
@@ -767,9 +822,255 @@ function validateWorkerCheckoutNeutrality(failures) {
 
   return {
     config: configPath,
+    remoteConfig: remoteConfigPath,
     operatorConfig: 'cloudflare/hsapi-oauth-broker/wrangler.operator.jsonc',
+    remoteOperatorConfig: 'cloudflare/hsapi-oauth-broker/wrangler.remote.operator.jsonc',
     trackedValues: 'placeholders-and-synthetic-fixtures-only',
     scannedFileCount: trackedSourceFiles.length
+  };
+}
+
+function validateRemoteMcpCheckoutNeutrality(failures, files) {
+  const root = 'cloudflare/hsapi-remote-mcp';
+  const configPath = `${root}/wrangler.jsonc`;
+  const configText = readText(configPath);
+  const packageFileSet = new Set(files);
+  const requiredPlaceholders = {
+    clientId: '00000000-0000-4000-8000-000000000002',
+    kvId: '00000000000000000000000000000000'
+  };
+
+  for (const relativePath of REQUIRED_REMOTE_MCP_PACKAGE_FILES) {
+    if (!packageFileSet.has(relativePath)) {
+      failures.push(`Package dry-run must include remote MCP file: ${relativePath}.`);
+    }
+  }
+
+  for (const [relativePath, markers] of [
+    ['docs/REMOTE_MCP.md', ['OAuth-only', 'ServiceKey', 'REMOTE_WRITES_ENABLED', 'HUBSPOT_APP_SCOPE_CEILING']],
+    [`${root}/README.md`, ['OAuth-only', 'ServiceKey', 'wrangler.operator.jsonc', 'CONFIRMATION_LEDGER', 'AUTHORIZATION_STATE', 'HUBSPOT_APP_SCOPE_CEILING']]
+  ]) {
+    const text = readText(relativePath);
+    for (const marker of markers) {
+      if (!text.toLowerCase().includes(marker.toLowerCase())) {
+        failures.push(`${relativePath} must mention ${marker}.`);
+      }
+    }
+  }
+
+  const exactCount = (pattern) => (configText.match(pattern) || []).length;
+  if (exactCount(/"REMOTE_WRITES_ENABLED"\s*:\s*"true"/g) !== 3) {
+    failures.push(`${configPath} must enable the reviewed remote write boundary in local, staging, and production.`);
+  }
+  if (exactCount(/"HUBSPOT_REQUIRE_USER_LEVEL"\s*:\s*"true"/g) !== 3) {
+    failures.push(`${configPath} must require user-level HubSpot OAuth in every environment.`);
+  }
+  if (exactCount(/"HUBSPOT_BROKER_URL"\s*:\s*"https:\/\/hsapi-remote-oauth\.REPLACE\.example"/g) !== 3) {
+    failures.push(`${configPath} must pin the neutral dedicated remote OAuth broker placeholder in every environment.`);
+  }
+  if (exactCount(/"invocation_logs"\s*:\s*false/g) !== 3) {
+    failures.push(`${configPath} must disable full invocation URL logs in every environment.`);
+  }
+
+  const clientIds = [...configText.matchAll(/"HUBSPOT_CLIENT_ID"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
+  if (clientIds.length !== 3 || clientIds.some((value) => value !== requiredPlaceholders.clientId)) {
+    failures.push(`${configPath} must contain only the placeholder HubSpot client ID.`);
+  }
+  const kvIds = [...configText.matchAll(/"id"\s*:\s*"([^"]+)"/g)]
+    .map((match) => match[1]);
+  if (kvIds.length !== 3 || kvIds.some((value) => value !== requiredPlaceholders.kvId)) {
+    failures.push(`${configPath} must contain one placeholder OAUTH_KV namespace ID per environment.`);
+  }
+  if (configText.includes('"AUTH_STATE_KV"')) {
+    failures.push(`${configPath} must keep one-time authorization state out of eventually consistent KV.`);
+  }
+  if (
+    !configText.includes('"nodejs_compat"')
+    || !configText.includes('"global_fetch_strictly_public"')
+  ) failures.push(`${configPath} must enable nodejs_compat and global_fetch_strictly_public.`);
+  if (
+    !configText.includes('"CONFIRMATION_LEDGER"')
+    || !configText.includes('"storage": "sqlite"')
+    || exactCount(/"name"\s*:\s*"CONFIRMATION_LEDGER"/g) !== 3
+  ) failures.push(`${configPath} must bind the SQLite ConfirmationLedger in every environment.`);
+  if (
+    exactCount(/"name"\s*:\s*"AUTHORIZATION_STATE"/g) !== 3
+    || exactCount(/"class_name"\s*:\s*"AuthorizationState"/g) !== 3
+    || !/"AuthorizationState"\s*:\s*\{[\s\S]*?"type"\s*:\s*"durable-object"[\s\S]*?"storage"\s*:\s*"sqlite"/.test(configText)
+  ) failures.push(`${configPath} must bind the SQLite AuthorizationState in every environment.`);
+  if (
+    exactCount(/"workers_dev"\s*:\s*false/g) !== 1
+    || exactCount(/"custom_domain"\s*:\s*true/g) !== 1
+  ) failures.push(`${configPath} production must use an explicit custom-domain route instead of an unreachable workers.dev origin.`);
+  for (const binding of ['EDGE_RATE_LIMITER', 'REMOTE_RATE_LIMITER', 'AUTH_RATE_LIMITER']) {
+    if (exactCount(new RegExp(`"name"\\s*:\\s*"${binding}"`, 'g')) !== 3) {
+      failures.push(`${configPath} must configure ${binding} in every environment.`);
+    }
+  }
+
+  const optionalScopeValues = [...configText.matchAll(/"HUBSPOT_OPTIONAL_SCOPES"\s*:\s*"([^"]*)"/g)]
+    .map((match) => match[1]);
+  const expectedRemoteWriteScopes = [
+    'crm.objects.contacts.write',
+    'crm.objects.companies.write',
+    'crm.objects.deals.write',
+    'crm.objects.tickets.write',
+    'crm.objects.line_items.write',
+    'crm.objects.products.write',
+    'crm.objects.tasks.write',
+    'crm.objects.notes.write',
+    'crm.objects.calls.write',
+    'crm.objects.meetings.write',
+    'crm.objects.emails.write',
+    'crm.objects.marketing_events.write'
+  ].sort();
+  if (
+    optionalScopeValues.length !== 3
+    || optionalScopeValues.some((value) => {
+      const writeScopes = value.split(/\s+/).filter((scope) => scope.endsWith('.write')).sort();
+      return JSON.stringify(writeScopes) !== JSON.stringify(expectedRemoteWriteScopes);
+    })
+    || optionalScopeValues.some((value) => value.includes('crm.objects.custom.') || value.includes('crm.schemas.custom.'))
+    || optionalScopeValues.some((value) => value.includes('cpq.price_books.'))
+    || optionalScopeValues.some((value) => value.includes('cpq.quotes.write'))
+  ) failures.push(`${configPath} must request exactly the reviewed remote write scopes and exclude unverified CPQ quote, custom-object, and ServiceKey-only Price Books scopes.`);
+  const appScopeCeilingValues = [...configText.matchAll(/"HUBSPOT_APP_SCOPE_CEILING"\s*:\s*"([^"]*)"/g)]
+    .map((match) => match[1].split(/\s+/).filter(Boolean));
+  if (
+    appScopeCeilingValues.length !== 3
+    || appScopeCeilingValues.some((scopes) => !scopes.includes('oauth')
+      || scopes.some((scope) => scope.startsWith('cpq.price_books.'))
+      || new Set(scopes).size !== scopes.length)
+  ) failures.push(`${configPath} must define one duplicate-free OAuth app scope ceiling without ServiceKey-only Price Books scopes per environment.`);
+  for (let index = 0; index < Math.min(optionalScopeValues.length, appScopeCeilingValues.length); index += 1) {
+    const ceiling = new Set(appScopeCeilingValues[index]);
+    const optionalScopes = optionalScopeValues[index].split(/\s+/).filter(Boolean);
+    if (optionalScopes.some((scope) => !ceiling.has(scope))) {
+      failures.push(`${configPath} environment ${index + 1} has a remote optional scope outside its public-app ceiling.`);
+    }
+  }
+
+  const secretBlocks = [...configText.matchAll(/"secrets"\s*:\s*\{\s*"required"\s*:\s*\[([^\]]+)\]/g)]
+    .map((match) => [...match[1].matchAll(/"([A-Z0-9_]+)"/g)].map((entry) => entry[1]).sort());
+  const expectedSecrets = ['STATE_ENCRYPTION_KEY'];
+  if (
+    secretBlocks.length !== 3
+    || secretBlocks.some((names) => JSON.stringify(names) !== JSON.stringify(expectedSecrets))
+  ) failures.push(`${configPath} must require only the documented state-encryption secret.`);
+
+  const gitignore = readText(`${root}/.gitignore`).split(/\r?\n/);
+  for (const entry of ['.dev.vars*', '.env*', '.wrangler/', 'wrangler.operator.jsonc', 'node_modules/']) {
+    if (!gitignore.includes(entry)) failures.push(`${root}/.gitignore must include ${entry}.`);
+  }
+  const workerPackage = readJson(`${root}/package.json`);
+  for (const scriptName of ['deploy:staging', 'deploy:production']) {
+    const script = workerPackage.scripts && workerPackage.scripts[scriptName];
+    if (!script || !script.includes('--config wrangler.operator.jsonc')) {
+      failures.push(`Remote MCP script ${scriptName} must deploy through the ignored operator config.`);
+    }
+  }
+
+  let checkoutFiles = [];
+  try {
+    checkoutFiles = execFileSync(
+      'git',
+      ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', root],
+      { cwd: PACKAGE_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    ).split('\0').filter(Boolean);
+  } catch (error) {
+    failures.push(`Unable to enumerate remote MCP checkout files: ${error.message}.`);
+  }
+
+  const executableFiles = checkoutFiles.filter((relativePath) =>
+    relativePath.startsWith(`${root}/src/`)
+    || relativePath.endsWith('/wrangler.jsonc')
+    || relativePath.endsWith('/worker-configuration.d.ts')
+    || relativePath.endsWith('/package.json')
+    || relativePath.endsWith('/vitest.config.ts')
+  );
+  const forbiddenCredentialHooks = /\b(?:HUBSPOT_CLIENT_SECRET|HUBSPOT_SERVICE_KEY|HSAPI_PORTALS_CONFIG|HUBSPOT_PRIVATE_APP_TOKEN|HUBSPOT_ACCESS_TOKEN|portalBearer|tokenEnv)\b|['"]service-key['"]/i;
+  for (const relativePath of executableFiles) {
+    const text = readText(relativePath);
+    if (forbiddenCredentialHooks.test(text)) {
+      failures.push(`Remote MCP executable/config file ${relativePath} contains a local/private credential hook.`);
+    }
+    if (/\b([a-z0-9-]+\.(?!REPLACE\.)[a-z0-9-]+\.workers\.dev)\b/i.test(text)) {
+      failures.push(`Remote MCP file ${relativePath} contains a concrete Cloudflare Worker hostname.`);
+    }
+  }
+
+  const oauthText = readText(`${root}/src/hubspot-oauth.ts`);
+  for (const marker of [
+    'config.brokerUrl',
+    '/v1/oauth/sessions',
+    '/v1/oauth/tokens/refresh',
+    '/v1/oauth/tokens/revoke',
+    'brokerCredential',
+    'config.hubSpotAppScopeCeiling',
+    'effectiveScopes',
+    'hubspot_grant_scope_attenuated',
+    'hubspot_grant_scope_rejected',
+    'expectedHubId'
+  ]) {
+    if (!oauthText.includes(marker)) failures.push(`Remote MCP broker-backed OAuth client is missing marker ${marker}.`);
+  }
+  if (/https:\/\/api\.hub(?:api|spot)\.com\/oauth\//.test(oauthText)) {
+    failures.push('Remote MCP OAuth client must not exchange tokens directly with HubSpot or hold the public-app secret.');
+  }
+
+  const policyText = readText(`${root}/src/remote-policy.ts`);
+  const requestText = readText(`${root}/src/hubspot-request.ts`);
+  const mcpText = readText(`${root}/src/mcp.ts`);
+  const authText = readText(`${root}/src/auth-handler.ts`);
+  const authorizationStateText = readText(`${root}/src/authorization-state.ts`);
+  const inboundText = readText(`${root}/src/inbound.ts`);
+  const indexText = readText(`${root}/src/index.ts`);
+  for (const marker of ['assertRemoteManifestMatchesCatalog()', 'rawFallback', 'CUSTOM_OBJECT_WRITE_SCOPE']) {
+    if (!policyText.includes(marker)) failures.push(`Remote MCP fail-closed policy is missing marker ${marker}.`);
+  }
+  for (const marker of ['https://api.hubapi.com', 'mcpClientId', 'mcpAccessTokenExpiresAtMs']) {
+    if (!requestText.includes(marker)) failures.push(`Remote MCP request boundary is missing marker ${marker}.`);
+  }
+  for (const marker of ['config.remoteWritesEnabled', 'readConfirmationToken', 'confirmationLedger.getByName']) {
+    if (!mcpText.includes(marker)) failures.push(`Remote MCP mutation boundary is missing marker ${marker}.`);
+  }
+  for (const marker of [
+    'codeChallengeMethod !== "S256"',
+    'request.resource !== config.resourceUrl',
+    'request.headers.get("origin") !== config.publicOrigin',
+    '"referrer-policy": "strict-origin"',
+    '"content-security-policy": consentContentSecurityPolicy(oauthRequest, config.brokerUrl)',
+    'HUBSPOT_AUTHORIZATION_ORIGIN',
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    'name="csrf"',
+    'cookieHeader(names.partitioned, browserBinding, "None", true)',
+    'Partitioned',
+  ]) {
+    if (!authText.includes(marker)) failures.push(`Remote MCP downstream OAuth validation is missing marker ${marker}.`);
+  }
+  for (const marker of [
+    'consumeIfProof(proofHash: string, nowMs = Date.now())',
+    'proofHashesEqual(proofHash, row.proof_hash)',
+    'DELETE FROM authorization_state WHERE id = 1',
+  ]) {
+    if (!authorizationStateText.includes(marker)) failures.push(`Remote MCP one-time OAuth state is missing marker ${marker}.`);
+  }
+  for (const marker of ['boundIncomingRequest', 'Request body too large.', 'reader.cancel()']) {
+    if (!inboundText.includes(marker)) failures.push(`Remote MCP inbound body boundary is missing marker ${marker}.`);
+  }
+  for (const marker of ['EDGE_RATE_LIMITER', 'AUTH_RATE_LIMITER', 'supportedMcpScopes(config.remoteWritesEnabled)', 'boundIncomingRequest']) {
+    if (!indexText.includes(marker)) failures.push(`Remote MCP edge/OAuth boundary is missing marker ${marker}.`);
+  }
+
+  return {
+    config: configPath,
+    operatorConfig: `${root}/wrangler.operator.jsonc`,
+    packagedFiles: REQUIRED_REMOTE_MCP_PACKAGE_FILES,
+    scannedFileCount: checkoutFiles.length,
+    writesEnabledByDefault: true,
+    serviceKeyAccepted: false
   };
 }
 
@@ -885,6 +1186,7 @@ function main() {
   const mcp = validateMcp(failures, files);
   const portalOnboarding = validatePortalOnboarding(failures, files);
   const workerCheckoutNeutrality = validateWorkerCheckoutNeutrality(failures);
+  const remoteMcpCheckoutNeutrality = validateRemoteMcpCheckoutNeutrality(failures, files);
 
   const output = {
     ok: failures.length === 0,
@@ -893,6 +1195,7 @@ function main() {
     mcp,
     portalOnboarding,
     workerCheckoutNeutrality,
+    remoteMcpCheckoutNeutrality,
     packageFileCount: files.length,
     failures
   };

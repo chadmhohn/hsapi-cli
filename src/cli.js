@@ -82,6 +82,7 @@ const {
   runProperties,
   runPropertyGroups,
   runPropertyValidations,
+  runPriceBooks,
   runQuotes,
   runScheduler,
   runSchemas,
@@ -627,6 +628,11 @@ async function main(argv = process.argv.slice(2)) {
 
   if (area === 'quotes' || area === 'quote') {
     await runQuotes(portal, action, rest, flags);
+    return;
+  }
+
+  if (area === 'price-books' || area === 'price-book') {
+    await runPriceBooks(portal, action, rest, flags);
     return;
   }
 

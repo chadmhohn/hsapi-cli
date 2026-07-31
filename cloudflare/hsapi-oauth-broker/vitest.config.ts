@@ -12,6 +12,8 @@ export default defineConfig({
           BROKER_SIGNING_KEY:
             "test-only-signing-key-with-at-least-thirty-two-characters",
           ENVIRONMENT: "test",
+          HSAPI_BROKER_ROLE: "local",
+          HSAPI_ALLOWED_REMOTE_COMPLETION_REDIRECT_URIS: "",
           HUBSPOT_CLIENT_ID: "11111111-1111-4111-8111-111111111111",
           HUBSPOT_CLIENT_SECRET: "test-only-client-secret",
           HUBSPOT_REDIRECT_URI:

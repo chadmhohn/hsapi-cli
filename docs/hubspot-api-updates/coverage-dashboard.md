@@ -1,32 +1,33 @@
 # HubSpot API Coverage Dashboard
 
-Generated: 2026-05-10
+Generated: 2026-07-29
 
 ## Snapshot
-- Typed commands: 315
-- Catalog-only endpoints: 322
+- Typed commands: 323
+- Catalog-only endpoints: 343
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 637
+- Endpoint count: 666
 - Non-HTTP surface count: 5
-- Total catalog items: 642
+- Total catalog items: 671
 
 ## Coverage by implementation status
-- catalog-only: 322
-- typed: 315
+- catalog-only: 343
+- typed: 323
 
 ## Coverage by risk
-- mutation: 278
-- read: 220
-- destructive: 82
-- sensitive-read: 57
+- mutation: 287
+- read: 229
+- destructive: 91
+- sensitive-read: 59
 
 ## Coverage by auth family
-- portal_bearer: 579
-- developer: 53
-- oauth: 4
+- portal_bearer: 595
+- developer: 63
+- oauth: 5
 
 ## Coverage by tier requirement
-- none: 621
+- none: 634
+- Revenue Hub Professional: 16
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
 - Marketing Hub Professional: 4
@@ -44,6 +45,7 @@ Generated: 2026-05-10
 - conversations: 18
 - marketing.emails: 18
 - automation.actions: 17
+- commerce.price_books: 16
 - cms.blogs: 15
 - settings.currencies: 15
 - crm.pipelines: 14
@@ -51,6 +53,7 @@ Generated: 2026-05-10
 - crm.extensions: 13
 - crm.objects: 13
 - crm.timeline: 12
+- app_management.feature_flags: 10
 - communication_preferences: 10
 - crm.associations.records: 10
 - files: 10
@@ -100,7 +103,9 @@ Generated: 2026-05-10
 - events: 2
 - events.events: 2
 - events.send: 2
+- meta.network_origins: 2
 - oauth.refresh_tokens: 2
+- app_management.uninstalls: 1
 - automation.action_types: 1
 - automation.performance: 1
 - automation.workflow_id_mappings: 1

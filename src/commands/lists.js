@@ -4,6 +4,7 @@ const {
 } = require('../runtime');
 const {
   boolFlag,
+  optionalBoolean,
   pathPart,
   requireFlag,
   values,
@@ -13,7 +14,9 @@ const {
 } = require('../output');
 const {
   listCreateBodyFromFlags,
+  listFilterUpdateBodyFromFlags,
   listMembershipBodyFromFlags,
+  listRecordIdsBodyFromFlags,
   listSearchBodyFromFlags,
 } = require('../command-inputs');
 const {
@@ -96,6 +99,26 @@ async function runLists(portal, action, rest, flags) {
     if (!listId) fail('lists membership-update requires <listId>.');
     const body = listMembershipBodyFromFlags(flags);
     printJson(await guardedFetch(portal, 'PUT', `${base}/${pathPart(listId)}/memberships/add-and-remove`, flags, body));
+    return;
+  }
+
+  if (action === 'members-add' || action === 'members-remove') {
+    const listId = rest[0];
+    if (!listId) fail(`lists ${action} requires <listId>.`);
+    const body = listRecordIdsBodyFromFlags(flags, `lists ${action}`);
+    const operation = action === 'members-add' ? 'add' : 'remove';
+    printJson(await guardedFetch(portal, 'PUT', `${base}/${pathPart(listId)}/memberships/${operation}`, flags, body));
+    return;
+  }
+
+  if (action === 'update-filters') {
+    const listId = rest[0];
+    if (!listId) fail('lists update-filters requires <listId>.');
+    const body = listFilterUpdateBodyFromFlags(flags);
+    const queryFlags = { ...flags, query: values(flags.query) };
+    const enrollObjects = optionalBoolean(flags['enroll-objects-in-workflows'], 'enroll-objects-in-workflows');
+    if (enrollObjects !== undefined) queryFlags.query.push(`enrollObjectsInWorkflows=${enrollObjects}`);
+    printJson(await guardedFetch(portal, 'PUT', `${base}/${pathPart(listId)}/update-list-filters`, queryFlags, body));
     return;
   }
 

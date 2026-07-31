@@ -11,6 +11,12 @@ This project is not ready for public release until these checks are complete.
 - Secret redaction gate passes: `npm run release:gates` verifies packaged files do not include token caches, local config paths, token-like values, or JSON secret values.
 - Auth-family coverage gate passes: `npm run release:gates` verifies catalog auth metadata covers `portal_bearer`, `oauth`, `developer`, and intentional unauthenticated endpoints.
 - MCP release gate passes: `npm run release:gates` verifies MCP server files, package bin entries, tool metadata and input schemas, sample MCP config safety, redaction coverage, and local-config exclusion.
+- Remote MCP release gate passes: packaged connector docs are present; the
+  Worker remains OAuth-only and placeholder-neutral; both write gates are off;
+  S256/resource binding, one-time confirmation claims, actual/effective HubSpot
+  scope attenuation, the explicit public-app ceiling, current HubSpot OAuth
+  endpoints, Cloudflare compatibility flags, and ignored operator config are
+  all enforced.
 - Portal onboarding gate passes: the package includes the canonical
   `portal-auth-setup` guide plus minimal ServiceKey, hosted OAuth, and combined
   templates; the ServiceKey template is copy-ready and no packaged file
@@ -30,6 +36,7 @@ This project is not ready for public release until these checks are complete.
 - Add package lock only if dependencies are introduced.
 - Run `npm test`.
 - Run `npm run release:gates`.
+- Run `npm run remote-mcp:check` without production secrets or deployment.
 - Run `npm pack --dry-run --json`.
 - Run the installed-tarball smoke test from a temp prefix.
 - Verify `hsapi-mcp` and `hsapi mcp serve` are packaged stdio MCP entry points and that `docs/MCP.md` plus `examples/mcp-server.sample.json` stay secret-free.

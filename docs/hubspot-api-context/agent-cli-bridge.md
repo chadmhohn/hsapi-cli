@@ -17,6 +17,13 @@ HubSpot Agent CLI `0.10.0` or newer for these families and sets
 `HUBSPOT_NO_AUTO_UPGRADE=1` in delegated child processes so a background MCP
 call cannot silently change the reviewed binary.
 
+Doctor preserves HubSpot's full version line, including the build identifier,
+because beta builds can change without a semantic-version bump. It also runs
+the read-only top-level `hubspot --help` command and reports the discovered
+command families. The bridge is ready only when both `reports` and `views` are
+present; newly discovered families are reported but are not exposed through an
+arbitrary pass-through.
+
 ## Provider boundary
 
 The public HubSpot API catalog remains the normal HSAPI provider. Only saved
@@ -29,6 +36,10 @@ arbitrary Agent CLI pass-through.
 The binary is not bundled, repackaged, patched, or auto-installed by HSAPI.
 Install it from HubSpot's current Agent CLI guide, verify its version, and
 upgrade it separately during an operator-approved maintenance window.
+As of 2026-07-27, `hubspot upgrade` supports macOS and Linux but rejects
+Windows. On Windows, reinstall the official Windows binary only after
+verifying HubSpot's published checksum, and retain the prior executable as a
+rollback copy.
 
 ## OAuth and multi-portal safety
 

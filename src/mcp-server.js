@@ -354,6 +354,7 @@ const TOOLS = [
           description: 'Optional query parameters. Values may be strings, numbers, booleans, nulls, or arrays of those values.'
         },
         body: { description: 'Optional JSON request body.' },
+        accept: { type: 'string', description: 'Optional HTTP Accept media type; defaults to application/json.' },
         paginate: { type: 'boolean', description: 'Use hsapi --paginate for paged read requests.' },
         readOnly: { type: 'boolean', description: 'Allow catalog-marked read-only POST execution with hsapi --read-only.' },
         showRequest: { type: 'boolean', description: 'Return the redacted request/auth preview without executing.' },
@@ -395,6 +396,7 @@ const TOOLS = [
           description: 'Optional query parameters. Values may be strings, numbers, booleans, nulls, or arrays of those values.'
         },
         body: { description: 'Optional JSON request body.' },
+        accept: { type: 'string', description: 'Optional HTTP Accept media type; defaults to application/json.' },
         paginate: { type: 'boolean', description: 'Use hsapi --paginate for paged read requests.' },
         readOnly: { type: 'boolean', description: 'Allow catalog-marked read-only POST execution (e.g. CRM search) with hsapi --read-only.' },
         showRequest: { type: 'boolean', description: 'Return the redacted request/auth preview without executing.' },
@@ -669,6 +671,7 @@ function requestArgv(args) {
   const target = stringArg(args.path, 'path');
   if (!/^[A-Z]+$/.test(method)) throw new Error('method must be an HTTP method name.');
   const argv = ['request', method, target, ...queryArgv(args.query), ...bodyArgv(args)];
+  if (args.accept !== undefined && args.accept !== null) argv.push('--accept', stringArg(args.accept, 'accept'));
   if (boolArg(args, 'paginate', false)) argv.push('--paginate');
   if (boolArg(args, 'readOnly', false)) argv.push('--read-only');
   return argv;

@@ -88,7 +88,10 @@ jobs:
             'data/hubspot-api-catalog.json',
             'data/hubspot-api-tiers.json',
             'docs/INSTALL.md',
+            'docs/REMOTE_MCP.md',
             'docs/TEST_PORTAL_MATRIX.md',
+            'cloudflare/hsapi-remote-mcp/README.md',
+            'examples/mcp-dual-connector.sample.json',
             'examples/portals.sample.json',
             'examples/portals.test-matrix.sample.json',
             'README.md',
@@ -116,13 +119,19 @@ jobs:
           NODE
 
   worker:
-    name: Cloudflare OAuth Worker
+    name: Cloudflare Worker (${{ matrix.worker-directory }})
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     defaults:
       run:
-        working-directory: cloudflare/hsapi-oauth-broker
+        working-directory: ${{ matrix.worker-directory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        worker-directory:
+          - cloudflare/hsapi-oauth-broker
+          - cloudflare/hsapi-remote-mcp
 
     steps:
       - name: Checkout
@@ -133,7 +142,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: cloudflare/hsapi-oauth-broker/package-lock.json
+          cache-dependency-path: ${{ matrix.worker-directory }}/package-lock.json
 
       - name: Install
         run: npm ci

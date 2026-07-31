@@ -163,14 +163,28 @@ For explicit HubSpot Projects delegation, use `hsapi project doctor --account <a
 
 HSAPI can optionally delegate the two first-party-only capability families to
 HubSpot's separate Agent CLI: saved reports and CRM index-page saved views.
-The `hubspot` binary is not bundled or auto-installed; install HubSpot Agent
-CLI `0.10.0` or newer separately, then verify the selected portal:
+The `hubspot` binary is not bundled or auto-installed; install or update the
+current HubSpot Agent CLI separately, then verify its build, command-family
+capabilities, and selected portal:
 
 ```bash
+# macOS/Linux; the current Agent CLI upgrader rejects Windows.
+hubspot upgrade
 hsapi agent-cli doctor --portal <profile>
 hsapi reports list --portal <profile>
 hsapi views list deals --portal <profile>
 ```
+
+On Windows, reinstall the current official Windows binary and verify its
+published checksum before replacing the existing executable. Keep a rollback
+copy because HubSpot currently publishes changing beta builds under the same
+semantic version.
+
+HubSpot beta builds can change without a semantic-version bump. Doctor keeps
+the full version/build line and probes the read-only top-level help output;
+the bridge is ready only when both `reports` and `views` are present. Agent CLI
+`segments` functionality stays on HSAPI's native public-API-backed `lists`
+commands rather than expanding the first-party bridge.
 
 HSAPI remains the portal selector, safety gate, output envelope, and MCP
 server. Agent CLI OAuth is a separate single-account cache, so HSAPI runs
@@ -197,9 +211,21 @@ boundary.
 
 Dual CLI/MCP adapter planning lives in docs/hubspot-api-context/mcp-adapter-project-plan.md. The target is one shared HubSpot config/auth/catalog/request core with two surfaces: direct hsapi CLI usage and a stdio MCP server for OpenClaw or other MCP clients. Live replacement of existing HubSpot MCP entries requires neutral token sourcing plus explicit operator approval for any Gateway restart.
 
+The additional OAuth-only remote MCP architecture is deliberately narrower: a
+Cloudflare Worker exposes only the HubSpot user-level OAuth app's reviewed scope
+boundary (with named and raw method/path execution) and uses its own remote-role broker and
+HubSpot app without holding that app secret, while the local stdio connector
+remains the OAuth-plus-ServiceKey superset. The shared code stays in this one
+Git repository; app identities, secrets, callbacks, state, and deployments are
+separate. See `docs/REMOTE_MCP.md` and `docs/OAUTH_APP_SPLIT.md`.
+
 ## MCP Server Usage
 
-Operational MCP docs live in `docs/MCP.md`; sample OpenClaw and generic MCP client config lives in `examples/mcp-server.sample.json`. For local Codex Desktop and Claude Desktop setup from a checkout or installed package, use `docs/DESKTOP_MCP_QUICKSTART.md`.
+Operational MCP docs live in `docs/MCP.md`; sample local config lives in
+`examples/mcp-server.sample.json`, and the two-connector remote/local shape is
+in `examples/mcp-dual-connector.sample.json`. For local Codex Desktop and
+Claude Desktop setup from a checkout or installed package, use
+`docs/DESKTOP_MCP_QUICKSTART.md`.
 
 Use direct CLI mode when an operator or agent can run shell commands:
 
@@ -227,6 +253,28 @@ credential values. MCP client config should pass `HSAPI_PORTALS_CONFIG` and
 local-mode client secrets, developer API keys, and personal access keys must
 come from environment injection, an OpenClaw-supported SecretRef path, a
 wrapper, or another secret manager.
+
+For clients that support remote MCP, the recommended names and routing are:
+
+- `hubspot-oauth-remote`: Cloudflare-hosted, OAuth-only, and limited to the
+  intersection of the HubSpot user-level OAuth grant and the remote manifest;
+  named operations and scope-bound raw HubSpot method/path calls are supported;
+- `hubspot-local-superset`: the existing local stdio server, with OAuth and an
+  explicitly configured, account-matched ServiceKey/private-app credential
+  where an endpoint requires it.
+
+The remote Worker never accepts a ServiceKey and is not an automatic fallback
+to the local connector. Reviewed writes, including destructive CRM operations,
+are enabled only through the remote scope boundary, an `hsapi.write` downstream
+grant, the exact HubSpot write scope, and one-time preview confirmation.
+Contracts reads are in
+the dedicated remote-app scope request; actual availability still depends on
+consent, product entitlement, and live validation. Price Books remain local
+ServiceKey-only. Contract writes and active custom-object OAuth grants remain
+pending their documented rechecks.
+See `docs/REMOTE_MCP.md`,
+`docs/OAUTH_APP_SPLIT.md`, and `cloudflare/hsapi-remote-mcp/README.md` before
+the dedicated-app production cutover.
 
 For cutover prep, `docs/MCP.md` documents a neutral token-source wrapper and reversible local migration runbook. The final OpenClaw cutover runbook is `docs/OPENCLAW_MCP_CUTOVER.md`, with a repo-safe payload template in `examples/openclaw-cutover.mcp.sample.json`. The neutral samples are `examples/neutral-token-wrapper.sample.sh` and `examples/portals.multi-portal.sample.json`; they preserve separate portal profile configuration without storing token values.
 
@@ -294,6 +342,10 @@ hsapi crm batch-upsert contacts --id-property email --inputs '[{"id":"ada@exampl
 hsapi associations batch-read contacts companies --ids 101,102 --show-request
 hsapi associations batch-create contacts companies --inputs '[{"from":{"id":"101"},"to":{"id":"9001"},"types":[{"associationCategory":"HUBSPOT_DEFINED","associationTypeId":279}]}]' --show-request
 hsapi lists search --search Renewals --count 10 --show-request
+hsapi lists members-add 123 --record-ids 101,102 --show-request
+hsapi lists members-remove 123 --record-ids 103 --show-request
+hsapi lists update-filters 123 --filter-branch @filter-branch.json --show-request
+hsapi request GET /meta/network-origins/2026-03/ip-ranges --query direction=EGRESS --query service=API --show-request
 hsapi exports start --export-name "Contact export" --object-type contacts --properties email,firstname --show-request
 hsapi subscriptions status ada@example.com --show-request
 hsapi subscriptions set-status ada@example.com --subscription-id 123 --status SUBSCRIBED --legal-basis LEGITIMATE_INTEREST_OTHER --legal-basis-explanation "Requested resubscribe" --show-request
@@ -302,6 +354,9 @@ hsapi files upload --file ./logo.png --folder-path /library/brand --access PRIVA
 hsapi files signed-url 123456 --show-request
 hsapi files folder-search --path /library --limit 10 --show-request
 hsapi pipelines stage-create deals default --label "Contract signed" --display-order 4 --show-request
+hsapi crm list contracts --properties hs_name,hs_contract_effective_date --show-request
+hsapi price-books list --limit 20 --show-request
+hsapi price-books validate 418966139535 --show-request
 hsapi events occurrences --event-type e_visited_page --object-type contact --object-id 224834 --show-request
 hsapi webhooks settings 12345 --show-request
 hsapi webhook-journal journal-batch-read --offsets 101,102 --show-request
@@ -325,6 +380,10 @@ hsapi project deploy --account example --project "my-project" --build 5 --show-r
 hsapi auth refresh --client-id-env HUBSPOT_CLIENT_ID --client-secret-env HUBSPOT_CLIENT_SECRET --refresh-token-env HUBSPOT_REFRESH_TOKEN --show-request
 npm run catalog:update:offline
 ```
+
+Contract list/get/batch reads use the generic `hsapi crm ... contracts` commands and require Revenue Hub Professional plus `crm.objects.contracts.read`. The current date-versioned Contracts API does not publish writes; see [the Contracts context and public-beta intake plan](docs/hubspot-api-context/contracts.md).
+
+Price Books is a `2026-09-beta` surface. The four GET operations and non-mutating validation POST have typed `hsapi price-books ...` commands; all 16 published method/path pairs are cataloged so the remaining beta writes get exact scope, tier, and confirmation-gate metadata through `hsapi request` and MCP. See [the Price Books beta guardrails](docs/hubspot-api-context/price-books.md).
 
 ## Token-Efficient Output
 
@@ -395,7 +454,7 @@ This matters most for custom objects, schema configuration, association labels/l
 
 <!-- BEGIN GENERATED: current-scope (npm run readme:scope) -->
 
-The catalog covers **315 typed commands** across **56 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
+The catalog covers **323 typed commands** across **57 endpoint families**, every one with documented arguments (`hsapi help <command>`). Local tooling on top: multi-portal profiles, generic catalog-gated requests with previews, the MCP server (`hsapi mcp serve`), tier reporting, CMS/auth/project doctors, the mutation audit log (`hsapi history`), and `hsapi upgrade`.
 
 - `hsapi account` — 6 commands
 - `hsapi association-labels` — 4 commands
@@ -431,7 +490,7 @@ The catalog covers **315 typed commands** across **56 endpoint families**, every
 - `hsapi forms` — 9 commands
 - `hsapi imports` — 5 commands
 - `hsapi limits` — 7 commands
-- `hsapi lists` — 11 commands
+- `hsapi lists` — 14 commands
 - `hsapi marketing campaigns` — 7 commands
 - `hsapi marketing emails` — 5 commands
 - `hsapi marketing events` — 3 commands
@@ -439,6 +498,7 @@ The catalog covers **315 typed commands** across **56 endpoint families**, every
 - `hsapi object-library` — 1 command
 - `hsapi owners` — 2 commands
 - `hsapi pipelines` — 10 commands
+- `hsapi price-books` — 5 commands
 - `hsapi properties` — 5 commands
 - `hsapi property-groups` — 4 commands
 - `hsapi property-validations` — 2 commands
@@ -450,7 +510,7 @@ The catalog covers **315 typed commands** across **56 endpoint families**, every
 - `hsapi webhook-journal` — 19 commands
 - `hsapi webhooks` — 6 commands
 
-Argspec coverage: 315/315 typed commands documented.
+Argspec coverage: 323/323 typed commands documented.
 
 <!-- END GENERATED: current-scope -->
 
@@ -486,7 +546,7 @@ Run the current coverage dashboard generator:
 npm run catalog:dashboard
 ```
 
-The updater is intentionally non-mutating. It checks catalog health, fetches official HubSpot source pages, detects the current `llms.txt` login redirect, compares discovered docs links to catalog docs URLs, and reports triage candidates under `docs/hubspot-api-updates/`. Reports also summarize implementation coverage by status, API family, risk, tier requirement, and required scope.
+The updater is intentionally non-mutating. It checks catalog health, fetches official HubSpot source pages, detects both docs-login and HubSpot account-picker redirects, compares discovered docs links to catalog docs URLs, and reports triage candidates under `docs/hubspot-api-updates/`. Reports also summarize implementation coverage by status, API family, risk, tier requirement, and required scope.
 
 Diff proposal mode fetches uncataloged docs pages, extracts likely `METHOD /path` endpoint references, filters out method/path pairs already in the catalog, and writes candidate endpoint stubs. Treat those stubs as review material: every proposed endpoint still needs command design, scope/tier notes, context docs, tests, and mutation-safety review before it belongs in `data/hubspot-api-catalog.json`.
 

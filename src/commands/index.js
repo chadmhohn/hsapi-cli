@@ -14,6 +14,7 @@ module.exports = {
   ...require('./account'),
   ...require('./tiers'),
   ...require('./commerce'),
+  ...require('./price-books'),
   ...require('./schemas'),
   ...require('./pipelines'),
   ...require('./lists'),
