@@ -114,6 +114,11 @@ function main() {
   const localBroker = readJson('cloudflare/hsapi-oauth-broker/wrangler.jsonc', true);
   const remoteBroker = readJson('cloudflare/hsapi-oauth-broker/wrangler.remote.jsonc', true);
   const remoteConnector = readJson('cloudflare/hsapi-remote-mcp/wrangler.jsonc', true);
+  const localProject = readJson('hubspot/hsapi-local-oauth-app/hsproject.json');
+  const remoteProject = readJson('hubspot/hsapi-remote-mcp-app/hsproject.json');
+
+  assert.strictEqual(localProject.platformVersion, '2026.03', 'local public app must use HubSpot developer platform 2026.03');
+  assert.strictEqual(remoteProject.platformVersion, '2026.03', 'remote public app must use HubSpot developer platform 2026.03');
 
   assertSameSet(broadScopes, [...new Set(broadScopes)], 'broad public-app scope profile contains duplicates');
   assertSameSet(remoteReadScopes, [...new Set(remoteReadScopes)], 'remote read scope profile contains duplicates');

@@ -35,8 +35,8 @@ A single HubSpot **developer app** is the authentication service for the whole t
   user-level flow accepted S256 PKCE, so the implementation also uses it as a
   CLI-to-broker proof: the broker will exchange a callback code only when the
   CLI presents both its consume secret and the matching verifier.
-- Current endpoints are OAuth **v3** (`/oauth/2026-03/token`); v1 is deprecated. The app
-  must target developer platform **v2025.2 or v2026.03**.
+- Current endpoints are OAuth **v3** (`/oauth/2026-03/token`); v1 is deprecated. Both
+  HSAPI public-app projects target developer platform **v2026.03**.
 
 **Implication:** a distributed CLI that performs the exchange locally needs the
 app `client_secret` on each machine. A hosted broker avoids that distribution
@@ -196,7 +196,7 @@ boundaries until they are added to catalog preflight metadata.
   exchange, all responses use `Cache-Control: no-store`, and callback
   invocation logging is disabled.
 - No elevation: HubSpot binds the token to the user at issue time.
-- App on platform v2025.2 / v2026.03; OAuth v3 endpoints.
+- App on platform v2026.03; OAuth v3 endpoints.
 
 ## Workstreams (→ issues)
 
