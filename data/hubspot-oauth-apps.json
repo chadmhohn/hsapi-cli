@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-30",
+  "updatedAt": "2026-08-03",
   "scopeProfiles": {
     "broadPublicAppOptional": [
       "crm.objects.contacts.read",
@@ -51,7 +51,9 @@
       "settings.users.teams.read",
       "mcp.users.read",
       "cpq.quotes.write",
-      "crm.objects.marketing_events.write"
+      "crm.objects.marketing_events.write",
+      "automation.sequences.read",
+      "automation.sequences.enrollments.write"
     ],
     "remoteReadRequest": [
       "crm.objects.contacts.read",
@@ -72,7 +74,9 @@
       "crm.objects.emails.read",
       "crm.objects.contracts.read",
       "crm.objects.marketing_events.read",
-      "mcp.users.read"
+      "mcp.users.read",
+      "settings.users.teams.read",
+      "automation.sequences.read"
     ],
     "remoteWriteRequest": [
       "crm.objects.contacts.write",
@@ -86,7 +90,8 @@
       "crm.objects.calls.write",
       "crm.objects.meetings.write",
       "crm.objects.emails.write",
-      "crm.objects.marketing_events.write"
+      "crm.objects.marketing_events.write",
+      "automation.sequences.enrollments.write"
     ]
   },
   "apps": {
@@ -112,7 +117,10 @@
     }
   },
   "pendingScopes": {
-    "customObjects": "A live 2026.03 user-level app upload on 2026-07-30 rejected crm.objects.custom.read as unrecognized even though HubSpot documents it as an optional public-app scope. Keep the implementation staged and recheck before activating these scopes.",
+    "customObjects": "A live 2026.03 user-level app upload on 2026-08-03 still rejected the documented custom record and schema scopes as unrecognized. Keep the implementation staged and recheck before activating these scopes.",
+    "commercePayments": "A live 2026.03 user-level app upload on 2026-08-03 rejected crm.objects.commercepayments.read as unrecognized. Keep Commerce Payments on an explicitly authorized local ServiceKey/private-app bearer.",
+    "salesTemplates": "The 2026-09 beta guide documents sales-templates-public-read and sales-templates-public-write, but a live 2026.03 user-level app upload rejected both on 2026-08-03.",
+    "teamWrites": "The 2026-09 beta guide documents settings.users.teams.write, but a live 2026.03 user-level app upload rejected it on 2026-08-03. Team reads remain OAuth-capable.",
     "contractWrites": "Add only after HubSpot publishes the public-beta method, path, and scope."
   },
   "scopeRecheckCandidates": {
@@ -121,6 +129,12 @@
       "crm.objects.custom.write",
       "crm.schemas.custom.read",
       "crm.schemas.custom.write"
+    ],
+    "newPublicApis": [
+      "crm.objects.commercepayments.read",
+      "sales-templates-public-read",
+      "sales-templates-public-write",
+      "settings.users.teams.write"
     ]
   },
   "serviceKeyOnlyCapabilities": {

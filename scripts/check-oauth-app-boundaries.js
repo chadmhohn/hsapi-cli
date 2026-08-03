@@ -108,6 +108,7 @@ function main() {
   const remoteWriteScopes = appManifest.scopeProfiles.remoteWriteRequest;
   const remoteRequestedScopes = [...remoteReadScopes, ...remoteWriteScopes];
   const customObjectCandidates = appManifest.scopeRecheckCandidates.customObjects;
+  const newPublicApiCandidates = appManifest.scopeRecheckCandidates.newPublicApis;
   const localApp = readJson(appManifest.apps.localHostedOAuth.appProjectConfig);
   const remoteApp = readJson(appManifest.apps.remoteMcpOAuth.appProjectConfig);
   const localBroker = readJson('cloudflare/hsapi-oauth-broker/wrangler.jsonc', true);
@@ -121,6 +122,9 @@ function main() {
   assert(remoteReadScopes.every((scope) => broadScopes.includes(scope)), 'remote read scopes must be a subset of the public-app scope profile');
   assert(remoteWriteScopes.every((scope) => broadScopes.includes(scope)), 'remote write scopes must be a subset of the public-app scope profile');
   assert(remoteReadScopes.includes('crm.objects.contracts.read'), 'remote read profile must include Contracts read');
+  assert(remoteReadScopes.includes('settings.users.teams.read'), 'remote read profile must include Teams read');
+  assert(remoteReadScopes.includes('automation.sequences.read'), 'remote read profile must include Sequences read');
+  assert(remoteWriteScopes.includes('automation.sequences.enrollments.write'), 'remote write profile must include Sequences enrollment write');
   assertSameSet(customObjectCandidates, [
     'crm.objects.custom.read',
     'crm.objects.custom.write',
@@ -130,6 +134,15 @@ function main() {
   assert(!broadScopes.some((scope) => customObjectCandidates.includes(scope)), 'unrecognized custom-object scopes must not enter the active public-app profile');
   assert(!remoteReadScopes.some((scope) => customObjectCandidates.includes(scope)), 'unrecognized custom-object scopes must not enter the active remote request');
   assert(!remoteWriteScopes.some((scope) => customObjectCandidates.includes(scope)), 'unrecognized custom-object scopes must not enter the active remote request');
+  assertSameSet(newPublicApiCandidates, [
+    'crm.objects.commercepayments.read',
+    'sales-templates-public-read',
+    'sales-templates-public-write',
+    'settings.users.teams.write',
+  ], 'new public-API scope recheck candidates drifted');
+  assert(!broadScopes.some((scope) => newPublicApiCandidates.includes(scope)), 'rejected public-API scopes must not enter the active public-app profile');
+  assert(!remoteReadScopes.some((scope) => newPublicApiCandidates.includes(scope)), 'rejected public-API scopes must not enter the active remote read request');
+  assert(!remoteWriteScopes.some((scope) => newPublicApiCandidates.includes(scope)), 'rejected public-API scopes must not enter the active remote write request');
   assert(!remoteReadScopes.some((scope) => scope.endsWith('.write')), 'remote read profile must exclude write scopes');
   assert(remoteWriteScopes.every((scope) => scope.endsWith('.write')), 'remote write profile must contain only write scopes');
   assert(remoteWriteScopes.includes('crm.objects.marketing_events.write'), 'remote write profile must include Marketing Events write');

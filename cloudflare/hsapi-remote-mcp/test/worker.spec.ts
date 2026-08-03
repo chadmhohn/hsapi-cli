@@ -21,7 +21,7 @@ describe("Worker public surface", () => {
       ok: true,
       service: "hsapi-remote-mcp",
       protocolVersion: "2026-07-28",
-      capabilityRevision: "2026-07-30.5",
+      capabilityRevision: "2026-08-03.1",
       remoteWritesEnabled: true,
       environment: "local",
     });

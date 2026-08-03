@@ -159,11 +159,13 @@ describe("hsapi OAuth broker", () => {
     const optionalScopes = (
       authorizationUrl.searchParams.get("optional_scope") ?? ""
     ).split(" ");
-    expect(optionalScopes).toHaveLength(49);
+    expect(optionalScopes).toHaveLength(51);
     expect(optionalScopes).toContain("cpq.quotes.write");
     expect(optionalScopes).toContain(
       "crm.objects.marketing_events.write",
     );
+    expect(optionalScopes).toContain("automation.sequences.read");
+    expect(optionalScopes).toContain("automation.sequences.enrollments.write");
     expect(optionalScopes).not.toContain("cpq.price_books.read");
     expect(optionalScopes).not.toContain("cpq.price_books.write");
     expect(authorizationUrl.searchParams.get("state")).toBe(start.sessionId);

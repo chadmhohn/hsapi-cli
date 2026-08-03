@@ -923,7 +923,8 @@ function validateRemoteMcpCheckoutNeutrality(failures, files) {
     'crm.objects.calls.write',
     'crm.objects.meetings.write',
     'crm.objects.emails.write',
-    'crm.objects.marketing_events.write'
+    'crm.objects.marketing_events.write',
+    'automation.sequences.enrollments.write'
   ].sort();
   if (
     optionalScopeValues.length !== 3

@@ -65,12 +65,17 @@ function validateEndpointArgs(raw, context) {
     const type = requireString(item.type, 'type', argContext);
     if (!VALID_ARG_TYPES.has(type)) fail(`${argContext} type must be one of ${[...VALID_ARG_TYPES].join(', ')}.`);
     if (item.required !== undefined && typeof item.required !== 'boolean') fail(`${argContext} required must be a boolean.`);
+    const requiredUnless = optionalStringArray(item.requiredUnless, 'requiredUnless', argContext);
+    if (item.required === true && requiredUnless.length) {
+      fail(`${argContext} cannot be unconditionally required and define requiredUnless.`);
+    }
     if (item.repeatable !== undefined && typeof item.repeatable !== 'boolean') fail(`${argContext} repeatable must be a boolean.`);
     return {
       name,
       kind,
       type,
       required: item.required === true,
+      requiredUnless,
       repeatable: item.repeatable === true,
       enum: optionalStringArray(item.enum, 'enum', argContext),
       aliases: optionalStringArray(item.aliases, 'aliases', argContext),
@@ -128,6 +133,14 @@ function validateEndpointDefinition(raw, index) {
   const requiredScopes = optionalStringArray(raw.requiredScopes, 'requiredScopes', context);
   const auth = normalizeEndpointAuth(raw.auth, context);
   const args = validateEndpointArgs(raw.args, context);
+  const argNames = new Set(args.map((arg) => arg.name));
+  for (const arg of args) {
+    for (const alternative of arg.requiredUnless) {
+      if (!argNames.has(alternative)) {
+        fail(`${context} arg ${arg.name} requiredUnless references unknown arg ${alternative}.`);
+      }
+    }
+  }
 
   return {
     id,
@@ -218,7 +231,12 @@ function endpointDefinitions(filePath) {
   return loadCatalogData(filePath).endpoints.map((endpoint) => ({
     ...endpoint,
     requiredScopes: [...endpoint.requiredScopes],
-    args: endpoint.args.map((arg) => ({ ...arg, enum: [...arg.enum], aliases: [...arg.aliases] })),
+    args: endpoint.args.map((arg) => ({
+      ...arg,
+      requiredUnless: [...arg.requiredUnless],
+      enum: [...arg.enum],
+      aliases: [...arg.aliases]
+    })),
     auth: endpoint.auth ? {
       ...endpoint.auth,
       queryParams: [...endpoint.auth.queryParams],

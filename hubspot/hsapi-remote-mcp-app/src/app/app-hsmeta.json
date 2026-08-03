@@ -63,7 +63,9 @@
         "settings.users.teams.read",
         "mcp.users.read",
         "cpq.quotes.write",
-        "crm.objects.marketing_events.write"
+        "crm.objects.marketing_events.write",
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
       ],
       "conditionallyRequiredScopes": []
     },

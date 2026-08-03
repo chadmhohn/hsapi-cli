@@ -5,7 +5,7 @@ This slice covers HubSpot automation and embedded CRM-extension areas, including
 ## What Is Covered
 
 - Workflows: legacy v3 list/get, v2 current enrollment, and v2 contact enrollment are typed as `hsapi automation workflows list|get|current-enrollment|enroll`; the workflows guide remains a docs-only surface because the model spans legacy v2/v3 paths and newer workflow guides.
-- Sequences: list/get, enrollment, and enrollment status are typed as `hsapi automation sequences list|get|enroll|status`; the sequence guide remains a docs-only surface for operator context.
+- Sequences: the stable list/get, enrollment, and enrollment-status operations are typed as `hsapi automation sequences list|get|enroll|status`. The 2026-09 public beta adds catalog-backed create/list/get/update/delete service-account sequence operations plus beta enrollment paths; see `2026-09-beta-sales-automation.md` for OAuth availability.
 - Call recordings and transcripts: recording settings, the ready notification, and transcript create/get are typed as `hsapi extensions calling recording-settings ...`, `hsapi extensions calling recordings ready`, and `hsapi extensions calling transcripts ...` because they form one recording-to-transcript flow.
 - Calling extensions: general calling settings get/delete and the channel-connection delete helper are typed as `hsapi extensions calling settings ...` and `hsapi extensions calling channel-connection delete`; treat them as embedded CRM-extension configuration, not ordinary CRM data.
 - Video conferencing: app-level settings get/delete are typed as `hsapi extensions videoconferencing settings ...`; the surface controls how HubSpot delegates meeting creation, updates, deletes, and account lookups.
@@ -14,7 +14,7 @@ This slice covers HubSpot automation and embedded CRM-extension areas, including
 
 - Workflow reads can expose workflow criteria, actions, validation details, statistics, and contact-specific enrollment state.
 - Workflow enrollment can trigger live automation immediately and the legacy enroll endpoint takes the workflow ID and contact email in the path with no request body.
-- Sequence reads and enrollment require the acting HubSpot `userId` where the API documents it, plus an assigned Sales Hub Professional/Enterprise or Service Hub Professional/Enterprise seat.
+- Stable sequence reads and enrollment require the acting HubSpot `userId` where the API documents it. The 2026-09 beta adds full sequence definition management. Both versions require an assigned Sales Hub Professional/Enterprise or Service Hub Professional/Enterprise seat.
 - Sequence enrollment is sales-sensitive, requires connected sender setup, and counts against portal inbox enrollment limits.
 - Call recording settings must return an authenticated recording URL and the configured endpoint URL should include `%s` so HubSpot can substitute the external ID. The CLI supports `--url` for recording settings or `--body <json|@file>` for exact payloads.
 - Recording-ready notifications and transcript creation both touch CRM timeline data. The CLI supports `--engagement-id` for ready notifications and `--engagement-id` plus `--utterances <json|@file>` for transcript creation, with `--body <json|@file>` available for exact payloads.
@@ -33,7 +33,8 @@ This slice covers HubSpot automation and embedded CRM-extension areas, including
 - Workflow v3 get: https://developers.hubspot.com/docs/api-reference/legacy/automation/workflows/v3/get-workflow
 - Workflow current enrollment: https://developers.hubspot.com/docs/api-reference/legacy/automation/workflows/v2/get-current-enrollment
 - Workflow enrollment: https://developers.hubspot.com/docs/api-reference/legacy/automation/workflows/v2/enroll-contact
-- Sequences guide: https://developers.hubspot.com/docs/api-reference/automation-sequences-v4/guide
+- Stable Sequences guide: https://developers.hubspot.com/docs/api-reference/latest/automation/sequences/guide
+- 2026-09 beta Sequences guide: https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide
 - Call recordings and transcripts guide: https://developers.hubspot.com/docs/api/create-and-transcribe-call-recordings
 - Retrieve recording settings: https://developers.hubspot.com/docs/api-reference/legacy/crm/extensions/calling-extensions/recording-settings/get-recording-settings
 - Create recording settings: https://developers.hubspot.com/docs/api-reference/legacy/crm/extensions/calling-extensions/recording-settings/create-recording-settings

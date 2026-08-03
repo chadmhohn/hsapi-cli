@@ -67,6 +67,8 @@ describe("Worker configuration", () => {
       "crm.objects.emails.read",
       "crm.objects.contracts.read",
       "crm.objects.marketing_events.read",
+      "settings.users.teams.read",
+      "automation.sequences.read",
       "mcp.users.read",
     ];
     const productionWriteScopes = [
@@ -82,6 +84,7 @@ describe("Worker configuration", () => {
       "crm.objects.meetings.write",
       "crm.objects.emails.write",
       "crm.objects.marketing_events.write",
+      "automation.sequences.enrollments.write",
     ];
     const config = readConfig(baseEnv({
       ENVIRONMENT: "production",
@@ -93,7 +96,12 @@ describe("Worker configuration", () => {
       HUBSPOT_APP_SCOPE_CEILING: ["oauth", ...productionReadScopes, ...productionWriteScopes].join(" "),
     }));
     expect(config.environment).toBe("production");
-    expect(config.hubSpotOptionalScopes).toHaveLength(31);
+    expect(config.hubSpotOptionalScopes).toHaveLength(34);
+    expect(config.hubSpotOptionalScopes).toEqual(expect.arrayContaining([
+      "settings.users.teams.read",
+      "automation.sequences.read",
+      "automation.sequences.enrollments.write",
+    ]));
     expect(config.remoteWritesEnabled).toBe(true);
   });
 

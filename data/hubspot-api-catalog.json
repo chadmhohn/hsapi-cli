@@ -1,7 +1,8 @@
 {
-  "generatedAt": "2026-07-29",
+  "generatedAt": "2026-08-03",
   "sourceDocs": [
     "https://developers.hubspot.com/docs/api-reference/latest/overview",
+    "https://developers.hubspot.com/docs/api-reference/2026-09-beta/overview",
     "https://developers.hubspot.com/docs/api-reference/legacy/overview",
     "https://developers.hubspot.com/docs/developer-tooling/platform/apis-by-tier",
     "https://developers.hubspot.com/changelog"
@@ -59,7 +60,7 @@
       "surfaceType": "docs-only",
       "risk": "read",
       "status": "catalog-only",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/automation-sequences-v4/guide",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Sequences keep this guide as a docs-only surface; the REST list/get/enroll/status paths are tracked as endpoint rows."
     }
@@ -452,8 +453,10 @@
           "name": "fields",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON array of {name,value} field objects."
+          "description": "JSON array of {name,value} field objects.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "submitted-at",
@@ -675,13 +678,14 @@
           "name": "subscription-id",
           "kind": "flag",
           "type": "integer",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "status",
           "kind": "flag",
           "type": "string",
-          "required": true,
           "enum": [
             "SUBSCRIBED",
             "UNSUBSCRIBED",
@@ -690,6 +694,9 @@
           "description": "Also --status-state.",
           "aliases": [
             "status-state"
+          ],
+          "requiredUnless": [
+            "body"
           ]
         },
         {
@@ -823,8 +830,10 @@
           "name": "emails",
           "kind": "flag",
           "type": "list",
-          "required": true,
-          "description": "Subscriber emails (CSV/JSON/@file)."
+          "description": "Subscriber emails (CSV/JSON/@file).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "channel",
@@ -881,7 +890,9 @@
           "name": "emails",
           "kind": "flag",
           "type": "list",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "channel",
@@ -937,7 +948,9 @@
           "name": "emails",
           "kind": "flag",
           "type": "list",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "channel",
@@ -1000,8 +1013,10 @@
           "name": "inputs",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON array / {\"inputs\":[...]} / JSONL of status writes."
+          "description": "JSON array / {\"inputs\":[...]} / JSONL of status writes.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "channel",
@@ -1525,8 +1540,10 @@
           "name": "url",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Source URL to import from."
+          "description": "Source URL to import from.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "name",
@@ -1550,11 +1567,13 @@
           "name": "access",
           "kind": "flag",
           "type": "string",
-          "required": true,
           "enum": [
             "PRIVATE",
             "PUBLIC_INDEXABLE",
             "PUBLIC_NOT_INDEXABLE"
+          ],
+          "requiredUnless": [
+            "body"
           ]
         },
         {
@@ -2068,7 +2087,9 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "parent-folder-id",
@@ -3182,8 +3203,10 @@
           "name": "offsets",
           "kind": "flag",
           "type": "list",
-          "required": true,
-          "description": "Journal offsets (CSV/JSON)."
+          "description": "Journal offsets (CSV/JSON).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -3405,8 +3428,10 @@
           "name": "offsets",
           "kind": "flag",
           "type": "list",
-          "required": true,
-          "description": "Journal offsets (CSV/JSON)."
+          "description": "Journal offsets (CSV/JSON).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -4711,8 +4736,10 @@
           "name": "ids",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Actor IDs (CSV/JSON/@file)."
+          "description": "Actor IDs (CSV/JSON/@file).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -6770,8 +6797,10 @@
           "name": "fields",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON array of {name,value} field objects."
+          "description": "JSON array of {name,value} field objects.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "submitted-at",
@@ -7234,8 +7263,10 @@
           "name": "properties",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "{\"hs_name\":...,...} campaign properties."
+          "description": "{\"hs_name\":...,...} campaign properties.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -7595,25 +7626,33 @@
           "name": "external-account-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "external-event-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-organizer",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-url",
@@ -7697,25 +7736,33 @@
           "name": "external-account-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "external-event-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-organizer",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "event-url",
@@ -7795,14 +7842,18 @@
           "name": "email-id",
           "kind": "flag",
           "type": "integer",
-          "required": true,
-          "description": "Transactional email content ID."
+          "description": "Transactional email content ID.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "to",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "from",
@@ -7959,20 +8010,26 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "label",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "columns",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON array of column definitions."
+          "description": "JSON array of column definitions.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "use-for-pages",
@@ -8106,8 +8163,10 @@
           "name": "values",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "{\"column\":\"value\",...} row values."
+          "description": "{\"column\":\"value\",...} row values.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "name",
@@ -8552,8 +8611,10 @@
           "name": "ids",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Flow IDs (CSV/JSON/@file); each becomes a {\"type\":\"FLOW_ID\",\"flowId\":...} coordinate (verified live)."
+          "description": "Flow IDs (CSV/JSON/@file); each becomes a {\"type\":\"FLOW_ID\",\"flowId\":...} coordinate (verified live).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -8739,6 +8800,9 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Sequences require an appropriate Sales or Service seat. Treat the result as sequence metadata rather than CRM data.",
       "command": "hsapi automation sequences list",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
       "args": [
         {
           "name": "user-id",
@@ -8772,6 +8836,7 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       }
     },
@@ -8787,6 +8852,9 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Requires the acting userId query parameter and an appropriate Sales or Service seat.",
       "command": "hsapi automation sequences get",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
       "args": [
         {
           "name": "sequenceId",
@@ -8808,6 +8876,7 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       }
     },
@@ -8823,31 +8892,43 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Enrollments need `userId` plus contact, sequence, and sender details. Treat the request as live sales sequencing.",
       "command": "hsapi automation sequences enroll",
+      "requiredScopes": [
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
+      ],
       "args": [
         {
           "name": "user-id",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Sender user ID (query param)."
+          "description": "Sender user ID (query param).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "contact-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "sequence-id",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "sender-email",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "sender-alias-address",
@@ -8873,6 +8954,7 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       }
     },
@@ -8888,6 +8970,9 @@
       "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
       "scopeNotes": "Reads whether a contact is currently enrolled in a sequence; the status can expose sales follow-up context.",
       "command": "hsapi automation sequences status",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
       "args": [
         {
           "name": "contactId",
@@ -8903,6 +8988,258 @@
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_create",
+      "method": "POST",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
+      ],
+      "scopeNotes": "Public beta. Creates a complete sequence definition. HubSpot accepted both scopes on a 2026.03 user-level app on 2026-08-03, but still warned that public API calls may fail.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_list",
+      "method": "GET",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
+      "scopeNotes": "Public-beta service-account sequence listing. Requires an assigned Sales or Service Professional or Enterprise seat.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_get",
+      "method": "GET",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences/{sequenceId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_update",
+      "method": "PUT",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences/{sequenceId}",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
+      ],
+      "scopeNotes": "Public beta. Retrieve the complete definition before replacing it with PUT.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_delete",
+      "method": "DELETE",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences/{sequenceId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
+      ],
+      "scopeNotes": "Public-beta destructive sequence deletion.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_enroll_contact",
+      "method": "POST",
+      "path": "/automation/sequences/2026-09-beta/enrollments",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read",
+        "automation.sequences.enrollments.write"
+      ],
+      "scopeNotes": "Public-beta enrollment. The sender needs an assigned Sales or Service Professional or Enterprise seat and a connected inbox.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "automation.sequences",
+      "name": "automation.sequences.beta_enrollment_status",
+      "method": "GET",
+      "path": "/automation/sequences/2026-09-beta/enrollments/contact/{contactId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "contextUrl": "docs/hubspot-api-context/automation-surfaces.md",
+      "requiredScopes": [
+        "automation.sequences.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "sales.email_templates",
+      "name": "sales.email_templates.create",
+      "method": "POST",
+      "path": "/automation/email-templates/2026-09-beta",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "sales-templates-public-write"
+      ],
+      "scopeNotes": "Public beta. A live 2026.03 user-level app build rejected this scope as unrecognized on 2026-08-03, so remote OAuth does not expose it.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "sales.email_templates",
+      "name": "sales.email_templates.list",
+      "method": "GET",
+      "path": "/automation/email-templates/2026-09-beta",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "sales-templates-public-read"
+      ],
+      "scopeNotes": "Public beta. The user-level app registry still rejects the documented public-read scope, so use an explicitly authorized local ServiceKey/private-app bearer.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "sales.email_templates",
+      "name": "sales.email_templates.get",
+      "method": "GET",
+      "path": "/automation/email-templates/2026-09-beta/{templateId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "sales-templates-public-read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "sales.email_templates",
+      "name": "sales.email_templates.update",
+      "method": "PATCH",
+      "path": "/automation/email-templates/2026-09-beta/{templateId}",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "sales-templates-public-write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "sales.email_templates",
+      "name": "sales.email_templates.folders",
+      "method": "GET",
+      "path": "/automation/email-templates/2026-09-beta/folders",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "sales-templates-public-read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
         "fallback": "none"
       }
     },
@@ -9165,7 +9502,9 @@
           "name": "engagement-id",
           "kind": "flag",
           "type": "integer",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -9206,14 +9545,18 @@
           "name": "engagement-id",
           "kind": "flag",
           "type": "integer",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "utterances",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON array of utterance objects."
+          "description": "JSON array of utterance objects.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -9648,8 +9991,10 @@
           "name": "organizer-user-id",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Organizer user ID (query param)."
+          "description": "Organizer user ID (query param).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "title",
@@ -10336,20 +10681,26 @@
           "name": "export-name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "object-type",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "properties",
           "kind": "flag",
           "type": "list",
-          "required": true,
-          "description": "Properties to include as columns."
+          "description": "Properties to include as columns.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "export-type",
@@ -10489,21 +10840,27 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "object-type-id",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "e.g. 0-1 for contacts."
+          "description": "e.g. 0-1 for contacts.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "processing-type",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "MANUAL, DYNAMIC, or SNAPSHOT."
+          "description": "MANUAL, DYNAMIC, or SNAPSHOT.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "list-folder-id",
@@ -11203,8 +11560,10 @@
           "name": "properties",
           "kind": "flag",
           "type": "json",
-          "required": true,
-          "description": "JSON object of property values (or @file / @-)."
+          "description": "JSON object of property values (or @file / @-).",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "associations",
@@ -11258,7 +11617,10 @@
           "name": "properties",
           "kind": "flag",
           "type": "json",
-          "description": "Record properties object. Required unless --body is supplied."
+          "description": "Record properties object. Required unless --body is supplied.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -13443,36 +13805,46 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "label",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "type",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Property data type, e.g. string, number, date, datetime, enumeration, bool."
+          "description": "Property data type, e.g. string, number, date, datetime, enumeration, bool.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "field-type",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Form control, e.g. text, textarea, number, select, checkbox, date."
+          "description": "Form control, e.g. text, textarea, number, select, checkbox, date.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "group-name",
           "kind": "flag",
           "type": "string",
-          "required": true,
           "description": "Property group (also --group).",
           "aliases": [
             "group"
+          ],
+          "requiredUnless": [
+            "body"
           ]
         },
         {
@@ -13777,13 +14149,17 @@
           "name": "label",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "display-order",
           "kind": "flag",
           "type": "integer",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "metadata",
@@ -13971,21 +14347,204 @@
       "family": "settings.teams",
       "name": "settings.users.teams",
       "method": "GET",
-      "path": "/settings/v3/users/teams",
-      "versionMode": "v3",
+      "path": "/settings/users/2026-03/teams",
+      "versionMode": "latest",
       "risk": "read",
       "status": "typed",
       "command": "hsapi users teams",
-      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/settings/users",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/latest/account/settings/user-provisioning/teams/get-teams",
       "auth": {
         "family": "portal_bearer",
         "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
         "fallback": "none"
       },
       "requiredScopes": [
         "settings.users.teams.read"
       ],
       "args": []
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_create",
+      "method": "POST",
+      "path": "/settings/teams/2026-09-beta",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/create-team",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "scopeNotes": "Public beta. The documented write scope was rejected as unrecognized by a live 2026.03 user-level app build on 2026-08-03.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_list",
+      "method": "GET",
+      "path": "/settings/teams/2026-09-beta",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/get-teams",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.read"
+      ],
+      "scopeNotes": "Public-beta paginated team listing. The read scope is accepted by the user-level app, while beta writes remain local-only.",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_get",
+      "method": "GET",
+      "path": "/settings/teams/2026-09-beta/{teamId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/get-team",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_update",
+      "method": "PATCH",
+      "path": "/settings/teams/2026-09-beta/{teamId}",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/update-team",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_delete",
+      "method": "DELETE",
+      "path": "/settings/teams/2026-09-beta/{teamId}",
+      "versionMode": "beta",
+      "risk": "destructive",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/delete-team",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_members_list",
+      "method": "GET",
+      "path": "/settings/teams/2026-09-beta/{teamId}/members",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/get-team-members",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.read"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "user",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_member_add",
+      "method": "POST",
+      "path": "/settings/teams/2026-09-beta/{teamId}/members",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/add-team-members",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_members_batch_add",
+      "method": "POST",
+      "path": "/settings/teams/2026-09-beta/{teamId}/members/batch",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/batch/add-team-members",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
+    },
+    {
+      "family": "settings.teams",
+      "name": "settings.teams.beta_member_remove",
+      "method": "DELETE",
+      "path": "/settings/teams/2026-09-beta/{teamId}/members/{userId}",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "catalog-only",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/remove-team-member",
+      "contextUrl": "docs/hubspot-api-context/2026-09-beta-sales-automation.md",
+      "requiredScopes": [
+        "settings.users.teams.write"
+      ],
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "tokenAudience": "admin",
+        "fallback": "none"
+      }
     },
     {
       "family": "settings.roles",
@@ -14073,7 +14632,9 @@
           "name": "email",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "first-name",
@@ -14581,14 +15142,18 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "template-path",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Leading slashes are stripped."
+          "description": "Leading slashes are stripped.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "html-title",
@@ -14994,7 +15559,9 @@
           "name": "publish-date",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -15222,14 +15789,18 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "template-path",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Leading slashes are stripped."
+          "description": "Leading slashes are stripped.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "html-title",
@@ -15635,7 +16206,9 @@
           "name": "publish-date",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -15856,14 +16429,18 @@
           "name": "name",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "content-group-id",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Parent blog ID."
+          "description": "Parent blog ID.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "slug",
@@ -16279,7 +16856,9 @@
           "name": "publish-date",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "body",
@@ -16432,14 +17011,18 @@
           "name": "route-prefix",
           "kind": "flag",
           "type": "string",
-          "required": true,
-          "description": "Source URL or pattern."
+          "description": "Source URL or pattern.",
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "destination",
           "kind": "flag",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "redirect-style",
