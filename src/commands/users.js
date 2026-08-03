@@ -46,7 +46,7 @@ async function runUsers(portal, action, rest, flags) {
   }
 
   if (action === 'teams') {
-    printJson(await hubspotFetch(portal, 'GET', `${base}/teams`, flags));
+    printJson(await hubspotFetch(portal, 'GET', '/settings/users/2026-03/teams', flags));
     return;
   }
 

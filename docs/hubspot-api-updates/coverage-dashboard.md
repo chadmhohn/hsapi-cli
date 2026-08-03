@@ -1,32 +1,32 @@
 # HubSpot API Coverage Dashboard
 
-Generated: 2026-07-29
+Generated: 2026-08-03
 
 ## Snapshot
 - Typed commands: 323
-- Catalog-only endpoints: 343
+- Catalog-only endpoints: 364
 - Catalog-only non-HTTP surfaces: 3
-- Endpoint count: 666
+- Endpoint count: 687
 - Non-HTTP surface count: 5
-- Total catalog items: 671
+- Total catalog items: 692
 
 ## Coverage by implementation status
-- catalog-only: 343
+- catalog-only: 364
 - typed: 323
 
 ## Coverage by risk
-- mutation: 287
-- read: 229
-- destructive: 91
+- mutation: 297
+- read: 238
+- destructive: 93
 - sensitive-read: 59
 
 ## Coverage by auth family
-- portal_bearer: 595
+- portal_bearer: 616
 - developer: 63
 - oauth: 5
 
 ## Coverage by tier requirement
-- none: 634
+- none: 655
 - Revenue Hub Professional: 16
 - Enterprise: 5
 - Marketing Hub Enterprise: 4
@@ -53,10 +53,12 @@ Generated: 2026-07-29
 - crm.extensions: 13
 - crm.objects: 13
 - crm.timeline: 12
+- automation.sequences: 11
 - app_management.feature_flags: 10
 - communication_preferences: 10
 - crm.associations.records: 10
 - files: 10
+- settings.teams: 10
 - cms.blog_settings: 9
 - cms.blogs.posts: 9
 - cms.pages.landing: 9
@@ -79,9 +81,9 @@ Generated: 2026-07-29
 - crm.schemas: 5
 - email.events: 5
 - marketing.transactional: 5
+- sales.email_templates: 5
 - settings.users: 5
 - auth.oauth: 4
-- automation.sequences: 4
 - crm.property_groups: 4
 - crm.property_validations: 4
 - email.subscriptions_v1: 4
@@ -124,7 +126,6 @@ Generated: 2026-07-29
 - oauth.access_tokens: 1
 - scheduler.calendar: 1
 - settings.roles: 1
-- settings.teams: 1
 
 ## Coverage by surface family
 - automation.sequences: 1
@@ -156,6 +157,6 @@ Generated: 2026-07-29
   - Context: docs/hubspot-api-context/automation-surfaces.md
   - Disposition: Workflows are documented here because HubSpot's workflow and custom-action model spans several older and newer guides.
 - automation.sequences.docs (docs-only, automation.sequences)
-  - Docs: https://developers.hubspot.com/docs/api-reference/automation-sequences-v4/guide
+  - Docs: https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide
   - Context: docs/hubspot-api-context/automation-surfaces.md
   - Disposition: Sequences keep this guide as a docs-only surface; the REST list/get/enroll/status paths are tracked as endpoint rows.

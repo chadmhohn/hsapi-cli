@@ -135,6 +135,53 @@ describe("remote capability policy", () => {
     );
   });
 
+  it("exposes the verified Sequences scopes and read-only Teams surfaces", () => {
+    expect(planRemoteRequest({ endpointId: "automation.sequences.beta_list" })).toMatchObject({
+      method: "GET",
+      path: "/automation/sequences/2026-09-beta/serviceaccounts/sequences",
+      risk: "read",
+      downstreamScope: "hsapi.read",
+      requiredHubSpotScopes: ["automation.sequences.read"],
+    });
+    expect(planRemoteRequest({
+      endpointId: "automation.sequences.beta_update",
+      pathParams: { sequenceId: "seq 123" },
+      body: { name: "Updated" },
+    })).toMatchObject({
+      method: "PUT",
+      path: "/automation/sequences/2026-09-beta/serviceaccounts/sequences/seq%20123",
+      risk: "mutation",
+      downstreamScope: "hsapi.write",
+      requiredHubSpotScopes: ["automation.sequences.read", "automation.sequences.enrollments.write"],
+    });
+    expect(planRemoteRequest({ endpointId: "settings.users.teams" })).toMatchObject({
+      method: "GET",
+      path: "/settings/users/2026-03/teams",
+      requiredHubSpotScopes: ["settings.users.teams.read"],
+    });
+    expect(planRemoteRequest({ endpointId: "settings.teams.beta_get", pathParams: { teamId: "42" } })).toMatchObject({
+      method: "GET",
+      path: "/settings/teams/2026-09-beta/42",
+      requiredHubSpotScopes: ["settings.users.teams.read"],
+    });
+    expectPolicyError(
+      () => planRemoteRequest({ endpointId: "settings.teams.beta_create", body: { name: "Sales" } }),
+      "endpoint_not_allowed",
+    );
+
+    const summary = remoteCapabilitySummary([
+      "oauth",
+      "automation.sequences.read",
+      "automation.sequences.enrollments.write",
+      "settings.users.teams.read",
+    ], true);
+    expect(summary.direct).toEqual(expect.arrayContaining([
+      expect.objectContaining({ endpointId: "automation.sequences.beta_list", available: true }),
+      expect.objectContaining({ endpointId: "automation.sequences.beta_update", available: true }),
+      expect.objectContaining({ endpointId: "settings.teams.beta_list", available: true }),
+    ]));
+  });
+
   it("supports scope-bound raw reads, mutations, and destructive calls", () => {
     expect(planRemoteRequest({
       method: "POST",

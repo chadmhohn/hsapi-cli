@@ -70,6 +70,9 @@ Current remote policy includes:
   object types whose exact read/write scope is in the current OAuth grant;
 - Contracts list, get, search, and batch-read with
   `crm.objects.contracts.read`;
+- stable and 2026-09-beta Sequences reads and confirmation-gated mutations with
+  `automation.sequences.read` and `automation.sequences.enrollments.write`;
+- stable and 2026-09-beta team reads with `settings.users.teams.read`;
 - typed and raw Marketing Events operations; and
 - raw calls within the same exposed OAuth scope boundary when a named wrapper
   does not yet exist.
@@ -85,8 +88,10 @@ Deliberately unavailable:
 - contract writes pending HubSpot's public beta, published endpoint contract,
   catalog review, and live validation;
 - custom record/schema reads: their strict `2-<digits>` policy is staged, but
-  the active 2026.03 user-level app still rejects
-  `crm.objects.custom.read` as an unrecognized scope;
+  a live 2026.03 user-level app build still rejected the documented custom
+  scopes as unrecognized on 2026-08-03;
+- Commerce Payments, sales email templates, and team writes remain local-only
+  because their documented public scopes were also rejected on 2026-08-03;
 - custom-object record writes remain staged behind
   `crm.objects.custom.write`; custom schema writes remain local; and
 - saved reports, CRM saved views, and other local HubSpot Agent CLI bridges.
@@ -111,7 +116,8 @@ and 12 reviewed write scopes used by this manifest. The write surface covers
 named and raw create/update/archive/merge/delete/batch calls for contacts,
 companies, deals, tickets, line items, products, tasks, notes, calls, meetings,
 and emails, plus Marketing Events. Price Books private-app scopes,
-`cpq.quotes.write`, custom-object scopes, and unpublished Contracts writes
+`cpq.quotes.write`, custom-object scopes, Commerce Payments, sales-template
+scopes, team writes, and unpublished Contracts writes
 remain excluded from the active OAuth request. A user must reauthorize after a
 scope expansion before the new grant can expose those writes.
 
