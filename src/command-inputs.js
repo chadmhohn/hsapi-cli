@@ -61,6 +61,15 @@ function recordCreateBodyFromFlags(flags) {
   return body;
 }
 
+function recordUpdateBodyFromFlags(flags) {
+  const explicitBody = parseBody(flags.body);
+  if (explicitBody !== undefined) return assertObjectBody(explicitBody, 'crm update --body');
+  if (flags.properties === undefined) fail('crm update requires --properties or --body.');
+
+  const properties = assertObjectBody(parseBody(requireFlag(flags, 'properties')), 'crm update --properties');
+  return { properties };
+}
+
 function mergeBodyFromFlags(flags, primaryId, objectIdToMerge) {
   const explicitBody = parseBody(flags.body);
   if (explicitBody !== undefined) return assertObjectBody(explicitBody, 'crm merge --body');
@@ -1663,6 +1672,7 @@ module.exports = {
   propertiesQueryFlags,
   propertyDefinitionBodyFromFlags,
   recordCreateBodyFromFlags,
+  recordUpdateBodyFromFlags,
   requireOneFolderTarget,
   requireOneParentFolderTarget,
   schedulerBookBodyFromFlags,

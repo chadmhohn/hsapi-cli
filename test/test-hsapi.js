@@ -4147,6 +4147,194 @@ test('73 127.0.0.1\');', async () => {
 
 });
 
+test('crm update --body is exact, body-first, offline-safe, and preserved through MCP previews', async () => {
+  const env = {
+    ...baseEnv,
+    HSAPI_TEST_TOKEN: 'profile-token'
+  };
+  const bodyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsapi-crm-update-body-'));
+  const bodyFile = path.join(bodyDir, 'update-body.json');
+  const invalidBodyFile = path.join(bodyDir, 'invalid-update-body.json');
+  const missingBodyFile = path.join(bodyDir, 'missing-update-body.json');
+
+  const inlineBody = {
+    properties: {
+      subject: 'Inline body only',
+      hs_pipeline: 'support_pipeline'
+    }
+  };
+  await expectShowRequest([
+    'crm', 'update', 'tickets', '101', '--body', JSON.stringify(inlineBody)
+  ], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/tickets/101',
+    endpointId: 'objects.update',
+    body: inlineBody
+  });
+
+  const fileBody = {
+    properties: {
+      subject: 'Body loaded from file',
+      hs_ticket_priority: 'HIGH'
+    }
+  };
+  fs.writeFileSync(bodyFile, JSON.stringify(fileBody), 'utf8');
+  await expectShowRequest([
+    'crm', 'update', 'tickets', '102', '--body', `@${bodyFile}`
+  ], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/tickets/102',
+    endpointId: 'objects.update',
+    body: fileBody
+  });
+
+  const winningBody = {
+    properties: {
+      subject: 'Explicit body wins',
+      hs_ticket_priority: 'LOW'
+    }
+  };
+  await expectShowRequest([
+    'crm', 'update', 'tickets', '103',
+    '--properties', JSON.stringify({ subject: 'Properties fallback must be ignored' }),
+    '--body', JSON.stringify(winningBody)
+  ], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/tickets/103',
+    endpointId: 'objects.update',
+    body: winningBody
+  });
+
+  const propertiesOnly = { subject: 'Properties-only update remains supported' };
+  await expectShowRequest([
+    'crm', 'update', 'tickets', '104', '--properties', JSON.stringify(propertiesOnly)
+  ], env, {
+    requests,
+    method: 'PATCH',
+    pathname: '/crm/objects/2026-03/tickets/104',
+    endpointId: 'objects.update',
+    body: { properties: propertiesOnly }
+  });
+
+  {
+    const help = parseJsonOutput(await run(['help', 'crm', 'update'], env));
+    const propertiesArg = help.args.find((arg) => arg.name === 'properties');
+    const bodyArg = help.args.find((arg) => arg.name === 'body');
+    assert.strictEqual(propertiesArg.required, false);
+    assert.match(propertiesArg.description, /Required unless --body/);
+    assert.match(bodyArg.description, /overrides --properties/);
+    assert.doesNotMatch(bodyArg.description, /associations/);
+  }
+
+  {
+    const before = requests.length;
+    const result = await run(['crm', 'update', 'tickets', '105'], env);
+    assert.strictEqual(result.status, 1);
+    assert.strictEqual(result.stdout, '');
+    assert.match(result.stderr, /crm update requires --properties or --body\./);
+    assert.strictEqual(requests.length, before, 'crm update without --properties or --body must not call network');
+  }
+
+  fs.writeFileSync(invalidBodyFile, '{"properties":', 'utf8');
+  const invalidBodyCases = [
+    {
+      label: 'invalid inline body',
+      bodyArg: '{"properties":',
+      error: /Body\/properties must be valid JSON/
+    },
+    {
+      label: 'invalid @file body',
+      bodyArg: `@${invalidBodyFile}`,
+      error: /Body\/properties must be valid JSON/
+    },
+    {
+      label: 'missing @file body',
+      bodyArg: `@${missingBodyFile}`,
+      error: /ENOENT|no such file or directory/i,
+      jsonError: true
+    }
+  ];
+  for (const invalidCase of invalidBodyCases) {
+    const before = requests.length;
+    const result = await run([
+      'crm', 'update', 'tickets', '106',
+      '--properties', JSON.stringify({ subject: 'Must not be used as a fallback' }),
+      '--body', invalidCase.bodyArg,
+      '--yes'
+    ], env);
+    assert.strictEqual(result.status, 1, `${invalidCase.label} must fail`);
+    if (invalidCase.jsonError) {
+      const output = parseJsonOutput(result);
+      assert.strictEqual(output.ok, false);
+      assert.match(output.error, invalidCase.error);
+    } else {
+      assert.strictEqual(result.stdout, '', `${invalidCase.label} must not produce a success response`);
+      assert.match(result.stderr, invalidCase.error);
+    }
+    assert.strictEqual(requests.length, before, `${invalidCase.label} must fail before any network request`);
+  }
+
+  const blockedBody = {
+    properties: {
+      subject: 'Review this exact mutation body',
+      hs_ticket_priority: 'MEDIUM'
+    }
+  };
+  {
+    const before = requests.length;
+    const result = await run([
+      'crm', 'update', 'tickets', '107', '--body', JSON.stringify(blockedBody)
+    ], env);
+    assert.strictEqual(result.status, 2);
+    const output = parseJsonOutput(result);
+    assert.strictEqual(output.dryRun, true);
+    assert.match(output.message, /Mutation blocked/);
+    assert.deepStrictEqual(output.body, blockedBody);
+    assert.strictEqual(requests.length, before, 'blocked crm update body preview must not call network');
+  }
+
+  {
+    const before = requests.length;
+    const mcp = await runMcpConversation([
+      {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'hsapi-test-crm-update-body', version: '0.0.0' }
+        }
+      },
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      {
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/call',
+        params: {
+          name: 'hsapi_command_execute',
+          arguments: {
+            portal: 'test',
+            argv: ['crm', 'update', 'tickets', '108', '--body', JSON.stringify(blockedBody)]
+          }
+        }
+      }
+    ], env, 2);
+    assert.strictEqual(mcp.stderr, '');
+    const preview = mcpStructuredContent(mcp.responses[1]);
+    assert.strictEqual(preview.ok, false);
+    assert.strictEqual(preview.executed, false);
+    assert.strictEqual(preview.blocked, true);
+    assert.strictEqual(preview.error.code, 'mutation_blocked');
+    assert.strictEqual(preview.safety.endpointId, 'objects.update');
+    assert.deepStrictEqual(preview.preview.request.body, blockedBody);
+    assert.strictEqual(requests.length, before, 'MCP crm update mutation preview must not call network');
+  }
+});
+
 test('74 example.com/logo.png\', \'--folder-path\', \'/library/imports\', \'--access\', \'PRIVATE', async () => {
     await expectShowRequest(['crm', 'list', 'deals', '--limit', '5'], baseEnv, {
       requests,
