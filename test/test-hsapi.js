@@ -3456,8 +3456,8 @@ test('62 block (42)', async () => {
         .filter((arg) => arg.requiredUnless.length)
         .map((arg) => ({ endpointId: definition.id, arg }))
     ));
-    assert.strictEqual(new Set(conditionalBodyArgs.map(({ endpointId }) => endpointId)).size, 37);
-    assert.strictEqual(conditionalBodyArgs.length, 65);
+    assert.strictEqual(new Set(conditionalBodyArgs.map(({ endpointId }) => endpointId)).size, 39);
+    assert.strictEqual(conditionalBodyArgs.length, 68);
     for (const { endpointId, arg } of conditionalBodyArgs) {
       assert.deepStrictEqual(arg.requiredUnless, ['body'], `${endpointId} ${arg.name} must only be required unless --body is supplied`);
       assert.strictEqual(arg.required, false, `${endpointId} ${arg.name} must not be unconditionally required`);
@@ -3468,6 +3468,18 @@ test('62 block (42)', async () => {
       .args.find((arg) => arg.name === 'properties');
     assert.strictEqual(crmUpdateProperties.required, false);
     assert.deepStrictEqual(crmUpdateProperties.requiredUnless, ['body']);
+    for (const [endpointId, conditionalNames, safetyName] of [
+      ['objects.merge', ['primaryId', 'objectIdToMerge'], 'danger-merge'],
+      ['objects.gdpr_delete', ['id'], 'danger-gdpr-delete']
+    ]) {
+      const definition = typedDefinitions.find((candidate) => candidate.id === endpointId);
+      for (const name of conditionalNames) {
+        const arg = definition.args.find((candidate) => candidate.name === name);
+        assert.strictEqual(arg.required, false);
+        assert.deepStrictEqual(arg.requiredUnless, ['body']);
+      }
+      assert.strictEqual(definition.args.find((arg) => arg.name === safetyName).required, true, `${endpointId} must retain its irreversible-action acknowledgment`);
+    }
 
     const endpointById = new Map(catalog.endpoints.map((endpoint) => [endpoint.id, endpoint]));
     const newApiChecks = [
@@ -4475,12 +4487,26 @@ test('74 example.com/logo.png\', \'--folder-path\', \'/library/imports\', \'--ac
       endpointId: 'objects.merge',
       body: { primaryObjectId: '101', objectIdToMerge: '202' }
     });
+    await expectShowRequest(['crm', 'merge', 'contacts', '--danger-merge', '--body', '{"primaryObjectId":"303","objectIdToMerge":"404"}'], baseEnv, {
+      requests,
+      method: 'POST',
+      pathname: '/crm/objects/2026-03/contacts/merge',
+      endpointId: 'objects.merge',
+      body: { primaryObjectId: '303', objectIdToMerge: '404' }
+    });
     await expectShowRequest(['crm', 'gdpr-delete', 'contacts', 'ada@example.com', '--id-property', 'email', '--danger-gdpr-delete'], baseEnv, {
       requests,
       method: 'POST',
       pathname: '/crm/objects/2025-09/contacts/gdpr-delete',
       endpointId: 'objects.gdpr_delete',
       body: { objectId: 'ada@example.com', idProperty: 'email' }
+    });
+    await expectShowRequest(['crm', 'gdpr-delete', 'contacts', '--danger-gdpr-delete', '--body', '{"objectId":"505"}'], baseEnv, {
+      requests,
+      method: 'POST',
+      pathname: '/crm/objects/2025-09/contacts/gdpr-delete',
+      endpointId: 'objects.gdpr_delete',
+      body: { objectId: '505' }
     });
     await expectShowRequest(['crm', 'batch-read', 'contacts', '--ids', '101,102', '--properties', 'email,firstname', '--properties-with-history', 'lifecyclestage'], baseEnv, {
       requests,

@@ -11695,13 +11695,17 @@
           "name": "primaryId",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "objectIdToMerge",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "danger-merge",
@@ -11753,7 +11757,9 @@
           "name": "id",
           "kind": "positional",
           "type": "string",
-          "required": true
+          "requiredUnless": [
+            "body"
+          ]
         },
         {
           "name": "danger-gdpr-delete",
