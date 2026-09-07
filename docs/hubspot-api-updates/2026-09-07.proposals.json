@@ -1,0 +1,513 @@
+{
+  "generatedAt": "2026-09-07T17:38:16.906Z",
+  "mode": "network",
+  "candidateUrlCount": 24,
+  "candidateFileCount": 0,
+  "maxProposals": 0,
+  "totalEndpointProposalCount": 5,
+  "truncatedEndpointProposalCount": 0,
+  "inspected": [
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/ip-ranges/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/ip-ranges/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 14671,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 11448,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 33908,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/action-types/get-action-types",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/action-types/get-action-types.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 15530,
+      "endpointReferenceCount": 1,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/conversations/conversations/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/conversations/conversations/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 41315,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/activities/task-series/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/activities/task-series/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 11410,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/lists/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/lists/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 39810,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 34029,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/pipelines/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/pipelines/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 49381,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/data-studio/datasource-ingestion/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/data-studio/datasource-ingestion/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 26546,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/aeo/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/aeo/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 18823,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/campaigns/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/campaigns/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 26398,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/forms/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/forms/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 3668,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/lead-scoring/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/lead-scoring/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 16216,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/meetings/notetaker/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/meetings/notetaker/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 10170,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/overview",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/overview.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 6377,
+      "endpointReferenceCount": 1,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/contracts/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/contracts/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 74671,
+      "endpointReferenceCount": 2,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-accounts/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-accounts/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 10927,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-links/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-links/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 30992,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 52708,
+      "endpointReferenceCount": 1,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 9598,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/user-provisioning/guide",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/user-provisioning/guide.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 14046,
+      "endpointReferenceCount": 0,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/create-sequence",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/create-sequence.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 33388,
+      "endpointReferenceCount": 1,
+      "note": null
+    },
+    {
+      "sourceType": "url",
+      "source": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/batch/get-workflows",
+      "final": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/batch/get-workflows.md",
+      "ok": true,
+      "status": 200,
+      "bytes": 167898,
+      "endpointReferenceCount": 1,
+      "note": null
+    }
+  ],
+  "catalogAdditions": [
+    {
+      "kind": "endpoint",
+      "family": "automation",
+      "name": "automation.automation.sequences.2026.09.beta.serviceaccounts.sequences.post",
+      "method": "POST",
+      "path": "/automation/sequences/2026-09-beta/serviceaccounts/sequences",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "proposed",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/create-sequence",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "automation.flows",
+      "name": "automation.flows.automation.2026.09.beta.flows.batch.read.post",
+      "method": "POST",
+      "path": "/automation/2026-09-beta/flows/batch/read",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "proposed",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/batch/get-workflows",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ],
+      "readOnlyPost": true
+    },
+    {
+      "kind": "endpoint",
+      "family": "commerce",
+      "name": "commerce.commerce.contracts.2026.09.beta.changes.post",
+      "method": "POST",
+      "path": "/commerce/contracts/2026-09-beta/changes",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "proposed",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/contracts/guide",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "commerce",
+      "name": "commerce.commerce.contracts.2026.09.beta.contracts.by.id.changes.post",
+      "method": "POST",
+      "path": "/commerce/contracts/2026-09-beta/contracts/{contractId}/changes",
+      "versionMode": "beta",
+      "risk": "mutation",
+      "status": "proposed",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/contracts/guide",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    },
+    {
+      "kind": "endpoint",
+      "family": "marketing.forms",
+      "name": "marketing.forms.marketing.forms.2026.09.beta.by.id.get",
+      "method": "GET",
+      "path": "/marketing/forms/2026-09-beta/{formId}",
+      "versionMode": "beta",
+      "risk": "read",
+      "status": "proposed",
+      "auth": {
+        "family": "portal_bearer",
+        "subtype": "private_app_or_static_app",
+        "fallback": "none",
+        "tokenAudience": "admin"
+      },
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/overview",
+      "command": null,
+      "notes": [
+        "Generated by catalog diff assistant. Review HubSpot docs before adding to data/hubspot-api-catalog.json.",
+        "Choose a stable command name, required scopes, contextUrl, and mutation guard behavior before marking typed."
+      ]
+    }
+  ],
+  "versionDuplicateCount": 0,
+  "versionDuplicates": [],
+  "docTriage": [
+    {
+      "kind": "doc-triage",
+      "family": "account",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/ip-ranges/guide",
+      "suggestedName": "account.https.developers.hubspot.com.docs.api.reference.2026.09.beta.account.ip.ranges.g",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "account",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/teams/guide",
+      "suggestedName": "account.https.developers.hubspot.com.docs.api.reference.2026.09.beta.account.settings.te",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/sequences/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.automation.sequence",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/automation/workflows/action-types/get-action-types",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.automation.workflow",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "conversations",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/conversations/conversations/guide",
+      "suggestedName": "conversations.https.developers.hubspot.com.docs.api.reference.2026.09.beta.conversations.conve",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "crm.objects",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/activities/task-series/guide",
+      "suggestedName": "crm.objects.https.developers.hubspot.com.docs.api.reference.2026.09.beta.crm.activities.task",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "crm.lists",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/lists/guide",
+      "suggestedName": "crm.lists.https.developers.hubspot.com.docs.api.reference.2026.09.beta.crm.lists.guide",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "crm.objects",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/objects/forecasts/guide",
+      "suggestedName": "crm.objects.https.developers.hubspot.com.docs.api.reference.2026.09.beta.crm.objects.forecas",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "crm.objects",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/crm/pipelines/guide",
+      "suggestedName": "crm.objects.https.developers.hubspot.com.docs.api.reference.2026.09.beta.crm.pipelines.guide",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/data-studio/datasource-ingestion/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.data.studio.datasou",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/aeo/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.marketing.aeo.guide",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/campaigns/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.marketing.campaigns",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/forms/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.marketing.forms.gui",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/marketing/lead-scoring/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.marketing.lead.scor",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/meetings/notetaker/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.meetings.notetaker.",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-accounts/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.revenue.payment.acc",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/payment-links/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.revenue.payment.lin",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "commerce.price_books",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/revenue/price-books/guide",
+      "suggestedName": "commerce.price_books.https.developers.hubspot.com.docs.api.reference.2026.09.beta.revenue.price.books",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "unclassified",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/sales/templates/guide",
+      "suggestedName": "unclassified.https.developers.hubspot.com.docs.api.reference.2026.09.beta.sales.templates.gui",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    },
+    {
+      "kind": "doc-triage",
+      "family": "account",
+      "docsUrl": "https://developers.hubspot.com/docs/api-reference/2026-09-beta/account/settings/user-provisioning/guide",
+      "suggestedName": "account.https.developers.hubspot.com.docs.api.reference.2026.09.beta.account.settings.us",
+      "reason": "Official docs page is not currently referenced by catalog sourceDocs or endpoint docsUrl fields."
+    }
+  ],
+  "warnings": [
+    "Non-mutating proposal output only. Do not paste proposals blindly into the catalog.",
+    "Endpoint paths extracted from docs pages may include examples, deprecated paths, or incomplete template variables.",
+    "Every proposal needs command ergonomics, scope/tier notes, tests, and mutation safety review before implementation."
+  ]
+}
